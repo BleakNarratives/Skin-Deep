@@ -8,7 +8,9 @@ interface SidebarProps {
   onSelectSection: (id: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ navItems, activeSection, onSelectSection }) => {
+// Performance optimization: Memoize Sidebar to avoid re-rendering menu items unless
+// activeSection or handlers change.
+const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, onSelectSection }) => {
   return (
     <nav className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto z-40 hidden lg:block">
       <ul>
@@ -33,6 +35,6 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, activeSection, onSelectSect
       </div>
     </nav>
   );
-};
+});
 
 export default Sidebar;

@@ -14,7 +14,9 @@ interface DataChartProps {
   color: string;
 }
 
-const DataChart: React.FC<DataChartProps> = ({ data, title, dataKey, unit, color }) => {
+// Performance optimization: Memoize DataChart to prevent redundant Recharts SVG re-renders
+// when parent state updates.
+const DataChart: React.FC<DataChartProps> = React.memo(({ data, title, dataKey, unit, color }) => {
   return (
     <Card title={title}>
       <ResponsiveContainer width="100%" height={300}>
@@ -39,6 +41,6 @@ const DataChart: React.FC<DataChartProps> = ({ data, title, dataKey, unit, color
       </ResponsiveContainer>
     </Card>
   );
-};
+});
 
 export default DataChart;
