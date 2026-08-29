@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import SectionTitle from './components/SectionTitle';
@@ -43,25 +43,39 @@ const App: React.FC = () => {
     }
   }, [activeSection, geminiExplanations]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleScroll = () => {
-    const scrollPosition = window.scrollY + 80; // Offset for fixed header
-    let currentActiveSection = 'introduction';
-    for (const item of NAV_ITEMS) {
-      const ref = sectionRefs.current[item.id];
-      if (ref && ref.offsetTop <= scrollPosition && ref.offsetTop + ref.offsetHeight > scrollPosition) {
-        currentActiveSection = item.id;
-        break;
-      }
-    }
-    setActiveSection(currentActiveSection);
-  };
-
+  // Performance optimization: Throttle scroll event handling with requestAnimationFrame
+  // and passive scroll listener to avoid layout thrashing and high CPU usage per scroll tick.
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    let ticking = false;
 
-  const handleSelectSection = (id: string) => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 80; // Offset for fixed header
+      let currentActiveSection = 'introduction';
+      for (const item of NAV_ITEMS) {
+        const ref = sectionRefs.current[item.id];
+        if (ref && ref.offsetTop <= scrollPosition && ref.offsetTop + ref.offsetHeight > scrollPosition) {
+          currentActiveSection = item.id;
+          break;
+        }
+      }
+      setActiveSection((prev) => (prev !== currentActiveSection ? currentActiveSection : prev));
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleSelectSection = useCallback((id: string) => {
     const ref = sectionRefs.current[id];
     if (ref) {
       window.scrollTo({
@@ -73,7 +87,7 @@ const App: React.FC = () => {
     if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanations[id]) {
       fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
     }
-  };
+  }, [geminiExplanations]);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">

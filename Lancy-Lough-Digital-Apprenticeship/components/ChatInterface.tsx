@@ -18,16 +18,20 @@ const ChatInterface: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (input.trim() === '') return;
+  // Sentinel Security Enhancement: Limit input length to mitigate DoS / prompt bloat risks.
+  const MAX_INPUT_LENGTH = 500;
 
-    const userMessage: ChatMessage = { role: 'user', text: input };
+  const handleSendMessage = async () => {
+    const sanitizedInput = input.trim().slice(0, MAX_INPUT_LENGTH);
+    if (sanitizedInput === '') return;
+
+    const userMessage: ChatMessage = { role: 'user', text: sanitizedInput };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      const geminiResponse = await getChatResponse(messages, input);
+      const geminiResponse = await getChatResponse(messages, sanitizedInput);
       const modelMessage: ChatMessage = { role: 'model', text: geminiResponse };
       setMessages((prevMessages) => [...prevMessages, modelMessage]);
     } catch (error) {
@@ -83,6 +87,7 @@ const ChatInterface: React.FC = () => {
           className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 mr-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus:border-teal-500 disabled:opacity-50"
           placeholder="Type your message..."
           value={input}
+          maxLength={MAX_INPUT_LENGTH}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !isLoading && input.trim()) {
