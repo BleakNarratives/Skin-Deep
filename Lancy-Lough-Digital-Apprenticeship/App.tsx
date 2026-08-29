@@ -28,9 +28,9 @@ const App: React.FC = () => {
       const explanation = await generateExplanation({ prompt });
       setGeminiExplanations((prev) => ({ ...prev, [sectionId]: explanation }));
     } catch (error: any) {
-      console.error(`Error fetching explanation for ${sectionId}:`, error);
-      // Simplified error message for mock
-      setGeminiExplanations((prev) => ({ ...prev, [sectionId]: `Failed to load AI explanation: ${error.message || 'Unknown error'}.` }));
+      // Sentinel Security: Avoid exposing raw internal error messages or stack details to the user interface
+      console.error(`Error fetching explanation for ${sectionId}`);
+      setGeminiExplanations((prev) => ({ ...prev, [sectionId]: "Failed to load AI explanation. Please try again later." }));
     } finally {
       setLoadingExplanation(false);
     }
