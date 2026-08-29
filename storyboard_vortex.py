@@ -147,64 +147,99 @@ def generate_mock_audio_bytes(shot_number: int) -> tuple[str, str]:
 
 
 def draw_camera_preset_visualizer(camera_angle: str):
-    """Draws a 2D wireframe preview representing the camera angle preset on a matplotlib canvas."""
-    fig, ax = plt.subplots(figsize=(6, 3.5), facecolor='#0f172a')
-    ax.set_facecolor('#0f172a')
+    """Draws an organic, hand-drawn director sketchpad preview on paper canvas."""
+    # Enable hand-drawn sketchy style
+    with plt.xkcd(scale=1.2, length=100, randomness=3):
+        fig, ax = plt.subplots(figsize=(6, 3.5), facecolor='#f4f1ea')
+        ax.set_facecolor('#fdfbf7')
 
-    # Outer frame
-    frame = patches.Rectangle((0.05, 0.05), 0.9, 0.9, linewidth=1.5, edgecolor='#38bdf8', facecolor='none')
-    ax.add_patch(frame)
+        # Grid lines simulating sketchbook graph paper
+        for x in [0.2, 0.4, 0.6, 0.8]:
+            ax.axvline(x, color='#e2ddd3', linestyle=':', linewidth=0.8)
+        for y in [0.2, 0.4, 0.6, 0.8]:
+            ax.axhline(y, color='#e2ddd3', linestyle=':', linewidth=0.8)
 
-    if camera_angle == "Extreme Close-Up":
-        # Target macro reticle
-        ax.plot([0.5, 0.5], [0.1, 0.9], color='#ef4444', linestyle='--', alpha=0.7)
-        ax.plot([0.1, 0.9], [0.5, 0.5], color='#ef4444', linestyle='--', alpha=0.7)
-        circle1 = patches.Circle((0.5, 0.5), 0.25, edgecolor='#ef4444', facecolor='none', linewidth=2)
-        circle2 = patches.Circle((0.5, 0.5), 0.1, edgecolor='#f87171', facecolor='none', linewidth=1)
-        ax.add_patch(circle1)
-        ax.add_patch(circle2)
-        ax.text(0.5, 0.82, "MACRO FOCUS - EXTREME CLOSE-UP", color='#f87171', fontsize=9, ha='center', weight='bold')
+        # Outer hand-drawn frame border (charcoal/pencil line)
+        frame = patches.Rectangle((0.05, 0.05), 0.9, 0.9, linewidth=2.0, edgecolor='#2b2927', facecolor='none')
+        ax.add_patch(frame)
 
-    elif camera_angle == "Low-Angle Tracker":
-        # Perspective upward lines
-        ax.plot([0.1, 0.5], [0.1, 0.85], color='#38bdf8', linewidth=2)
-        ax.plot([0.9, 0.5], [0.1, 0.85], color='#38bdf8', linewidth=2)
-        ax.plot([0.2, 0.8], [0.3, 0.3], color='#818cf8', linestyle=':')
-        ax.plot([0.3, 0.7], [0.55, 0.55], color='#818cf8', linestyle=':')
-        # Upward arrow
-        ax.annotate('', xy=(0.5, 0.85), xytext=(0.5, 0.2),
-                    arrowprops=dict(arrowstyle="->", color="#38bdf8", lw=3))
-        ax.text(0.5, 0.92, "LOW-ANGLE TRACKER (TILT UP)", color='#38bdf8', fontsize=9, ha='center', weight='bold')
+        pencil_dark = '#1e1e1e'
+        pencil_red = '#b91c1c'
+        pencil_blue = '#1d4ed8'
+        pencil_gray = '#57534e'
 
-    elif camera_angle == "Establishing Wide":
-        # Horizon line and wide perspective
-        ax.axhline(0.4, color='#38bdf8', linestyle='-', linewidth=1.5)
-        # Horizon grid
-        for x in [0.1, 0.3, 0.5, 0.7, 0.9]:
-            ax.plot([x, 0.5], [0.1, 0.4], color='#64748b', linestyle='--')
-        ax.plot([0.2, 0.8], [0.75, 0.75], color='#a855f7', linewidth=2)
-        ax.plot([0.2, 0.2], [0.65, 0.85], color='#a855f7', linewidth=2)
-        ax.plot([0.8, 0.8], [0.65, 0.85], color='#a855f7', linewidth=2)
-        ax.text(0.5, 0.82, "ESTABLISHING WIDE (PANORAMIC)", color='#a855f7', fontsize=9, ha='center', weight='bold')
+        if camera_angle == "Extreme Close-Up":
+            # Hand-sketched eye / dermal sensor macro focus
+            # Draw eye/sensor oval outline
+            eye_outer = patches.Ellipse((0.5, 0.5), 0.5, 0.28, angle=0, edgecolor=pencil_dark, facecolor='none', linewidth=2)
+            iris = patches.Circle((0.5, 0.5), 0.1, edgecolor=pencil_dark, facecolor='#d97706', alpha=0.3, linewidth=1.5)
+            pupil = patches.Circle((0.5, 0.5), 0.04, color=pencil_dark)
+            ax.add_patch(eye_outer)
+            ax.add_patch(iris)
+            ax.add_patch(pupil)
 
-    else:  # Rule of Thirds Grid
-        # 3x3 Grid
-        ax.axvline(0.33, color='#f59e0b', linestyle='--', linewidth=1.5)
-        ax.axvline(0.66, color='#f59e0b', linestyle='--', linewidth=1.5)
-        ax.axhline(0.33, color='#f59e0b', linestyle='--', linewidth=1.5)
-        ax.axhline(0.66, color='#f59e0b', linestyle='--', linewidth=1.5)
-        # Focal points
-        for x in [0.33, 0.66]:
-            for y in [0.33, 0.66]:
-                node = patches.Circle((x, y), 0.03, color='#f59e0b')
-                ax.add_patch(node)
-        ax.text(0.5, 0.92, "RULE OF THIRDS GRID", color='#f59e0b', fontsize=9, ha='center', weight='bold')
+            # Crosshair focus markings
+            ax.plot([0.5, 0.5], [0.12, 0.88], color=pencil_red, linestyle='--', linewidth=1.2)
+            ax.plot([0.12, 0.88], [0.5, 0.5], color=pencil_red, linestyle='--', linewidth=1.2)
+            ax.text(0.5, 0.84, "[ ECU: MACRO FOCUS SKETCH ]", color=pencil_red, fontsize=9, ha='center', weight='bold')
 
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis('off')
-    plt.tight_layout()
-    return fig
+        elif camera_angle == "Low-Angle Tracker":
+            # Hand-drawn stick figure looking up + perspective convergence lines
+            # Vanishing lines from low angle
+            ax.plot([0.08, 0.5], [0.08, 0.82], color=pencil_gray, linestyle='-', linewidth=1.5)
+            ax.plot([0.92, 0.5], [0.08, 0.82], color=pencil_gray, linestyle='-', linewidth=1.5)
+
+            # Sketched director tilt arrow
+            ax.annotate('', xy=(0.5, 0.82), xytext=(0.5, 0.2),
+                        arrowprops=dict(arrowstyle="->", color=pencil_blue, lw=2.5))
+
+            # Low angle stick figure hero pose
+            head = patches.Circle((0.5, 0.65), 0.06, edgecolor=pencil_dark, facecolor='none', linewidth=2)
+            ax.add_patch(head)
+            ax.plot([0.5, 0.5], [0.35, 0.59], color=pencil_dark, linewidth=2.5) # body
+            ax.plot([0.5, 0.4], [0.35, 0.15], color=pencil_dark, linewidth=2) # leg L
+            ax.plot([0.5, 0.6], [0.35, 0.15], color=pencil_dark, linewidth=2) # leg R
+            ax.plot([0.5, 0.35], [0.5, 0.42], color=pencil_dark, linewidth=2) # arm L
+            ax.plot([0.5, 0.65], [0.5, 0.42], color=pencil_dark, linewidth=2) # arm R
+
+            ax.text(0.5, 0.88, "[ LOW-ANGLE TILT UP ]", color=pencil_blue, fontsize=9, ha='center', weight='bold')
+
+        elif camera_angle == "Establishing Wide":
+            # Hand-sketched mountain/skyline horizon layout
+            ax.plot([0.05, 0.95], [0.35, 0.35], color=pencil_dark, linewidth=1.8) # Horizon line
+            # Distant mountain peaks / buildings sketch
+            ax.plot([0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 0.95],
+                    [0.35, 0.6, 0.38, 0.68, 0.42, 0.58, 0.35],
+                    color=pencil_gray, linewidth=1.5)
+            # Sun / Light source sketch
+            sun = patches.Circle((0.75, 0.72), 0.08, edgecolor='#f59e0b', facecolor='none', linewidth=1.5, linestyle='--')
+            ax.add_patch(sun)
+            ax.text(0.5, 0.85, "[ ESTABLISHING WIDE: PANORAMA ]", color=pencil_dark, fontsize=9, ha='center', weight='bold')
+
+        else:  # Rule of Thirds Grid
+            # Sketched 3x3 rule of thirds grid with focal nodes
+            ax.plot([0.33, 0.33], [0.05, 0.95], color=pencil_red, linestyle='--', linewidth=1.2)
+            ax.plot([0.66, 0.66], [0.05, 0.95], color=pencil_red, linestyle='--', linewidth=1.2)
+            ax.plot([0.05, 0.95], [0.33, 0.33], color=pencil_red, linestyle='--', linewidth=1.2)
+            ax.plot([0.05, 0.95], [0.66, 0.66], color=pencil_red, linestyle='--', linewidth=1.2)
+
+            # Focal nodes sketch
+            for x in [0.33, 0.66]:
+                for y in [0.33, 0.66]:
+                    node = patches.Circle((x, y), 0.035, edgecolor=pencil_red, facecolor='#fee2e2', linewidth=1.5)
+                    ax.add_patch(node)
+
+            # Rough character sketch at primary focal point
+            head = patches.Circle((0.33, 0.66), 0.05, edgecolor=pencil_dark, facecolor='none', linewidth=1.5)
+            ax.add_patch(head)
+            ax.plot([0.33, 0.33], [0.42, 0.61], color=pencil_dark, linewidth=2)
+            ax.text(0.5, 0.88, "[ RULE OF THIRDS GRID ]", color=pencil_red, fontsize=9, ha='center', weight='bold')
+
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis('off')
+        plt.tight_layout()
+        return fig
 
 
 def generate_midjourney_prompt(shot: dict) -> str:
