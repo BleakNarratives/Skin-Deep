@@ -1,0 +1,5 @@
+fastapi>=0.115
+uvicorn[standard]>=0.32
+websockets>=12
+httpx>=0.27
+requests>=2.31   # Boardroom router (Groq key-pool client)

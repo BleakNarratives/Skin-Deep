@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtualenv
+.venv/
+
+# Arena scratch database — human benchmark/battle data is local-only.
+# The sacred ~/MikeySwarm/persona_runs.db corpus is never here.
+arena.db
+arena.db-*

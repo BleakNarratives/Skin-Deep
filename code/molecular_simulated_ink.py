@@ -1,3 +1,14 @@
+# [DNA_TAG]
+# ORIGIN: Crostini-Chromebook (auto-detected)
+# PILLAR: rootbase-engine-room
+# DEPS: numpy, matplotlib, matplotlib
+# ROLE: Component of UNPACKED
+# AUTHOR: Auto-tagged by Buffy (DNA Sweeper)
+# SESSION: 2026-08-22 ShipWreckD OS Builder
+# TIER: Recruit (5)
+# AKA: molecular_simulated_ink, code-module
+# [/DNA_TAG]
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation

@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "name": "Skin-Deep",
+    "path": "/storage/emulated/0/RootBase/Skin-Deep",
+    "languages": {
+      "typescript": 13,
+      "html": 1,
+      "python": 6
+    },
+    "entrypoints": [],
+    "package_json": false,
+    "requirements": 0,
+    "readme_excerpt": "",
+    "last_modified": "2026-06-22T04:09:48.914504"
+  },
+  "runbook": {
+    "commands": [],
+    "env": [],
+    "notes": []
+  },
+  "bard_note": "No obvious entrypoint. Bold choice. (Bardildo: harsh truth incoming)"
+}

@@ -1,3 +1,14 @@
+# [DNA_TAG]
+# ORIGIN: Crostini-Chromebook (auto-detected)
+# PILLAR: rootbase-engine-room
+# DEPS: os, sys, json, time, pathlib (stdlib)
+# ROLE: Component of UNPACKED
+# AUTHOR: Auto-tagged by Buffy (DNA Sweeper)
+# SESSION: 2026-08-22 ShipWreckD OS Builder
+# TIER: Recruit (5)
+# AKA: pen_point_cross_section_skin_layers, code-module
+# [/DNA_TAG]
+
 def render_skin_cross_section(needle_depth, ink_deposition, trauma_zones):
     """
     Creates a medical-illustration style view of skin layers

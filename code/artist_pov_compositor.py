@@ -1,3 +1,14 @@
+# [DNA_TAG]
+# ORIGIN: Crostini-Chromebook (auto-detected)
+# PILLAR: rootbase-engine-room
+# DEPS: os, sys, json, time, pathlib (stdlib)
+# ROLE: Component of UNPACKED
+# AUTHOR: Auto-tagged by Buffy (DNA Sweeper)
+# SESSION: 2026-08-22 ShipWreckD OS Builder
+# TIER: Recruit (5)
+# AKA: artist_pov_compositor, code-module
+# [/DNA_TAG]
+
 # Mockup: Artist POV compositor
 def composite_artist_pov(hand_cam, scene_cam, hud_data):
     """

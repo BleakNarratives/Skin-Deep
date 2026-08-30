@@ -1,3 +1,14 @@
+# [DNA_TAG]
+# ORIGIN: Crostini-Chromebook (auto-detected)
+# PILLAR: rootbase-engine-room
+# DEPS: cv2, numpy, pygame, queue
+# ROLE: Component of UNPACKED
+# AUTHOR: Auto-tagged by Buffy (DNA Sweeper)
+# SESSION: 2026-08-22 ShipWreckD OS Builder
+# TIER: Recruit (5)
+# AKA: lough_unified_viewer, code-module
+# [/DNA_TAG]
+
 # File: lough_unified_viewer.py
 """
 LOUGH Unified Viewer v0.1

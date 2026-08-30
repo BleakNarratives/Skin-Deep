@@ -1,3 +1,14 @@
+# [DNA_TAG]
+# ORIGIN: Crostini-Chromebook (auto-detected)
+# PILLAR: rootbase-engine-room
+# DEPS: pyrealsense2, cv2, numpy, open3d, sklearn
+# ROLE: Component of UNPACKED
+# AUTHOR: Auto-tagged by Buffy (DNA Sweeper)
+# SESSION: 2026-08-22 ShipWreckD OS Builder
+# TIER: Recruit (5)
+# AKA: skin_ui_processor, code-module
+# [/DNA_TAG]
+
 # File: skin_ui_processor.py
 """
 Skin Interface Processor v0.1

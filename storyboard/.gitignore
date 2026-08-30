@@ -1,0 +1,6 @@
+storyboard.db
+storyboard.db-journal
+images/
+exports/
+__pycache__/
+.pytest_cache/

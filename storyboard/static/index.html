@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SKIN DEEP — Storyboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0c09; --panel:#14110c; --line:#3a3226; --ink:#e8dcc3;
+  --dim:#8a7f68; --gold:#d4af37; --crimson:#c0392b; --tan:#c0b493; --silver:#b8b2a6;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:'Courier Prime',monospace;margin:0;padding:1.4em}
+h1{font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;color:var(--gold);font-size:1.9em;margin:0}
+.sub{color:var(--dim);font-style:italic;font-family:'Playfair Display',serif;margin:.2em 0 1.2em}
+button{background:var(--panel);color:var(--tan);border:1px solid var(--line);
+  font-family:'Courier Prime',monospace;padding:.45em .9em;cursor:pointer}
+button:hover{border-color:var(--gold);color:var(--gold)}
+button:disabled{opacity:.45;cursor:wait}
+button.danger:hover{border-color:var(--crimson);color:var(--crimson)}
+.bar{display:flex;gap:.6em;flex-wrap:wrap;align-items:center;margin-bottom:1em}
+select,input,textarea{background:var(--panel);color:var(--ink);border:1px solid var(--line);
+  font-family:'Courier Prime',monospace;padding:.4em}
+.hdr{border:1px solid var(--line);padding:1em;margin-bottom:1.2em;background:var(--panel)}
+.hdr .notes{color:var(--tan);white-space:pre-wrap;font-size:.85em;max-height:8em;overflow:auto}
+.scenes{display:flex;flex-direction:column;gap:1.4em}
+.scene{border-top:1px solid var(--line);padding-top:.9em}
+.slug{font-family:'Bebas Neue',sans-serif;color:var(--crimson);letter-spacing:.06em;font-size:1.15em}
+.syn{color:var(--tan);margin:.2em 0 .8em;max-width:70em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1em}
+.card{border:1px solid var(--line);background:var(--panel);padding:.7em;display:flex;flex-direction:column;gap:.5em}
+.top{display:flex;justify-content:space-between;font-size:.8em}
+.shot{color:var(--gold);letter-spacing:.05em}
+.dur{color:var(--dim)}
+img.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--line)}
+.ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;border:1px dashed var(--line);color:#5a5142;font-size:.72em;text-align:center;padding:.5em}
+.act{font-size:.84em;line-height:1.45}
+.vo{color:var(--tan);font-style:italic;font-size:.8em}
+.ost{color:var(--crimson);font-size:.72em}
+.tools{display:flex;gap:.4em;margin-top:auto;flex-wrap:wrap}
+.tools button{font-size:.75em;padding:.3em .6em}
+#status{position:fixed;bottom:1em;right:1em;background:var(--panel);border:1px solid var(--line);
+  color:var(--tan);padding:.6em 1em;font-size:.8em;max-width:30em;display:none;white-space:pre-wrap}
+.muted{color:var(--dim);font-size:.8em}
+a{color:var(--gold)}
+</style>
+</head>
+<body>
+<h1>SKIN DEEP — STORYBOARD ENGINE</h1>
+<div class="sub" id="epsub">the ghost in the machine starts on paper</div>
+
+<div class="bar">
+  <select id="epsel"><option value="">loading episodes…</option></select>
+  <button id="b-scenes">1 · outline → scenes</button>
+  <button id="b-panels">2 · scenes → panels</button>
+  <button id="b-boardroom">boardroom mode</button>
+  <span class="muted">|</span>
+  <a id="x-json" href="#" target="_blank">JSON</a>
+  <a id="x-csv" href="#" target="_blank">CSV</a>
+  <a id="x-sheet" href="#" target="_blank">contact sheet</a>
+  <span class="muted">|</span>
+  <button id="b-health" class="muted">health</button>
+  <button id="b-seed" class="muted">new episode</button>
+</div>
+
+<div class="hdr" id="ephdr" style="display:none">
+  <div id="eptitle"></div>
+  <div class="sub" id="eplog"></div>
+  <div class="notes" id="epnotes"></div>
+</div>
+
+<div class="scenes" id="scenes"></div>
+<div id="status"></div>
+
+<script>
+const API = "/api/v1/storyboard";
+const $ = id => document.getElementById(id);
+let EP = null;
+
+function status(msg, sticky){
+  const s = $("status");
+  if(!msg){ s.style.display = "none"; return; }
+  s.textContent = msg; s.style.display = "block";
+  if(!sticky) setTimeout(() => s.style.display = "none", 6000);
+}
+async function jfetch(url, opts){
+  const r = await fetch(url, opts);
+  if(!r.ok){
+    let d = await r.text();
+    try { const p = JSON.parse(d); d = p.detail && p.detail.cause ? p.detail.stage+": "+p.detail.cause+"\n"+(p.detail.raw_excerpt||"") : (p.detail || d); } catch(e){}
+    throw new Error(r.status+" — "+d);
+  }
+  return r.json();
+}
+function busy(btn, on, label){
+  btn.disabled = on;
+  if(label) btn.textContent = label;
+}
+
+async function loadEpisodes(){
+  const eps = await jfetch(API+"/episodes");
+  const sel = $("epsel");
+  sel.innerHTML = eps.length
+    ? eps.map(e => `<option value="${e.id}">S${e.season}E${e.number} — ${e.title}</option>`).join("")
+    : `<option value="">no episodes — click "new episode"</option>`;
+  if(eps.length){ EP = eps[0].id; sel.value = EP; await loadTree(); }
+}
+
+async function loadTree(){
+  if(!EP) return;
+  const t = await jfetch(`${API}/episodes/${EP}`);
+  $("ephdr").style.display = "block";
+  $("eptitle").textContent = `S${t.season}E${t.number} — ${t.title}`;
+  $("eplog").textContent = t.logline;
+  let notes = "";
+  if(t.director_notes){
+    try { const n = JSON.parse(t.director_notes); notes = JSON.stringify(n.champion || n, null, 1); }
+    catch(e){ notes = t.director_notes; }
+  }
+  $("epnotes").textContent = notes ? "BOARDROOM NOTES:\n"+notes : "";
+  $("epsub").textContent = t.status === "draft" ? "draft" : t.status;
+  const urls = ["json","csv","sheet"].map(k => [k, `${API}/episodes/${EP}/export/${k}`]);
+  urls.forEach(([k,u]) => { $("x-"+k).href = u; });
+  const sc = $("scenes");
+  sc.innerHTML = "";
+  (t.scenes||[]).forEach(s => {
+    const div = document.createElement("div");
+    div.className = "scene";
+    div.innerHTML = `<div class="slug">SC ${s.ord} — ${s.slug}</div>
+      <div class="syn">${s.synopsis}</div><div class="grid"></div>`;
+    const g = div.querySelector(".grid");
+    s.panels.forEach(p => g.appendChild(panelCard(p)));
+    sc.appendChild(div);
+  });
+  if(!(t.scenes||[]).length)
+    sc.innerHTML = `<div class="muted">no scenes yet — run "outline → scenes"</div>`;
+}
+
+function panelCard(p){
+  const c = document.createElement("div");
+  c.className = "card";
+  const vis = p.image_status === "ready"
+    ? `<img class="thumb" src="/storyboard/images/${p.image_path}" alt="panel ${p.id}">`
+    : `<div class="ph">no image — ${p.image_status}<br>visual prompt on file</div>`;
+  c.innerHTML = `<div class="top"><span class="shot">${p.shot_type} · ${p.camera_move||"static"}</span>
+    <span class="dur">${Number(p.duration_sec).toFixed(1)}s</span></div>${vis}
+    <div class="act">${p.action}</div>
+    ${p.vo_line ? `<div class="vo">${p.vo_speaker||"VO"}: ${p.vo_line}</div>` : ""}
+    ${p.on_screen_text ? `<div class="ost">[ ${p.on_screen_text} ]</div>` : ""}
+    <div class="tools">
+      <button data-a="img">image</button>
+      <button data-a="regen">re-cut</button>
+      <button data-a="edit">edit</button>
+      <button data-a="dur" title="duration -">−</button>
+      <button data-a="durp" title="duration +">+</button>
+    </div>`;
+  c.querySelectorAll("button").forEach(b => b.onclick = () => act(b.dataset.a, p, c));
+  return c;
+}
+
+async function act(a, p, card){
+  try{
+    if(a === "img"){
+      busy(card.querySelector('[data-a="img"]'), true);
+      const r = await jfetch(`${API}/panels/${p.id}/image`, {method:"POST"});
+      status(r.status === "ready" ? "image ready" : "no image provider answered — placeholder kept");
+    } else if(a === "regen"){
+      status("re-cutting panel…", true);
+      await jfetch(`${API}/panels/${p.id}/regenerate`, {method:"POST"});
+      status("panel re-cut");
+    } else if(a === "edit"){
+      const v = prompt("action:", p.action);
+      if(v === null) return;
+      await jfetch(`${API}/panels/${p.id}`, {method:"PATCH",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({action: v})});
+      status("saved");
+    } else if(a === "dur" || a === "durp"){
+      const d = Math.max(0.5, Number(p.duration_sec) + (a === "durp" ? 0.5 : -0.5));
+      await jfetch(`${API}/panels/${p.id}`, {method:"PATCH",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({duration_sec: d})});
+    }
+    await loadTree();
+  }catch(e){ status(String(e), true); }
+}
+
+$("epsel").onchange = e => { EP = Number(e.target.value); loadTree(); };
+$("b-scenes").onclick = async e => {
+  if(!EP) return;
+  busy(e.target, true, "working…");
+  try{ const r = await jfetch(`${API}/episodes/${EP}/scenes`, {method:"POST", body:"{}"});
+    status(r.scenes+" scenes via "+r.provider); await loadTree();
+  }catch(err){ status(String(err), true); } finally { busy(e.target, false, "1 · outline → scenes"); }
+};
+$("b-panels").onclick = async e => {
+  if(!EP) return;
+  busy(e.target, true, "cutting…");
+  try{ const r = await jfetch(`${API}/episodes/${EP}/panels`, {method:"POST"});
+    status(r.panels+" panels across "+r.scenes+" scenes via "+r.provider); await loadTree();
+  }catch(err){ status(String(err), true); } finally { busy(e.target, false, "2 · scenes → panels"); }
+};
+$("b-boardroom").onclick = async e => {
+  if(!EP) return;
+  busy(e.target, true, "the board is in session…");
+  try{ await jfetch(`${API}/episodes/${EP}/boardroom`, {method:"POST", body:"{}"});
+    status("champion stored as director notes"); await loadTree();
+  }catch(err){ status(String(err), true); } finally { busy(e.target, false, "boardroom mode"); }
+};
+$("b-health").onclick = async () => {
+  try{ const h = await jfetch(API+"/health");
+    const g = h.text_providers.groq_keys || 0;
+    status(`text: groq keys=${g} openrouter=${h.text_providers.openrouter} gemini=${h.text_providers.gemini}\n` +
+      h.image_chain.map(i => `${i.provider}:${i.key||i.enabled||false}`).join("  "), true);
+  }catch(err){ status(String(err), true); }
+};
+$("b-seed").onclick = async () => {
+  const title = prompt("episode title:", "The Handshake");
+  if(!title) return;
+  const slug = "ep1_the_handshake";
+  try{
+    const outline = await fetch("/storyboard/episodes/"+slug+".md").then(r => r.ok ? r.text() : "");
+    await jfetch(API+"/episodes", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({season:1, number:1, slug, title,
+        logline:"A broke operator walks into a master's shop with salvaged sensors — and walks out with a deadline.",
+        outline})});
+    await loadEpisodes();
+  }catch(err){ status(String(err), true); }
+};
+
+loadEpisodes();
+</script>
+</body>
+</html>

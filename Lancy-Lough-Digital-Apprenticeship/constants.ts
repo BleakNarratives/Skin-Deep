@@ -3,6 +3,7 @@ import { NavItem, ChartDataPoint, SensorSpec, MachineSpec } from './types';
 
 export const NAV_ITEMS: NavItem[] = [
   { id: 'introduction', name: 'Introduction' },
+  { id: 'flash-generator', name: 'Flash Generator' },
   { id: 'bio-kinetic-acquisition', name: 'Bio-Kinetic Acquisition' },
   { id: 'biometric-telemetry', name: 'Biometric Telemetry' },
   { id: 'machine-telemetry', name: 'Machine Telemetry' },
@@ -99,6 +100,7 @@ export const MACHINE_SPECS: MachineSpec[] = [
 // Placeholder content for AI explanations to be replaced by actual Gemini calls
 export const AI_EXPLANATION_PROMPTS = {
   'introduction': `Explain the core purpose and key integrations of the LOUGH computational architecture in the context of Lancy Lough's digital apprenticeship.`,
+  'flash-generator': `Describe the procedural Flash & Stencil Generator, its style/complexity parameters, and the AR Trace Mode for camera-assisted stencil transfer.`,
   'bio-kinetic-acquisition': `Describe the methods used for high-fidelity bio-kinetic data acquisition in LOUGH, focusing on markerless optical tracking and hybrid sensor fusion for finger tracking.`,
   'biometric-telemetry': `Detail how biometric telemetry, specifically sEMG and muscle activation monitoring, contributes to understanding the 'Loughian' technique and the signal processing challenges involved.`,
   'machine-telemetry': `Explain the role of tattoo machine telemetry in the LOUGH system, differentiating between coil and rotary machine dynamics and the data points captured for each.`,

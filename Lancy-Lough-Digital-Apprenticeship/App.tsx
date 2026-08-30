@@ -7,6 +7,7 @@ import Card from './components/Card';
 import DataChart from './components/DataChart';
 import ChatInterface from './components/ChatInterface';
 import HapticFeedbackSimulator from './components/HapticFeedbackSimulator';
+import FlashStencilGenerator from './components/FlashStencilGenerator';
 import VideoDataOverlay from './components/VideoDataOverlay';
 import { NAV_ITEMS, MOCK_EMG_DATA, MOCK_MACHINE_RPM_DATA, MOCK_MACHINE_VOLTAGE_DATA, SENSOR_SPECS, MACHINE_SPECS, AI_EXPLANATION_PROMPTS } from './constants';
 import { generateExplanation, checkApiKeyAndPrompt } from './services/geminiService';
@@ -135,6 +136,16 @@ const App: React.FC = () => {
                 fidelity in data capture.
               </p>
             </Card>
+          </section>
+
+
+          <section id="flash-generator" ref={(el) => (sectionRefs.current['flash-generator'] = el)}>
+            <SectionTitle
+              id="flash-generator"
+              title="Flash & Stencil Generator"
+              subtitle="Procedural Design Tools with AR Trace Assist"
+            />
+            <FlashStencilGenerator />
           </section>
 
           <section id="bio-kinetic-acquisition" ref={(el) => (sectionRefs.current['bio-kinetic-acquisition'] = el)}>

@@ -1,3 +1,14 @@
+# [DNA_TAG]
+# ORIGIN: Crostini-Chromebook (auto-detected)
+# PILLAR: rootbase-engine-room
+# DEPS: cv2, mediapipe, numpy, pandas
+# ROLE: Component of UNPACKED
+# AUTHOR: Auto-tagged by Buffy (DNA Sweeper)
+# SESSION: 2026-08-22 ShipWreckD OS Builder
+# TIER: Recruit (5)
+# AKA: lough_mvp_v0, code-module
+# [/DNA_TAG]
+
 # File: lough_mvp_v0.py
 """
 LOUGH MVP v0.0.1
