@@ -76,10 +76,11 @@ const HapticFeedbackSimulator: React.FC = () => {
               Target trajectory represented by the teal circle. Your "hand" is the glowing blue dot.
             </span>
           </p>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Haptic feedback modes">
             <button
               onClick={() => setFeedbackType('none')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              aria-pressed={feedbackType === 'none'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'none' ? 'bg-gray-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
               }`}
             >
@@ -87,7 +88,8 @@ const HapticFeedbackSimulator: React.FC = () => {
             </button>
             <button
               onClick={() => setFeedbackType('spring')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              aria-pressed={feedbackType === 'spring'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'spring' ? 'bg-teal-600 text-white' : 'bg-teal-800 hover:bg-teal-700 text-teal-200'
               }`}
             >
@@ -95,7 +97,8 @@ const HapticFeedbackSimulator: React.FC = () => {
             </button>
             <button
               onClick={() => setFeedbackType('damping')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              aria-pressed={feedbackType === 'damping'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'damping' ? 'bg-purple-600 text-white' : 'bg-purple-800 hover:bg-purple-700 text-purple-200'
               }`}
             >
@@ -103,7 +106,8 @@ const HapticFeedbackSimulator: React.FC = () => {
             </button>
             <button
               onClick={() => setFeedbackType('spring-damping')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              aria-pressed={feedbackType === 'spring-damping'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'spring-damping' ? 'bg-indigo-600 text-white' : 'bg-indigo-800 hover:bg-indigo-700 text-indigo-200'
               }`}
             >
@@ -114,7 +118,11 @@ const HapticFeedbackSimulator: React.FC = () => {
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
           </p>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          role="img"
+          aria-label={`Interactive haptic simulation displaying target at center and hand indicator using ${feedbackType.replace('-', ' ')} feedback`}
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
