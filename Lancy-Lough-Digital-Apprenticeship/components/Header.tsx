@@ -1,7 +1,8 @@
 
 import React from 'react';
 
-const Header: React.FC = () => {
+// Performance optimization: Memoize Header to prevent unnecessary re-renders when parent App updates active section or state.
+const Header: React.FC = React.memo(() => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-700 py-4 px-6 shadow-lg">
       <div className="container mx-auto flex items-center justify-between">
@@ -13,6 +14,6 @@ const Header: React.FC = () => {
       </div>
     </header>
   );
-};
+});
 
 export default Header;
