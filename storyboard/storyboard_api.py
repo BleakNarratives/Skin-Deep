@@ -39,7 +39,9 @@ EPISODES_DIR = gen.EPISODES_DIR
 class EpisodeCreate(BaseModel):
     season: int = 1
     number: int = 1
-    slug: str = Field(min_length=2, max_length=80)
+    # Security: Restrict slug to safe alphanumeric characters, hyphens, and underscores.
+    # Prevents directory traversal attacks when writing markdown outlines to filesystem (episodes/{slug}.md).
+    slug: str = Field(min_length=2, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
     title: str = Field(min_length=1, max_length=200)
     logline: str = ""
     outline: str = ""  # markdown; written to episodes/{slug}.md
@@ -357,9 +359,13 @@ def _render_sheet(tree: dict) -> str:
 
 @router.get("/health")
 def health() -> dict:
-    from router import check_providers
+    try:
+        from router import check_providers
+        text_providers = check_providers()
+    except ImportError:
+        text_providers = []
 
-    out: dict[str, Any] = {"text_providers": check_providers()}
+    out: dict[str, Any] = {"text_providers": text_providers}
     out["image_chain"] = [
         {"provider": "openrouter", "key": bool(gen._openrouter_key())},
         {"provider": "novita", "key": bool(gen.os.environ.get("NOVITA_API_KEY"))},
