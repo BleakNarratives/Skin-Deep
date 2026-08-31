@@ -85,7 +85,9 @@ function generateFlashDesign(style: FlashStyle, complexity: number, seed: number
   return paths;
 }
 
-const FlashStencilGenerator: React.FC = () => {
+// Performance optimization: Memoize FlashStencilGenerator component to skip redundant re-renders
+// when parent App component updates state (e.g. active scroll section or DeepSeek AI explanations).
+const FlashStencilGenerator: React.FC = React.memo(() => {
   const [style, setStyle] = useState<FlashStyle>('traditional');
   const [complexity, setComplexity] = useState(6);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100000));
@@ -95,7 +97,9 @@ const FlashStencilGenerator: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  const paths = generateFlashDesign(style, complexity, seed);
+  // Performance optimization: Memoize flash stencil SVG path generation to avoid costly
+  // PRNG and bezier curve mathematical calculations on unrelated re-renders (e.g., overlay scale/opacity changes).
+  const paths = React.useMemo(() => generateFlashDesign(style, complexity, seed), [style, complexity, seed]);
 
   const reroll = useCallback(() => setSeed(Math.floor(Math.random() * 100000)), []);
 
@@ -203,6 +207,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
       </div>
     </Card>
   );
-};
+});
 
 export default FlashStencilGenerator;
