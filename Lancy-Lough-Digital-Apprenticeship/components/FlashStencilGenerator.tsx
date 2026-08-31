@@ -131,11 +131,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Style</label>
+            <label htmlFor="flash-style-select" className="text-sm text-gray-400 block mb-1">Style</label>
             <select
+              id="flash-style-select"
               value={style}
               onChange={(e) => setStyle(e.target.value as FlashStyle)}
-              className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600"
+              className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
             >
               <option value="traditional">Traditional</option>
               <option value="fineline">Fine Line</option>
@@ -144,33 +145,47 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             </select>
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
+            <label htmlFor="flash-complexity-slider" className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
             <input
+              id="flash-complexity-slider"
               type="range" min={2} max={14} value={complexity}
               onChange={(e) => setComplexity(Number(e.target.value))}
-              className="w-full"
+              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
             />
           </div>
           <div className="flex gap-3 flex-wrap">
-            <button onClick={reroll} className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium">
+            <button
+              onClick={reroll}
+              aria-label="Reroll flash design seed"
+              className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+            >
               Reroll
             </button>
-            <button onClick={downloadSvg} className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium">
+            <button
+              onClick={downloadSvg}
+              aria-label="Download flash stencil as SVG"
+              className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+            >
               Download SVG
             </button>
-            <button onClick={() => setArMode(!arMode)} className={`px-4 py-2 rounded-full text-sm font-medium ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}>
+            <button
+              onClick={() => setArMode(!arMode)}
+              aria-pressed={arMode}
+              aria-label="Toggle AR Trace Mode"
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'}`}
+            >
               {arMode ? 'Exit AR Trace' : 'AR Trace Mode'}
             </button>
           </div>
           {arMode && (
             <div className="space-y-2 pt-2 border-t border-gray-700">
-              <label className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
-              <input type="range" min={0.3} max={2.5} step={0.05} value={overlayScale}
-                onChange={(e) => setOverlayScale(Number(e.target.value))} className="w-full" />
-              <label className="text-sm text-gray-400 block">Overlay Opacity: {Math.round(overlayOpacity * 100)}%</label>
-              <input type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
-                onChange={(e) => setOverlayOpacity(Number(e.target.value))} className="w-full" />
-              {cameraError && <p className="text-red-400 text-sm">{cameraError}</p>}
+              <label htmlFor="ar-overlay-scale" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
+              <input id="ar-overlay-scale" type="range" min={0.3} max={2.5} step={0.05} value={overlayScale}
+                onChange={(e) => setOverlayScale(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg" />
+              <label htmlFor="ar-overlay-opacity" className="text-sm text-gray-400 block">Overlay Opacity: {Math.round(overlayOpacity * 100)}%</label>
+              <input id="ar-overlay-opacity" type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
+                onChange={(e) => setOverlayOpacity(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg" />
+              {cameraError && <p className="text-red-400 text-sm" role="alert">{cameraError}</p>}
             </div>
           )}
         </div>
