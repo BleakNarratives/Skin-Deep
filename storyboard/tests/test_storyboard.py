@@ -26,6 +26,7 @@ import storyboard_db as db  # noqa: E402
 import storyboard_gen as gen  # noqa: E402
 
 from fastapi import HTTPException  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -114,6 +115,19 @@ def test_episode_create_and_tree(api):
     with pytest.raises(HTTPException) as ei:
         api.get_episode(424242)
     assert ei.value.status_code == 404
+
+
+def test_episode_create_slug_path_traversal_prevention(api):
+
+    for invalid_slug in ["../evil", "../../etc/passwd", "sub/dir", "slug with space", "slug!"]:
+        with pytest.raises(ValidationError):
+            api.EpisodeCreate(
+                season=1,
+                number=1,
+                slug=invalid_slug,
+                title="Invalid Slug Ep",
+                outline="some outline",
+            )
 
 
 def test_panels_require_scenes(api):
