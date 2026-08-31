@@ -1,1 +1,4 @@
-from .code.skin_ui_processor import SkinInterface
+try:
+    from .code.skin_ui_processor import SkinInterface
+except ImportError:
+    SkinInterface = None

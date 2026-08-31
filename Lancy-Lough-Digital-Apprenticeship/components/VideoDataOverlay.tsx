@@ -1,10 +1,17 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Card from './Card';
 import DataChart from './DataChart';
 import { MOCK_EMG_DATA } from '../constants';
 
-const VideoDataOverlay: React.FC = () => {
+// Performance optimization: Memoize VideoDataOverlay component to skip redundant re-renders
+// when parent component updates state (e.g., active scroll section or AI explanations).
+const VideoDataOverlay: React.FC = React.memo(() => {
+  // Memoize needle pressure data transformation to avoid array mapping allocation on render
+  const needlePressureData = useMemo(() => {
+    return MOCK_EMG_DATA.map(d => ({ ...d, value: d.value / 5 }));
+  }, []);
+
   return (
     <Card title="Video-Data Overlay: Live Session View" className="col-span-1 lg:col-span-2">
       <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-6 shadow-md">
@@ -44,7 +51,7 @@ const VideoDataOverlay: React.FC = () => {
         />
         <DataChart
           title="Simulated Needle Pressure"
-          data={MOCK_EMG_DATA.map(d => ({ ...d, value: d.value / 5 }))} // Reuse EMG data, scale down
+          data={needlePressureData}
           dataKey="value"
           unit="g/cm²"
           color="#ffc658"
@@ -52,6 +59,6 @@ const VideoDataOverlay: React.FC = () => {
       </div>
     </Card>
   );
-};
+});
 
 export default VideoDataOverlay;
