@@ -76,39 +76,47 @@ const HapticFeedbackSimulator: React.FC = () => {
               Target trajectory represented by the teal circle. Your "hand" is the glowing blue dot.
             </span>
           </p>
-          <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Haptic feedback modes">
+          <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Haptic Feedback Mode">
             <button
+              type="button"
               onClick={() => setFeedbackType('none')}
               aria-pressed={feedbackType === 'none'}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
-                feedbackType === 'none' ? 'bg-gray-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              aria-label="Disable haptic feedback"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                feedbackType === 'none' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
               }`}
             >
               No Feedback
             </button>
             <button
+              type="button"
               onClick={() => setFeedbackType('spring')}
               aria-pressed={feedbackType === 'spring'}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
-                feedbackType === 'spring' ? 'bg-teal-600 text-white' : 'bg-teal-800 hover:bg-teal-700 text-teal-200'
+              aria-label="Enable spring haptic feedback"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                feedbackType === 'spring' ? 'bg-teal-600 text-white shadow-md' : 'bg-teal-800 hover:bg-teal-700 text-teal-200'
               }`}
             >
               Spring Feedback
             </button>
             <button
+              type="button"
               onClick={() => setFeedbackType('damping')}
               aria-pressed={feedbackType === 'damping'}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
-                feedbackType === 'damping' ? 'bg-purple-600 text-white' : 'bg-purple-800 hover:bg-purple-700 text-purple-200'
+              aria-label="Enable damping haptic feedback"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                feedbackType === 'damping' ? 'bg-purple-600 text-white shadow-md' : 'bg-purple-800 hover:bg-purple-700 text-purple-200'
               }`}
             >
               Damping Feedback
             </button>
             <button
+              type="button"
               onClick={() => setFeedbackType('spring-damping')}
               aria-pressed={feedbackType === 'spring-damping'}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
-                feedbackType === 'spring-damping' ? 'bg-indigo-600 text-white' : 'bg-indigo-800 hover:bg-indigo-700 text-indigo-200'
+              aria-label="Enable spring-damping haptic feedback"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                feedbackType === 'spring-damping' ? 'bg-indigo-600 text-white shadow-md' : 'bg-indigo-800 hover:bg-indigo-700 text-indigo-200'
               }`}
             >
               Spring-Damping

@@ -7,7 +7,8 @@ interface SectionTitleProps {
   id: string;
 }
 
-const SectionTitle: React.FC<SectionTitleProps> = ({ title, subtitle, id }) => {
+// Performance optimization: Memoize SectionTitle to avoid unnecessary re-renders when parent state updates.
+const SectionTitle: React.FC<SectionTitleProps> = React.memo(({ title, subtitle, id }) => {
   return (
     <div id={id} className="mb-8 pt-10"> {/* Added pt-10 for scroll offset */}
       <h2 className="text-4xl font-extrabold text-white mb-2 tracking-tight">
@@ -16,6 +17,6 @@ const SectionTitle: React.FC<SectionTitleProps> = ({ title, subtitle, id }) => {
       {subtitle && <p className="text-xl text-teal-300 font-medium">{subtitle}</p>}
     </div>
   );
-};
+});
 
 export default SectionTitle;

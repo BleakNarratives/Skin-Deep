@@ -18,7 +18,8 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, o
           <li key={item.id} className="mb-2">
             <button
               onClick={() => onSelectSection(item.id)}
-              className={`block w-full text-left py-2 px-4 rounded-lg transition-colors duration-200 ${
+              aria-current={activeSection === item.id ? 'page' : undefined}
+              className={`block w-full text-left py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 activeSection === item.id
                   ? 'bg-teal-700 text-white shadow-md'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
