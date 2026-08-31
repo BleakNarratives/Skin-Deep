@@ -12,7 +12,7 @@ interface SidebarProps {
 // activeSection or handlers change.
 const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, onSelectSection }) => {
   return (
-    <nav className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto z-40 hidden lg:block">
+    <nav aria-label="Main Navigation" className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto z-40 hidden lg:block">
       <ul>
         {navItems.map((item) => (
           <li key={item.id} className="mb-2">
