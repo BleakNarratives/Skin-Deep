@@ -35,7 +35,8 @@ const ChatInterface: React.FC = () => {
       const modelMessage: ChatMessage = { role: 'model', text: geminiResponse };
       setMessages((prevMessages) => [...prevMessages, modelMessage]);
     } catch (error) {
-      console.error("Error sending message to Gemini:", error);
+      // Sentinel Security: Avoid logging raw internal error objects to prevent leaking stack traces or sensitive data
+      console.error("Error sending message to DeepSeek AI chat service");
       const errorMessage: ChatMessage = { role: 'model', text: "Sorry, I couldn't get a response. Please try again." };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
