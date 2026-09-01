@@ -4,7 +4,9 @@ import { ChatMessage } from '../types';
 import { getChatResponse } from '../services/geminiService';
 import Card from './Card';
 
-const ChatInterface: React.FC = () => {
+// Performance optimization: Memoize ChatInterface component to prevent redundant re-renders
+// when parent component updates state (e.g. active scroll section during user scrolling).
+const ChatInterface: React.FC = React.memo(() => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -116,6 +118,6 @@ const ChatInterface: React.FC = () => {
       {/* Removed billing info link as API key selection is no longer required. */}
     </Card>
   );
-};
+});
 
 export default ChatInterface;
