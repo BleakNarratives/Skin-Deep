@@ -9,6 +9,7 @@ already owns backoff/retry. Slow calls are expected; fast failures are not.
 from __future__ import annotations
 
 import csv
+import html
 import io
 import json
 import sys
@@ -299,8 +300,8 @@ def export_sheet(episode_id: int) -> HTMLResponse:
 
 
 def _esc(s: Any) -> str:
-    return (str(s).replace("&", "&amp;").replace("<", "&lt;")
-            .replace(">", "&gt;"))
+    # Escape HTML special characters including single and double quotes to prevent XSS/attribute injection
+    return html.escape(str(s), quote=True)
 
 
 def _render_sheet(tree: dict) -> str:
