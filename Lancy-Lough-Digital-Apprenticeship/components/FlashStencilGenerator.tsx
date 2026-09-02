@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Card from './Card';
 
 type FlashStyle = 'traditional' | 'fineline' | 'blackwork' | 'geometric';
@@ -85,7 +85,9 @@ function generateFlashDesign(style: FlashStyle, complexity: number, seed: number
   return paths;
 }
 
-const FlashStencilGenerator: React.FC = () => {
+// Performance optimization: Memoize FlashStencilGenerator to prevent redundant re-renders
+// when parent component state updates on scroll.
+const FlashStencilGenerator: React.FC = React.memo(() => {
   const [style, setStyle] = useState<FlashStyle>('traditional');
   const [complexity, setComplexity] = useState(6);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100000));
@@ -95,7 +97,12 @@ const FlashStencilGenerator: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  const paths = generateFlashDesign(style, complexity, seed);
+  // Performance optimization: Memoize generated SVG path data so PRNG calculations,
+  // trig functions, and string concatenations are skipped when overlay scale/opacity sliders move.
+  const paths = useMemo(
+    () => generateFlashDesign(style, complexity, seed),
+    [style, complexity, seed]
+  );
 
   const reroll = useCallback(() => setSeed(Math.floor(Math.random() * 100000)), []);
 
@@ -203,6 +210,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
       </div>
     </Card>
   );
-};
+});
 
 export default FlashStencilGenerator;
