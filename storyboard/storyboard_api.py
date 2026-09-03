@@ -9,6 +9,7 @@ already owns backoff/retry. Slow calls are expected; fast failures are not.
 from __future__ import annotations
 
 import csv
+import html
 import io
 import json
 import sys
@@ -303,9 +304,10 @@ def export_sheet(episode_id: int) -> HTMLResponse:
     return HTMLResponse(html)
 
 
+# Security: Use standard library html.escape with quote=True to escape quotes
+# and prevent HTML/attribute-injection XSS in contact sheet exports.
 def _esc(s: Any) -> str:
-    return (str(s).replace("&", "&amp;").replace("<", "&lt;")
-            .replace(">", "&gt;"))
+    return html.escape(str(s), quote=True)
 
 
 def _render_sheet(tree: dict) -> str:
