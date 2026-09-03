@@ -150,6 +150,22 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             </select>
           </div>
           <div>
+            <label htmlFor="flash-complexity" className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
+            <input
+              id="flash-complexity"
+              type="range" min={2} max={14} value={complexity}
+              onChange={(e) => setComplexity(Number(e.target.value))}
+              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded"
+            />
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            <button type="button" onClick={reroll} className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400">
+              Reroll
+            </button>
+            <button type="button" onClick={downloadSvg} className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400">
+              Download SVG
+            </button>
+            <button type="button" onClick={() => setArMode(!arMode)} aria-pressed={arMode} className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}>
             <label htmlFor="flash-complexity-range" className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
             <input
               id="flash-complexity-range"
@@ -215,6 +231,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
           </div>
           {arMode && (
             <div className="space-y-2 pt-2 border-t border-gray-700">
+              <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
+              <input id="overlay-scale" type="range" min={0.3} max={2.5} step={0.05} value={overlayScale}
+                onChange={(e) => setOverlayScale(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded" />
+              <label htmlFor="overlay-opacity" className="text-sm text-gray-400 block">Overlay Opacity: {Math.round(overlayOpacity * 100)}%</label>
+              <input id="overlay-opacity" type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
+                onChange={(e) => setOverlayOpacity(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded" />
               <label htmlFor="ar-scale-range" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
               <input id="ar-scale-range" type="range" min={0.3} max={2.5} step={0.05} value={overlayScale}
                 onChange={(e) => setOverlayScale(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md" />
