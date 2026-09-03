@@ -174,9 +174,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             </button>
             <button
               onClick={() => setArMode(!arMode)}
-              aria-pressed={arMode}
-              aria-label="Toggle AR Trace Mode"
-              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'}`}
+              aria-label={arMode ? 'Exit AR trace mode' : 'Enter AR trace mode'}
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}
             >
               {arMode ? 'Exit AR Trace' : 'AR Trace Mode'}
             </button>
