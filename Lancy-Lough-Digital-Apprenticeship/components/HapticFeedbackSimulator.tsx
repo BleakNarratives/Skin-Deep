@@ -4,8 +4,8 @@ import Card from './Card';
 
 type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 
-// Performance optimization: Memoize HapticFeedbackSimulator component to prevent redundant re-renders
-// when parent component state updates (e.g., activeSection scroll updates).
+// Performance optimization: Memoize HapticFeedbackSimulator component to skip redundant re-renders
+// when parent component state updates on scroll.
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
