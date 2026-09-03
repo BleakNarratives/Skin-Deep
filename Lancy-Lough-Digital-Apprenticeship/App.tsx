@@ -44,36 +44,29 @@ const App: React.FC = () => {
     }
   }, [activeSection, geminiExplanations]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Performance optimization: Throttle scroll event handling with requestAnimationFrame
-  // and passive scroll listener to avoid layout thrashing and high CPU usage per scroll tick.
+  // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
+  // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
+  // engine threads, eliminating synchronous layout thrashing (forced reflow) and main-thread CPU overhead on scroll.
   useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 80; // Offset for fixed header
-      let currentActiveSection = 'introduction';
-      for (const item of NAV_ITEMS) {
-        const ref = sectionRefs.current[item.id];
-        if (ref && ref.offsetTop <= scrollPosition && ref.offsetTop + ref.offsetHeight > scrollPosition) {
-          currentActiveSection = item.id;
-          break;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries.find((entry) => entry.isIntersecting);
+        if (visibleEntry) {
+          setActiveSection(visibleEntry.target.id);
         }
+      },
+      {
+        rootMargin: '-80px 0px -60% 0px',
+        threshold: 0,
       }
-      setActiveSection((prev) => (prev !== currentActiveSection ? currentActiveSection : prev));
-    };
+    );
 
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+    NAV_ITEMS.forEach((item) => {
+      const el = sectionRefs.current[item.id];
+      if (el) observer.observe(el);
+    });
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => observer.disconnect();
   }, []);
 
   const handleSelectSection = useCallback((id: string) => {
