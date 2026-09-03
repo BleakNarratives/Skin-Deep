@@ -85,7 +85,9 @@ function generateFlashDesign(style: FlashStyle, complexity: number, seed: number
   return paths;
 }
 
-const FlashStencilGenerator: React.FC = () => {
+// Performance optimization: Memoize FlashStencilGenerator component to skip redundant re-renders
+// when parent App component updates state (e.g. active scroll section or DeepSeek AI explanations).
+const FlashStencilGenerator: React.FC = React.memo(() => {
   const [style, setStyle] = useState<FlashStyle>('traditional');
   const [complexity, setComplexity] = useState(6);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100000));
@@ -95,7 +97,9 @@ const FlashStencilGenerator: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  const paths = generateFlashDesign(style, complexity, seed);
+  // Performance optimization: Memoize flash stencil SVG path generation to avoid costly
+  // PRNG and bezier curve mathematical calculations on unrelated re-renders (e.g., overlay scale/opacity changes).
+  const paths = React.useMemo(() => generateFlashDesign(style, complexity, seed), [style, complexity, seed]);
 
   const reroll = useCallback(() => setSeed(Math.floor(Math.random() * 100000)), []);
 
@@ -134,10 +138,9 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <label htmlFor="flash-style-select" className="text-sm text-gray-400 block mb-1">Style</label>
             <select
               id="flash-style-select"
-              aria-label="Select Flash Design Style"
               value={style}
               onChange={(e) => setStyle(e.target.value as FlashStyle)}
-              className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
             >
               <option value="traditional">Traditional</option>
               <option value="fineline">Fine Line</option>
@@ -149,54 +152,43 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <label htmlFor="flash-complexity-slider" className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
             <input
               id="flash-complexity-slider"
-              aria-label="Adjust design complexity"
               type="range" min={2} max={14} value={complexity}
               onChange={(e) => setComplexity(Number(e.target.value))}
-              className="w-full accent-teal-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
             />
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
               onClick={reroll}
-              aria-label="Generate new random stencil pattern"
-              className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
+              aria-label="Reroll flash design seed"
+              className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
             >
               Reroll
             </button>
             <button
               onClick={downloadSvg}
-              aria-label="Download stencil design as SVG file"
-              className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
+              aria-label="Download flash stencil as SVG"
+              className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
             >
               Download SVG
             </button>
             <button
               onClick={() => setArMode(!arMode)}
-              aria-label={arMode ? "Exit AR Trace Mode" : "Enter AR Trace Mode"}
               aria-pressed={arMode}
-              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}
+              aria-label="Toggle AR Trace Mode"
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200 hover:bg-indigo-800'}`}
             >
               {arMode ? 'Exit AR Trace' : 'AR Trace Mode'}
             </button>
           </div>
           {arMode && (
             <div className="space-y-2 pt-2 border-t border-gray-700">
-              <label htmlFor="ar-overlay-scale-slider" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
-              <input
-                id="ar-overlay-scale-slider"
-                aria-label="Adjust AR overlay scale"
-                type="range" min={0.3} max={2.5} step={0.05} value={overlayScale}
-                onChange={(e) => setOverlayScale(Number(e.target.value))}
-                className="w-full accent-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
-              />
-              <label htmlFor="ar-overlay-opacity-slider" className="text-sm text-gray-400 block">Overlay Opacity: {Math.round(overlayOpacity * 100)}%</label>
-              <input
-                id="ar-overlay-opacity-slider"
-                aria-label="Adjust AR overlay opacity"
-                type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
-                onChange={(e) => setOverlayOpacity(Number(e.target.value))}
-                className="w-full accent-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
-              />
+              <label htmlFor="ar-overlay-scale" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
+              <input id="ar-overlay-scale" type="range" min={0.3} max={2.5} step={0.05} value={overlayScale}
+                onChange={(e) => setOverlayScale(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg" />
+              <label htmlFor="ar-overlay-opacity" className="text-sm text-gray-400 block">Overlay Opacity: {Math.round(overlayOpacity * 100)}%</label>
+              <input id="ar-overlay-opacity" type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
+                onChange={(e) => setOverlayOpacity(Number(e.target.value))} className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg" />
               {cameraError && <p className="text-red-400 text-sm" role="alert">{cameraError}</p>}
             </div>
           )}
@@ -230,6 +222,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
       </div>
     </Card>
   );
-};
+});
 
 export default FlashStencilGenerator;
