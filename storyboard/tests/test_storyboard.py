@@ -81,6 +81,22 @@ def test_esc_quotes_and_html(api):
 
 # ── db round-trip ────────────────────────────────────────────────────────
 
+def test_update_episode_sanitizes_columns(tmp_db):
+    ep = tmp_db.create_episode(1, 98, "test_update_episode", "Update Episode Title", "log", "")
+    # Updating valid field
+    tmp_db.update_episode(ep["id"], title="Updated Title", logline="Updated Logline")
+    updated = tmp_db.get_episode(ep["id"])
+    assert updated["title"] == "Updated Title"
+    assert updated["logline"] == "Updated Logline"
+
+    # Attempting SQL injection / unallowed column injection via kwargs
+    malicious_kwargs = {"title": "New Title", "malicious_col; DROP TABLE episodes;--": "value"}
+    tmp_db.update_episode(ep["id"], **malicious_kwargs)
+    after_attack = tmp_db.get_episode(ep["id"])
+    assert after_attack is not None
+    assert after_attack["title"] == "New Title"
+
+
 def test_db_roundtrip(tmp_db):
     ep = tmp_db.create_episode(1, 99, "test_ep_roundtrip", "Roundtrip", "log", "")
     scenes = [{"slug": "INT. SHOP - DAY", "synopsis": "s", "location": "shop",
