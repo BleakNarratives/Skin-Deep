@@ -77,8 +77,13 @@ def _panel_or_404(panel_id: int) -> dict:
 def _outline_text(ep: dict, override: str = "") -> str:
     if override.strip():
         return override
-    path = SB_DIR / ep["outline_path"] if ep.get("outline_path") else None
-    if path and path.exists():
+    if not ep.get("outline_path"):
+        raise HTTPException(400, f"episode '{ep['slug']}' has no outline file")
+    # Security: Ensure path remains inside SB_DIR to prevent directory traversal attacks
+    path = (SB_DIR / ep["outline_path"]).resolve()
+    if not path.is_relative_to(SB_DIR.resolve()):
+        raise HTTPException(400, "invalid outline path")
+    if path.exists():
         return path.read_text(errors="replace")
     raise HTTPException(400, f"episode '{ep['slug']}' has no outline file")
 
@@ -299,6 +304,8 @@ def export_sheet(episode_id: int) -> HTMLResponse:
     return HTMLResponse(html)
 
 
+# Security: Use standard library html.escape with quote=True to escape quotes
+# and prevent HTML/attribute-injection XSS in contact sheet exports.
 def _esc(s: Any) -> str:
     # Escape HTML special characters including single and double quotes to prevent XSS/attribute injection
     return html.escape(str(s), quote=True)
