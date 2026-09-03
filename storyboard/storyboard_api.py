@@ -307,6 +307,7 @@ def export_sheet(episode_id: int) -> HTMLResponse:
 # Security: Use standard library html.escape with quote=True to escape quotes
 # and prevent HTML/attribute-injection XSS in contact sheet exports.
 def _esc(s: Any) -> str:
+    # Escape HTML special characters including single and double quotes to prevent XSS/attribute injection
     return html.escape(str(s), quote=True)
 
 

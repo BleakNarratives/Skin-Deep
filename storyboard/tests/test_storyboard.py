@@ -71,6 +71,14 @@ def test_extract_garbage_raises():
         gen.extract_json("no json here at all")
 
 
+def test_esc_quotes_and_html(api):
+    raw = '<script>alert("xss")</script> & \'quote\''
+    escaped = api._esc(raw)
+    assert "&lt;script&gt;" in escaped
+    assert "&quot;xss&quot;" in escaped
+    assert "&#x27;quote&#x27;" in escaped or "&#39;quote&#39;" in escaped
+
+
 # ── db round-trip ────────────────────────────────────────────────────────
 
 def test_db_roundtrip(tmp_db):
