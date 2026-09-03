@@ -130,6 +130,14 @@ def test_episode_create_slug_path_traversal_prevention(api):
             )
 
 
+def test_outline_text_path_traversal_prevention(api, tmp_db):
+    ep = tmp_db.create_episode(1, 100, "test_traversal", "Traversal", "log", outline_path="../backend/app.py")
+    with pytest.raises(HTTPException) as ei:
+        api._outline_text(ep)
+    assert ei.value.status_code == 400
+    assert ei.value.detail == "invalid outline path"
+
+
 def test_panels_require_scenes(api):
     ep = api.create_episode(api.EpisodeCreate(
         season=1, number=3, slug="test_no_scenes", title="NoScenes"))
