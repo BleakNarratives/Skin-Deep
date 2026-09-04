@@ -148,6 +148,19 @@ def test_runs_corpus():
     assert all(row["group_type"] == "A" for row in rows)
 
 
+def test_runs_corpus_db_error_handling(monkeypatch):
+    """Verify database exceptions return generic 500 detail without leaking filesystem paths or DB errors."""
+    import sqlite3
+
+    def mock_connect(*args, **kwargs):
+        raise sqlite3.Error("sqlite error exposing /home/jules/secret_path/persona_runs.db")
+
+    monkeypatch.setattr(sqlite3, "connect", mock_connect)
+    r = client.get("/api/v1/runs")
+    assert r.status_code == 500
+    assert r.json()["detail"] == "corpus read failed"
+
+
 def test_groups():
     r = client.get("/api/v1/groups")
     assert r.status_code == 200
