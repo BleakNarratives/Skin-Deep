@@ -158,12 +158,15 @@ def list_episodes() -> list[dict]:
 
 
 def update_episode(episode_id: int, **fields: Any) -> None:
+    # Security: Strict whitelist mapping allowed field names to actual SQL columns.
+    # Discards any unallowed keys or SQL injection attempts in field names.
     allowed = {"director_notes", "status", "logline", "title"}
     sets = {k: _j(v) for k, v in fields.items() if k in allowed}
     if not sets:
         return
     sets["updated_at"] = _now()
-    cols = ", ".join(f"{k} = ?" for k in sets)
+    # Explicitly filter and validate column names against whitelist before formatting SQL string
+    cols = ", ".join(f"{k} = ?" for k in sets if k in allowed or k == "updated_at")
     with _tx() as conn:
         conn.execute(
             f"UPDATE episodes SET {cols} WHERE id = ?",
