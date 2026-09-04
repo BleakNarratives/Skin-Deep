@@ -140,6 +140,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               id="flash-style-select"
               value={style}
               onChange={(e) => setStyle(e.target.value as FlashStyle)}
+              className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
               aria-label="Select stencil style"
               className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
             >
@@ -153,6 +154,9 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <label htmlFor="flash-complexity" className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
             <input
               id="flash-complexity"
+              type="range" min={2} max={14} value={complexity}
+              onChange={(e) => setComplexity(Number(e.target.value))}
+              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
               type="range"
               min={2}
               max={14}
@@ -184,6 +188,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               onClick={() => setArMode(!arMode)}
               aria-label={arMode ? 'Exit AR trace mode' : 'Enter AR trace mode'}
               aria-pressed={arMode}
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}
               className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
                 arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'
               }`}
@@ -193,6 +198,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
           </div>
           {arMode && (
             <div className="space-y-2 pt-2 border-t border-gray-700">
+              <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
               <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">
                 Overlay Scale: {overlayScale.toFixed(2)}x
               </label>
@@ -205,6 +211,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 value={overlayScale}
                 aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
                 onChange={(e) => setOverlayScale(Number(e.target.value))}
+                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
                 className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
               />
               <label htmlFor="overlay-opacity" className="text-sm text-gray-400 block">
@@ -219,6 +226,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 value={overlayOpacity}
                 aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
                 onChange={(e) => setOverlayOpacity(Number(e.target.value))}
+                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
                 className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
               />
               {cameraError && <p className="text-red-400 text-sm" role="alert">{cameraError}</p>}
