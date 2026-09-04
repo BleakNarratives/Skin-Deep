@@ -85,8 +85,8 @@ function generateFlashDesign(style: FlashStyle, complexity: number, seed: number
   return paths;
 }
 
-// Performance optimization: Memoize FlashStencilGenerator component to skip redundant re-renders
-// when parent App component updates state (e.g. active scroll section or DeepSeek AI explanations).
+// Performance & UX optimization: Memoize FlashStencilGenerator component to skip redundant re-renders
+// while providing clear keyboard focus rings and ARIA live feedback.
 const FlashStencilGenerator: React.FC = React.memo(() => {
   const [style, setStyle] = useState<FlashStyle>('traditional');
   const [complexity, setComplexity] = useState(6);
@@ -94,6 +94,7 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
   const [arMode, setArMode] = useState(false);
   const [overlayScale, setOverlayScale] = useState(1);
   const [overlayOpacity, setOverlayOpacity] = useState(0.7);
+  const [statusMessage, setStatusMessage] = useState<string>('Stencil ready.');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -101,10 +102,15 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
   // PRNG and bezier curve mathematical calculations on unrelated re-renders (e.g., overlay scale/opacity changes).
   const paths = useMemo(() => generateFlashDesign(style, complexity, seed), [style, complexity, seed]);
 
-  const reroll = useCallback(() => setSeed(Math.floor(Math.random() * 100000)), []);
+  const reroll = useCallback(() => {
+    const newSeed = Math.floor(Math.random() * 100000);
+    setSeed(newSeed);
+    setStatusMessage(`Generated new ${style} stencil variation #${newSeed}.`);
+  }, [style]);
 
   useEffect(() => {
     if (!arMode) return;
+    setStatusMessage("AR Trace Mode active. Unlike Mikey's shaky freehand, your overlay is locked in!");
     navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
       .then((stream) => {
         if (videoRef.current) videoRef.current.srcObject = stream;
@@ -128,6 +134,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
     a.download = `flash-${style}-${seed}.svg`;
     a.click();
     URL.revokeObjectURL(url);
+    setStatusMessage(`Downloaded ${style} stencil SVG.`);
   };
 
   return (
@@ -135,10 +142,17 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 space-y-4">
           <div>
-            <label htmlFor="flash-style-select" className="text-sm text-gray-400 block mb-1">Style</label>
+            <label htmlFor="flash-style-select" className="text-sm text-gray-400 block mb-1">
+              Style
+            </label>
             <select
               id="flash-style-select"
               value={style}
+              onChange={(e) => {
+                const newStyle = e.target.value as FlashStyle;
+                setStyle(newStyle);
+                setStatusMessage(`Style updated to ${newStyle}.`);
+              }}
               onChange={(e) => setStyle(e.target.value as FlashStyle)}
               className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
               aria-label="Select stencil style"
@@ -150,10 +164,23 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               <option value="geometric">Geometric</option>
             </select>
           </div>
+
           <div>
-            <label htmlFor="flash-complexity" className="text-sm text-gray-400 block mb-1">Complexity: {complexity}</label>
+            <label htmlFor="flash-complexity" className="text-sm text-gray-400 block mb-1">
+              Complexity: {complexity}
+            </label>
             <input
               id="flash-complexity"
+              type="range"
+              min={2}
+              max={14}
+              value={complexity}
+              onChange={(e) => setComplexity(Number(e.target.value))}
+              aria-label={`Complexity level: ${complexity}`}
+              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
+            />
+          </div>
+
               type="range" min={2} max={14} value={complexity}
               onChange={(e) => setComplexity(Number(e.target.value))}
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
@@ -185,7 +212,11 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             </button>
             <button
               type="button"
-              onClick={() => setArMode(!arMode)}
+              onClick={() => {
+                const nextState = !arMode;
+                setArMode(nextState);
+                if (!nextState) setStatusMessage("Exited AR Trace Mode.");
+              }}
               aria-label={arMode ? 'Exit AR trace mode' : 'Enter AR trace mode'}
               aria-pressed={arMode}
               className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}
@@ -196,7 +227,41 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               {arMode ? 'Exit AR Trace' : 'AR Trace Mode'}
             </button>
           </div>
+
           {arMode && (
+            <div className="space-y-3 pt-2 border-t border-gray-700">
+              <div>
+                <label htmlFor="overlay-scale" className="text-sm text-gray-400 block mb-1">
+                  Overlay Scale: {overlayScale.toFixed(2)}x
+                </label>
+                <input
+                  id="overlay-scale"
+                  type="range"
+                  min={0.3}
+                  max={2.5}
+                  step={0.05}
+                  value={overlayScale}
+                  onChange={(e) => setOverlayScale(Number(e.target.value))}
+                  aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
+                  className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
+                />
+              </div>
+              <div>
+                <label htmlFor="overlay-opacity" className="text-sm text-gray-400 block mb-1">
+                  Overlay Opacity: {Math.round(overlayOpacity * 100)}%
+                </label>
+                <input
+                  id="overlay-opacity"
+                  type="range"
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  value={overlayOpacity}
+                  onChange={(e) => setOverlayOpacity(Number(e.target.value))}
+                  aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
+                  className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
+                />
+              </div>
             <div className="space-y-2 pt-2 border-t border-gray-700">
               <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
               <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">
@@ -232,6 +297,11 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               {cameraError && <p className="text-red-400 text-sm" role="alert">{cameraError}</p>}
             </div>
           )}
+
+          {/* Accessible status live region for user and screen-reader feedback */}
+          <div aria-live="polite" className="text-xs text-teal-300 italic pt-1">
+            🎨 {statusMessage}
+          </div>
         </div>
 
         <div className="flex-1 relative h-80 border border-gray-600 rounded-lg overflow-hidden bg-white">
