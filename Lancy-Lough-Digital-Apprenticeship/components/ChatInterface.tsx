@@ -10,6 +10,7 @@ const ChatInterface: React.FC = React.memo(() => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -17,8 +18,8 @@ const ChatInterface: React.FC = React.memo(() => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isMinimized) scrollToBottom();
+  }, [messages, isMinimized]);
 
   // Sentinel Security Enhancement: Limit input length to mitigate DoS / prompt bloat risks.
   const MAX_INPUT_LENGTH = 500;
@@ -47,11 +48,24 @@ const ChatInterface: React.FC = React.memo(() => {
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 h-96 flex flex-col bg-gray-900 shadow-2xl z-50 p-0 overflow-hidden">
-      <div className="bg-teal-700 text-white p-4 font-bold flex items-center justify-between">
-        <span>DeepSeek AI Chat</span>
-        <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full" />
+    <Card className={`fixed bottom-4 right-4 z-50 bg-gray-900 shadow-2xl p-0 overflow-hidden transition-all duration-300 ${isMinimized ? 'w-64 h-12' : 'w-80 h-96 flex flex-col'}`}>
+      <div className="bg-teal-700 text-white p-3 font-bold flex items-center justify-between select-none">
+        <div className="flex items-center space-x-2">
+          <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full" />
+          <span className="text-sm">DeepSeek AI Chat</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsMinimized((prev) => !prev)}
+          aria-label={isMinimized ? "Expand DeepSeek AI Chat" : "Minimize DeepSeek AI Chat"}
+          aria-expanded={!isMinimized}
+          className="p-1 rounded text-teal-100 hover:text-white hover:bg-teal-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-200 transition-colors"
+        >
+          {isMinimized ? '▲' : '▼'}
+        </button>
       </div>
+      {!isMinimized && (
+        <>
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {messages.length === 0 && (
           <p className="text-gray-400 text-sm text-center italic mt-4">
@@ -116,6 +130,8 @@ const ChatInterface: React.FC = React.memo(() => {
         </button>
       </div>
       {/* Removed billing info link as API key selection is no longer required. */}
+        </>
+      )}
     </Card>
   );
 });

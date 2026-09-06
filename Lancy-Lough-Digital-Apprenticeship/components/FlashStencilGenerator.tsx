@@ -153,8 +153,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setStyle(newStyle);
                 setStatusMessage(`Style updated to ${newStyle}.`);
               }}
-              onChange={(e) => setStyle(e.target.value as FlashStyle)}
-              className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
               aria-label="Select stencil style"
               className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
             >
@@ -176,20 +174,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               max={14}
               value={complexity}
               onChange={(e) => setComplexity(Number(e.target.value))}
-              aria-label={`Complexity level: ${complexity}`}
-              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
-            />
-          </div>
-
-              type="range" min={2} max={14} value={complexity}
-              onChange={(e) => setComplexity(Number(e.target.value))}
-              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
-              type="range"
-              min={2}
-              max={14}
-              value={complexity}
               aria-label={`Stencil complexity level: ${complexity}`}
-              onChange={(e) => setComplexity(Number(e.target.value))}
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
             />
           </div>
@@ -219,7 +204,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               }}
               aria-label={arMode ? 'Exit AR trace mode' : 'Enter AR trace mode'}
               aria-pressed={arMode}
-              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'}`}
               className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
                 arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'
               }`}
@@ -262,38 +246,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
                 />
               </div>
-            <div className="space-y-2 pt-2 border-t border-gray-700">
-              <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">Overlay Scale: {overlayScale.toFixed(2)}x</label>
-              <label htmlFor="overlay-scale" className="text-sm text-gray-400 block">
-                Overlay Scale: {overlayScale.toFixed(2)}x
-              </label>
-              <input
-                id="overlay-scale"
-                type="range"
-                min={0.3}
-                max={2.5}
-                step={0.05}
-                value={overlayScale}
-                aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
-                onChange={(e) => setOverlayScale(Number(e.target.value))}
-                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
-                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
-              />
-              <label htmlFor="overlay-opacity" className="text-sm text-gray-400 block">
-                Overlay Opacity: {Math.round(overlayOpacity * 100)}%
-              </label>
-              <input
-                id="overlay-opacity"
-                type="range"
-                min={0.1}
-                max={1}
-                step={0.05}
-                value={overlayOpacity}
-                aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
-                onChange={(e) => setOverlayOpacity(Number(e.target.value))}
-                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
-                className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
-              />
               {cameraError && <p className="text-red-400 text-sm" role="alert">{cameraError}</p>}
             </div>
           )}
