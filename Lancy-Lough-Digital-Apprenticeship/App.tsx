@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -20,7 +19,8 @@ const App: React.FC = () => {
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const fetchExplanation = async (sectionId: string, prompt: string) => {
+  // Performance optimization: Wrap fetchExplanation in useCallback so function reference remains stable
+  const fetchExplanation = useCallback(async (sectionId: string, prompt: string) => {
     setLoadingExplanation(true);
     // Removed apiKeyError related logic
     try {
@@ -35,14 +35,14 @@ const App: React.FC = () => {
     } finally {
       setLoadingExplanation(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Fetch initial explanation for the active section
     if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanations[activeSection]) {
       fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection]);
     }
-  }, [activeSection, geminiExplanations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSection, geminiExplanations, fetchExplanation]);
 
   // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
   // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
@@ -69,6 +69,8 @@ const App: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Performance optimization: Keep handleSelectSection reference stable with empty deps array
+  // to avoid breaking React.memo on Sidebar. Setting activeSection triggers fetchExplanation in useEffect.
   const handleSelectSection = useCallback((id: string) => {
     const ref = sectionRefs.current[id];
     if (ref) {
@@ -78,10 +80,7 @@ const App: React.FC = () => {
       });
     }
     setActiveSection(id);
-    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanations[id]) {
-      fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
-    }
-  }, [geminiExplanations]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
