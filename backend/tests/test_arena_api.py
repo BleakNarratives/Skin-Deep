@@ -148,6 +148,20 @@ def test_runs_corpus():
     assert all(row["group_type"] == "A" for row in rows)
 
 
+def test_runs_error_handling_sanitized(monkeypatch):
+    import sqlite3
+
+    def mock_connect(*args, **kwargs):
+        raise sqlite3.Error("operational error at /internal/db/path")
+
+    monkeypatch.setattr(sqlite3, "connect", mock_connect)
+    r = client.get("/api/v1/runs")
+    assert r.status_code == 500
+    detail = r.json().get("detail", "")
+    assert detail == "corpus read failed"
+    assert "/internal/db/path" not in detail
+
+
 def test_groups():
     r = client.get("/api/v1/groups")
     assert r.status_code == 200
