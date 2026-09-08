@@ -19,6 +19,11 @@ const App: React.FC = () => {
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const geminiExplanationsRef = useRef(geminiExplanations);
+
+  useEffect(() => {
+    geminiExplanationsRef.current = geminiExplanations;
+  }, [geminiExplanations]);
 
   const fetchExplanation = async (sectionId: string, prompt: string) => {
     setLoadingExplanation(true);
@@ -69,6 +74,10 @@ const App: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Performance optimization: Ref-backed stable callback for section selection.
+  // Accessing geminiExplanationsRef allows checking for existing explanations without including
+  // geminiExplanations in handleSelectSection's dependency array. This keeps handleSelectSection's
+  // identity reference stable, preventing unnecessary Sidebar re-renders when AI explanations update.
   const handleSelectSection = useCallback((id: string) => {
     const ref = sectionRefs.current[id];
     if (ref) {
@@ -78,10 +87,10 @@ const App: React.FC = () => {
       });
     }
     setActiveSection(id);
-    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanations[id]) {
+    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanationsRef.current[id]) {
       fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
     }
-  }, [geminiExplanations]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
