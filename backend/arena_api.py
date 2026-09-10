@@ -176,8 +176,8 @@ async def runs(group: str | None = None, limit: int = 50) -> list[dict]:
         with sqlite3.connect(MIKEY_DB) as conn:
             conn.row_factory = sqlite3.Row
             rows = [dict(r) for r in conn.execute(q, args).fetchall()]
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"corpus read failed: {e}")
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="corpus read failed")
     for r in rows:
         r.pop("response_summary", None)
         r.pop("response_text", None)
@@ -211,10 +211,11 @@ async def persona() -> dict:
 @router.put("/persona")
 async def persona_update(req: PersonaUpdate) -> dict:
     """Persist a customized seed to arena.db. NEVER touches the canonical seed."""
-    arena_db.get_conn().execute(
-        "INSERT INTO persona_custom (created, seed) VALUES (?, ?)",
-        (arena_db._now(), json.dumps(req.seed)),
-    )
+    with arena_db.get_conn() as conn:
+        conn.execute(
+            "INSERT INTO persona_custom (created, seed) VALUES (?, ?)",
+            (arena_db._now(), json.dumps(req.seed)),
+        )
     return {"status": "stored", "identifier": req.seed.get("identifier", "custom")}
 
 
