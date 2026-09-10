@@ -88,7 +88,7 @@ const App: React.FC = () => {
       <Header />
       <Sidebar navItems={NAV_ITEMS} activeSection={activeSection} onSelectSection={handleSelectSection} />
 
-      <main className="lg:ml-64 pt-20 p-8">
+      <main id="main-content" tabIndex={-1} className="lg:ml-64 pt-20 p-8 outline-none">
         <div className="container mx-auto">
 
           {/* AI Explanation Area */}
