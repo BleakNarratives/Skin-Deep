@@ -272,19 +272,30 @@ def export_json(episode_id: int) -> Response:
     )
 
 
+def _sanitize_csv_cell(val: Any) -> Any:
+    # Escape formula trigger characters (=, +, -, @, \t, \r) with a leading single quote
+    # to prevent CSV formula injection when opened in Excel/Sheets.
+    if isinstance(val, str) and val and val[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return f"'{val}"
+    return val
+
+
 @router.get("/episodes/{episode_id}/export/csv")
 def export_csv(episode_id: int) -> Response:
     tree = db.episode_tree(episode_id)
     if tree is None:
         raise HTTPException(404, "episode not found")
     rows = _flatten(tree)
+    sanitized_rows = [
+        {k: _sanitize_csv_cell(v) for k, v in r.items()} for r in rows
+    ]
     buf = io.StringIO()
     cols = ["scene_ord", "scene_slug", "location", "time_of_day", "panel_ord",
             "shot_type", "camera_move", "action", "vo_speaker", "vo_line",
             "on_screen_text", "duration_sec", "image_status"]
     w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
     w.writeheader()
-    w.writerows(rows)
+    w.writerows(sanitized_rows)
     name = f"{tree['slug']}_shotlist.csv"
     return Response(
         buf.getvalue(), media_type="text/csv",
