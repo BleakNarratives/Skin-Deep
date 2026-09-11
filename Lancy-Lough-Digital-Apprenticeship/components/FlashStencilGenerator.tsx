@@ -122,8 +122,8 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
 
   const downloadSvg = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}">
-${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round" />`).join('\n')}
-</svg>`;
+${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round" />`).join('\n')}` +
+'\n</svg>';
     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -136,6 +136,15 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
     setTimeout(() => {
       setIsDownloaded(false);
     }, 2000);
+  };
+
+  const copySvg = () => {
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}">
+${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round" />`).join('\n')}` +
+'\n</svg>';
+    navigator.clipboard.writeText(svgContent)
+      .then(() => setStatusMessage(`Copied SVG stencil to clipboard! Unlike Mikey's shaky freehand, your stencil is pixel-perfect.`))
+      .catch(() => setStatusMessage('Failed to copy SVG stencil.'));
   };
 
   return (
@@ -188,6 +197,14 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
             >
               Reroll
+            </button>
+            <button
+              type="button"
+              onClick={copySvg}
+              aria-label="Copy flash stencil SVG code to clipboard"
+              className="px-4 py-2 rounded-full bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+            >
+              Copy SVG
             </button>
             <button
               type="button"
