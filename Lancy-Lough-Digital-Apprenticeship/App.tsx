@@ -18,6 +18,11 @@ const App: React.FC = () => {
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const geminiExplanationsRef = useRef(geminiExplanations);
+
+  useEffect(() => {
+    geminiExplanationsRef.current = geminiExplanations;
+  }, [geminiExplanations]);
 
   // Performance optimization: Keep a ref to geminiExplanations to stabilize handleSelectSection reference,
   // preventing unnecessary re-renders of the memoized <Sidebar /> component whenever AI explanations load.
