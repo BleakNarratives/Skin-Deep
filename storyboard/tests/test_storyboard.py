@@ -223,6 +223,43 @@ def test_generation_pipeline_mocked(api, monkeypatch):
     api.delete_episode(ep["id"])
 
 
+def test_export_csv_formula_injection_sanitization(api, monkeypatch):
+    ep = api.create_episode(api.EpisodeCreate(
+        season=1, number=7, slug="test_csv_injection", title="CSV Injection Ep", outline="beats"))
+
+    fake_scenes = [{
+        "slug": "=cmd|' /C calc'!A0", "synopsis": "formula in synopsis",
+        "location": "@LOCATION", "time_of_day": "+DAY",
+        "characters": ["LANCY"],
+    }]
+    monkeypatch.setattr(gen, "generate_scenes", lambda outline: (fake_scenes, "fake"))
+
+    fake_panels = [{
+        "shot_type": "-ECU", "camera_move": "static", "action": "=SUM(1+1)",
+        "vo_speaker": "@SARAH", "vo_line": "+0.78mV",
+        "on_screen_text": "@INTERSTITIAL", "duration_sec": 2.5,
+        "visual_prompt": "prompt",
+    }]
+    monkeypatch.setattr(gen, "generate_panels", lambda scene, title: (fake_panels, "fake"))
+
+    api.generate_scenes(ep["id"])
+    api.generate_panels(ep["id"])
+
+    res = api.export_csv(ep["id"])
+    content = bytes(res.body).decode("utf-8")
+
+    assert "'=cmd|' /C calc'!A0" in content
+    assert "'@LOCATION" in content
+    assert "'+DAY" in content
+    assert "'-ECU" in content
+    assert "'=SUM(1+1)" in content
+    assert "'@SARAH" in content
+    assert "'+0.78mV" in content
+    assert "'@INTERSTITIAL" in content
+
+    api.delete_episode(ep["id"])
+
+
 def test_generation_fail_loud(api, monkeypatch):
     ep = api.create_episode(api.EpisodeCreate(
         season=1, number=5, slug="test_badllm", title="Bad LLM", outline="beats"))
