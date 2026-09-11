@@ -6,6 +6,6 @@
 **Learning:** Interactive stencil generators and dynamic overlay tools benefit from an `aria-live="polite"` feedback container that dynamically announces seed variations, AR mode toggles, and file downloads for screen reader users while providing instant feedback.
 **Action:** When adding or updating custom canvas or SVG generation tools, include an `aria-live="polite"` status region with explicit state announcements alongside `aria-label` attributes on range inputs and toggle buttons.
 
-## 2026-09-09 - Collapsible Floating AI Chat Widget & Flex Container Constraints
-**Learning:** Floating overlay widgets (like AI chat windows) require collapse/expand controls with explicit `aria-expanded` and `aria-label` states to allow users to unblock background telemetry charts. When styling flex containers within fixed-width cards (`w-80`), `<input>` controls require `min-w-0` to prevent flex items from expanding past container bounds and truncating submit buttons.
-**Action:** Always add `aria-expanded` toggle controls to fixed floating overlays and apply `min-w-0` to flex input elements inside fixed-width containers.
+## 2026-09-05 - Floating Chat Widget Collapsibility & Expandability
+**Learning:** Floating overlay components (like AI chat assistants) can obscure data charts and interactive canvas areas on smaller viewports. Providing an explicit minimize/expand toggle button with `aria-expanded` and `aria-label` attributes ensures screen reader accessibility while allowing users to reclaim screen real estate without losing active conversation state.
+**Action:** When creating or updating floating overlay UI elements, include a toggle button with `aria-expanded` and `focus-visible:ring-2` focus styling to support viewport customization and keyboard accessibility.
