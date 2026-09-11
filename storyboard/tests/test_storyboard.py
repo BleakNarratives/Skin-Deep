@@ -156,6 +156,31 @@ def test_episode_create_slug_path_traversal_prevention(api):
 
 def test_esc_quotes_escaping(api):
     assert api._esc('test "double" & \'single\' <tag>') == 'test &quot;double&quot; &amp; &#x27;single&#x27; &lt;tag&gt;'
+
+
+def test_csv_formula_injection_sanitization(api, tmp_db):
+    assert api._sanitize_csv_cell("=1+1") == "'=1+1"
+    assert api._sanitize_csv_cell("+cmd") == "'+cmd"
+    assert api._sanitize_csv_cell("-cmd") == "'-cmd"
+    assert api._sanitize_csv_cell("@cmd") == "'@cmd"
+    assert api._sanitize_csv_cell("normal text") == "normal text"
+
+    ep = tmp_db.create_episode(1, 101, "test_csv_inj", "CSV Inj", "log", "")
+    scenes = [{"slug": "INT. SHOP - DAY", "synopsis": "s", "location": "=DANGEROUS()",
+               "time_of_day": "DAY", "characters": ["LANCY"]}]
+    tmp_db.replace_scenes(ep["id"], scenes, {"provider": "test"})
+    scenes_db = tmp_db.list_scenes(ep["id"])
+    tmp_db.replace_panels(scenes_db[0]["id"], [{
+        "shot_type": "CU", "action": "+cmd|' /C calc'!A0",
+        "duration_sec": 4, "visual_prompt": "prompt",
+    }], {"provider": "test"})
+
+    res = api.export_csv(ep["id"])
+    csv_text = bytes(res.body).decode("utf-8")
+    assert "'=DANGEROUS()" in csv_text
+    assert "'+cmd|' /C calc'!A0" in csv_text
+
+
 def test_outline_text_path_traversal_prevention(api, tmp_db):
     ep = tmp_db.create_episode(1, 100, "test_traversal", "Traversal", "log", outline_path="../backend/app.py")
     with pytest.raises(HTTPException) as ei:
@@ -223,6 +248,43 @@ def test_generation_pipeline_mocked(api, monkeypatch):
     api.delete_episode(ep["id"])
 
 
+def test_export_csv_formula_injection_sanitization(api, monkeypatch):
+    ep = api.create_episode(api.EpisodeCreate(
+        season=1, number=7, slug="test_csv_injection", title="CSV Injection Ep", outline="beats"))
+
+    fake_scenes = [{
+        "slug": "=cmd|' /C calc'!A0", "synopsis": "formula in synopsis",
+        "location": "@LOCATION", "time_of_day": "+DAY",
+        "characters": ["LANCY"],
+    }]
+    monkeypatch.setattr(gen, "generate_scenes", lambda outline: (fake_scenes, "fake"))
+
+    fake_panels = [{
+        "shot_type": "-ECU", "camera_move": "static", "action": "=SUM(1+1)",
+        "vo_speaker": "@SARAH", "vo_line": "+0.78mV",
+        "on_screen_text": "@INTERSTITIAL", "duration_sec": 2.5,
+        "visual_prompt": "prompt",
+    }]
+    monkeypatch.setattr(gen, "generate_panels", lambda scene, title: (fake_panels, "fake"))
+
+    api.generate_scenes(ep["id"])
+    api.generate_panels(ep["id"])
+
+    res = api.export_csv(ep["id"])
+    content = bytes(res.body).decode("utf-8")
+
+    assert "'=cmd|' /C calc'!A0" in content
+    assert "'@LOCATION" in content
+    assert "'+DAY" in content
+    assert "'-ECU" in content
+    assert "'=SUM(1+1)" in content
+    assert "'@SARAH" in content
+    assert "'+0.78mV" in content
+    assert "'@INTERSTITIAL" in content
+
+    api.delete_episode(ep["id"])
+
+
 def test_generation_fail_loud(api, monkeypatch):
     ep = api.create_episode(api.EpisodeCreate(
         season=1, number=5, slug="test_badllm", title="Bad LLM", outline="beats"))
@@ -284,3 +346,30 @@ def test_health_offline(api):
     h = api.health()
     assert "image_chain" in h
     assert "text_providers" in h
+
+
+def test_generate_image_for_panel_path_traversal_prevention(api):
+    panel = {"id": 1, "action": "test action", "visual_prompt": "test prompt"}
+    malicious_ep = {"slug": "../evil_dir"}
+    with pytest.raises(ValueError) as excinfo:
+        gen.generate_image_for_panel(panel, malicious_ep)
+    assert "invalid episode slug" in str(excinfo.value)
+
+
+def test_arena_db_insert_persona_custom(tmp_path):
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_db
+
+    arena_db.ARENA_DB = tmp_path / "test_arena.db"
+    arena_db.init_db()
+
+    seed_data = {"identifier": "test-security-seed", "weights": {"dim1": 0.9}}
+    row_id = arena_db.insert_persona_custom(seed_data)
+    assert row_id > 0
+
+    with arena_db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM persona_custom WHERE id = ?", (row_id,)).fetchone()
+        assert row is not None
+        assert "test-security-seed" in row["seed"]
