@@ -80,6 +80,8 @@ const ChatInterface: React.FC = React.memo(() => {
           </svg>
         </button>
       </div>
+      {!isMinimized && (
+        <>
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {messages.length === 0 && (
           <p className="text-gray-400 text-sm text-center italic mt-4">

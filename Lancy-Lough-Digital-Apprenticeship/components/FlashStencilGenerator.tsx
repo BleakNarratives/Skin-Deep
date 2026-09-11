@@ -171,7 +171,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               max={14}
               value={complexity}
               aria-label={`Stencil complexity level: ${complexity}`}
-              onChange={(e) => setComplexity(Number(e.target.value))}
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
             />
           </div>
