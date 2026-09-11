@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from '../types';
 import { getChatResponse } from '../services/geminiService';
-import Card from './Card';
 
 // Performance optimization: Memoize ChatInterface component to prevent redundant re-renders
 // when parent component updates state (e.g. active scroll section during user scrolling).
@@ -13,7 +12,9 @@ const ChatInterface: React.FC = React.memo(() => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!isMinimized) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
