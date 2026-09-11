@@ -176,8 +176,8 @@ def boardroom_mode(episode_id: int, body: dict | None = None) -> dict:
         notes = gen.boardroom_notes(outline, rounds=rounds)
     except gen.GenerationError as e:
         raise _gen_fail(e)
-    except Exception as e:  # conductor runtime failure — fail loud, stay specific
-        raise HTTPException(502, f"boardroom conductor failed: {e}")
+    except Exception:  # conductor runtime failure — fail loud
+        raise HTTPException(502, "boardroom conductor failed")
     db.update_episode(episode_id, director_notes=json.dumps(notes, ensure_ascii=False))
     return notes
 
@@ -272,10 +272,10 @@ def export_json(episode_id: int) -> Response:
     )
 
 
-# Security: Prepend single quote (') to cells starting with formula triggers
-# (=, +, -, @, \t, \r) to prevent CSV / Formula Injection attacks (CWE-1236).
 def _sanitize_csv_cell(val: Any) -> Any:
-    if isinstance(val, str) and val.startswith(("=", "+", "-", "@", "\t", "\r")):
+    # Escape formula trigger characters (=, +, -, @, \t, \r) with a leading single quote
+    # to prevent CSV formula injection when opened in Excel/Sheets.
+    if isinstance(val, str) and val and val[0] in ("=", "+", "-", "@", "\t", "\r"):
         return f"'{val}"
     return val
 
@@ -287,8 +287,7 @@ def export_csv(episode_id: int) -> Response:
         raise HTTPException(404, "episode not found")
     rows = _flatten(tree)
     sanitized_rows = [
-        {k: _sanitize_csv_cell(v) for k, v in row.items()}
-        for row in rows
+        {k: _sanitize_csv_cell(v) for k, v in r.items()} for r in rows
     ]
     buf = io.StringIO()
     cols = ["scene_ord", "scene_slug", "location", "time_of_day", "panel_ord",
