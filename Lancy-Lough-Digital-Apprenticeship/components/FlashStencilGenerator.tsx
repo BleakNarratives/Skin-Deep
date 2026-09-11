@@ -194,6 +194,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               type="button"
               onClick={reroll}
               aria-label="Reroll flash design seed"
+              title="Generate a crisp procedural variation — way better than Mikey's attempts"
               className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
             >
               Reroll
