@@ -6,6 +6,6 @@
 **Learning:** In interactive SVG stencil tools, slider inputs (like scale and opacity controls) trigger continuous re-renders. If geometric path algorithms using PRNG loops and trigonometric math (`Math.sin`, `Math.cos`) are not wrapped in `useMemo`, every drag tick recalculates complex path strings, causing frame drops during UI interactions.
 **Action:** Wrap procedural path generation functions in `useMemo` dependent only on design seed/style parameters, and wrap interactive SVG sub-components in `React.memo`.
 
-## 2025-05-20 - Callback Identity Invalidation via Volatile State Dependencies
-**Learning:** Passing `useCallback` event handlers that include frequently updated state objects (like asynchronous request response caches) in their dependency arrays invalidates the callback reference on every response update. This forces dependent child components (`Sidebar`, `NavMenu`) to unnecessarily re-render on every state mutation.
-**Action:** Use a synchronized `useRef` to hold volatile state maps, allowing `useCallback` functions to access the latest state while preserving a stable `[]` dependency array and reference identity.
+## 2025-05-20 - Unstable Callback Dependencies Invalidating Memoized Child Navigation
+**Learning:** Passing unstable callback functions to memoized navigation components (`Sidebar` wrapped in `React.memo`) causes full component tree re-renders whenever state objects change. Additionally, triggering state updates (`setActiveSection`) that already run side-effects in `useEffect` creates duplicate API calls.
+**Action:** Memoize API handlers with `useCallback` and keep section navigation callbacks clean with empty dependency arrays `[]` so memoized children skip re-renders.

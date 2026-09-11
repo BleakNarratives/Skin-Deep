@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import SectionTitle from './components/SectionTitle';
@@ -25,6 +24,16 @@ const App: React.FC = () => {
     geminiExplanationsRef.current = geminiExplanations;
   }, [geminiExplanations]);
 
+  // Performance optimization: Keep a ref to geminiExplanations to stabilize handleSelectSection reference,
+  // preventing unnecessary re-renders of the memoized <Sidebar /> component whenever AI explanations load.
+  const geminiExplanationsRef = useRef(geminiExplanations);
+  geminiExplanationsRef.current = geminiExplanations;
+
+  // Performance optimization: Memoize current section name lookup to prevent O(N) array scans on render
+  const activeSectionName = useMemo(() => {
+    return NAV_ITEMS.find((item) => item.id === activeSection)?.name || '';
+  }, [activeSection]);
+
   const fetchExplanation = async (sectionId: string, prompt: string) => {
     setLoadingExplanation(true);
     // Removed apiKeyError related logic
@@ -40,14 +49,14 @@ const App: React.FC = () => {
     } finally {
       setLoadingExplanation(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Fetch initial explanation for the active section
     if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanations[activeSection]) {
       fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection]);
     }
-  }, [activeSection, geminiExplanations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSection, geminiExplanations, fetchExplanation]);
 
   // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
   // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
@@ -74,10 +83,8 @@ const App: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Performance optimization: Ref-backed stable callback for section selection.
-  // Accessing geminiExplanationsRef allows checking for existing explanations without including
-  // geminiExplanations in handleSelectSection's dependency array. This keeps handleSelectSection's
-  // identity reference stable, preventing unnecessary Sidebar re-renders when AI explanations update.
+  // Performance optimization: Keep handleSelectSection reference stable with empty deps array
+  // to avoid breaking React.memo on Sidebar. Setting activeSection triggers fetchExplanation in useEffect.
   const handleSelectSection = useCallback((id: string) => {
     const ref = sectionRefs.current[id];
     if (ref) {
@@ -104,7 +111,7 @@ const App: React.FC = () => {
           <Card className="mb-12 bg-gradient-to-br from-gray-800 to-gray-900 border-l-4 border-teal-500 shadow-2xl">
             <h3 className="text-2xl font-bold text-teal-400 mb-4 flex items-center">
               <img src="https://picsum.photos/30/30" alt="AI Icon" className="mr-3 rounded-full" />
-              DeepSeek AI Insights: {NAV_ITEMS.find(item => item.id === activeSection)?.name}
+              DeepSeek AI Insights: {activeSectionName}
             </h3>
             {loadingExplanation ? (
               <div className="flex items-center text-teal-300 text-lg">
