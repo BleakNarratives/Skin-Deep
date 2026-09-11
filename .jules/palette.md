@@ -6,6 +6,6 @@
 **Learning:** Interactive stencil generators and dynamic overlay tools benefit from an `aria-live="polite"` feedback container that dynamically announces seed variations, AR mode toggles, and file downloads for screen reader users while providing instant feedback.
 **Action:** When adding or updating custom canvas or SVG generation tools, include an `aria-live="polite"` status region with explicit state announcements alongside `aria-label` attributes on range inputs and toggle buttons.
 
-## 2026-09-15 - Floating Collapsible Chat Widgets & Screen Reader Live Regions
-**Learning:** Fixed overlay widgets (like floating AI chat interfaces) permanently obscure viewport content unless paired with a collapsible state (`isMinimized`), explicit `aria-expanded` and `aria-label` toggle attributes, focus-visible rings (`focus-visible:ring-2`), and `role="log"` with `aria-live="polite"` on message logs to ensure both visual clarity and screen reader awareness.
-**Action:** Always provide minimize/expand capability for fixed bottom-corner UI components with accessible toggle controls and live region message containers.
+## 2026-09-05 - Floating Chat Widget Collapsibility & Expandability
+**Learning:** Floating overlay components (like AI chat assistants) can obscure data charts and interactive canvas areas on smaller viewports. Providing an explicit minimize/expand toggle button with `aria-expanded` and `aria-label` attributes ensures screen reader accessibility while allowing users to reclaim screen real estate without losing active conversation state.
+**Action:** When creating or updating floating overlay UI elements, include a toggle button with `aria-expanded` and `focus-visible:ring-2` focus styling to support viewport customization and keyboard accessibility.
