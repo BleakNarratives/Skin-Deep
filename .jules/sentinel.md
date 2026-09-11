@@ -2,7 +2,7 @@
 
 This journal tracks critical security learnings, unique vulnerability patterns, and architectural constraints discovered within this codebase.
 
-## 2026-03-31 - CSV Formula Injection in Export Endpoints
-**Vulnerability:** Unsanitized user inputs in CSV export data starting with formula trigger characters (`=`, `+`, `-`, `@`, `\t`, `\r`) allowed CSV formula injection (DDE/formula execution when opened in Excel or Google Sheets).
-**Learning:** CSV serialization via standard `csv.DictWriter` handles structural delimiter quoting, but does not escape leading formula trigger characters within cell values.
-**Prevention:** Always sanitize cell strings before CSV serialization by prepending a single quote `'` to any cell starting with `=`, `+`, `-`, `@`, `\t`, or `\r`.
+## 2026-09-04 - Unsanitized Exception Formatting in FastAPI Handlers
+**Vulnerability:** Raw `sqlite3.Error` string interpolation in FastAPI `HTTPException` detail fields leaked internal server paths (`/home/jules/MikeySwarm/persona_runs.db`) and database driver details.
+**Learning:** Formatting raw exception objects into API response payloads leaks backend directory layouts and internal error details to unauthenticated callers.
+**Prevention:** Always catch database exceptions and return sanitized, generic error details (`detail="corpus read failed"`) while logging exception details internally.
