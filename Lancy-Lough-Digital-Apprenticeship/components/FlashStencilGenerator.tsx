@@ -106,7 +106,7 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
 
   useEffect(() => {
     if (!arMode) return;
-    setStatusMessage("AR Trace Mode active. Unlike Mikey's shaky freehand, your overlay is locked in!");
+    setStatusMessage("AR Trace Mode active. Overlay locked in!");
     navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
       .then((stream) => {
         if (videoRef.current) videoRef.current.srcObject = stream;
@@ -149,6 +149,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setStyle(newStyle);
                 setStatusMessage(`Style updated to ${newStyle}.`);
               }}
+              aria-label="Select stencil style"
               className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
               aria-label="Select stencil style"
             >
@@ -169,8 +170,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               min={2}
               max={14}
               value={complexity}
+              aria-label={`Stencil complexity level: ${complexity}`}
               onChange={(e) => setComplexity(Number(e.target.value))}
-              aria-label={`Complexity level: ${complexity}`}
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
             />
           </div>
@@ -222,8 +223,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={2.5}
                   step={0.05}
                   value={overlayScale}
-                  onChange={(e) => setOverlayScale(Number(e.target.value))}
                   aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
+                  onChange={(e) => setOverlayScale(Number(e.target.value))}
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
               </div>
@@ -238,8 +239,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={1}
                   step={0.05}
                   value={overlayOpacity}
-                  onChange={(e) => setOverlayOpacity(Number(e.target.value))}
                   aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
+                  onChange={(e) => setOverlayOpacity(Number(e.target.value))}
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
               </div>
@@ -247,7 +248,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             </div>
           )}
 
-          {/* Accessible status live region for user and screen-reader feedback */}
           <div aria-live="polite" className="text-xs text-teal-300 italic pt-1">
             🎨 {statusMessage}
           </div>

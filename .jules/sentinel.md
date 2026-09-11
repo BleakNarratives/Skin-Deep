@@ -2,7 +2,7 @@
 
 This journal tracks critical security learnings, unique vulnerability patterns, and architectural constraints discovered within this codebase.
 
-## 2026-08-26 - Storyboard UI DOM XSS via Unescaped innerHTML
-**Vulnerability:** Dynamic episode, scene, and panel data from backend API was directly interpolated into HTML template literals assigned to `.innerHTML` without entity escaping.
-**Learning:** While Python backend export endpoints used `html.escape()`, the static frontend client rendered API objects directly into DOM via template string literals.
-**Prevention:** Always sanitize dynamic strings using an HTML entity escape function (`esc()`) before setting `.innerHTML` in static web interfaces.
+## 2026-09-04 - Unsanitized Exception Formatting in FastAPI Handlers
+**Vulnerability:** Raw `sqlite3.Error` string interpolation in FastAPI `HTTPException` detail fields leaked internal server paths (`/home/jules/MikeySwarm/persona_runs.db`) and database driver details.
+**Learning:** Formatting raw exception objects into API response payloads leaks backend directory layouts and internal error details to unauthenticated callers.
+**Prevention:** Always catch database exceptions and return sanitized, generic error details (`detail="corpus read failed"`) while logging exception details internally.
