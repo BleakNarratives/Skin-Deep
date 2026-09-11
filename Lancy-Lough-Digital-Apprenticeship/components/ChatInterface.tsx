@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Card from './Card';
 import { ChatMessage } from '../types';
 import { getChatResponse } from '../services/geminiService';
 
@@ -9,7 +10,7 @@ const ChatMessageItem = React.memo(({ message }: { message: ChatMessage }) => {
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[75%] px-4 py-2 rounded-lg ${
-          message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-100'
+          message.role === 'user' ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-100'
         }`}
       >
         {message.text}
@@ -34,10 +35,10 @@ const ChatInterface: React.FC = React.memo(() => {
   };
 
   useEffect(() => {
-    if (!isCollapsed) {
+    if (!isMinimized) {
       scrollToBottom();
     }
-  }, [messages, isCollapsed]);
+  }, [messages, isMinimized]);
 
   // Sentinel Security Enhancement: Limit input length to mitigate DoS / prompt bloat risks.
   const MAX_INPUT_LENGTH = 500;
@@ -74,8 +75,9 @@ const ChatInterface: React.FC = React.memo(() => {
   if (isMinimized) {
     return (
       <button
+        type="button"
         onClick={() => setIsMinimized(false)}
-        aria-label="Open DeepSeek AI Chat"
+        aria-label="Open DeepSeek AI Chat (Unlike Mikey, our AI actually has answers!)"
         aria-expanded={false}
         className="fixed bottom-4 right-4 bg-teal-700 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-full shadow-2xl z-50 flex items-center space-x-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-all duration-200"
       >
@@ -86,15 +88,16 @@ const ChatInterface: React.FC = React.memo(() => {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 h-96 flex flex-col bg-gray-900 shadow-2xl z-50 p-0 overflow-hidden">
+    <Card className="fixed bottom-4 right-4 w-80 h-96 flex flex-col bg-gray-900 shadow-2xl z-50 p-0 overflow-hidden border border-teal-500/30">
       <div className="bg-teal-700 text-white p-4 font-bold flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full" />
           <span>DeepSeek AI Chat</span>
         </div>
         <button
+          type="button"
           onClick={() => setIsMinimized(true)}
-          aria-label="Minimize DeepSeek AI Chat"
+          aria-label="Minimize DeepSeek AI Chat panel"
           aria-expanded={true}
           className="text-teal-100 hover:text-white p-1 rounded hover:bg-teal-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 transition-colors"
         >
@@ -103,12 +106,11 @@ const ChatInterface: React.FC = React.memo(() => {
           </svg>
         </button>
       </div>
-      {!isMinimized && (
-        <>
+
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {messages.length === 0 && (
           <p className="text-gray-400 text-sm text-center italic mt-4">
-            Ask me anything about the LOUGH system, Lancy Lough's techniques, or digital apprenticeship!
+            Ask anything about LOUGH bio-telemetry or Lancy Lough's techniques (Unlike Mikey, our AI actually gives useful answers!).
           </p>
         )}
         {messages.map((msg, index) => (
@@ -116,19 +118,24 @@ const ChatInterface: React.FC = React.memo(() => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg">
-              <span className="animate-pulse">Typing...</span>
+            <div className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg flex items-center space-x-2">
+              <svg className="animate-spin h-4 w-4 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="animate-pulse text-sm">Thinking...</span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t border-gray-700 p-4 flex items-center">
+
+      <div className="border-t border-gray-700 p-3 flex items-center space-x-2 bg-gray-800">
         <input
           type="text"
-          aria-label="Type your message"
-          className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 mr-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus:border-teal-500 disabled:opacity-50"
-          placeholder="Type your message..."
+          aria-label="Type your chat message to DeepSeek AI"
+          className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus:border-teal-500 disabled:opacity-50"
+          placeholder="Ask AI a question..."
           value={input}
           maxLength={MAX_INPUT_LENGTH}
           onChange={handleInputChange}
@@ -141,90 +148,21 @@ const ChatInterface: React.FC = React.memo(() => {
         />
         <button
           type="button"
-          onClick={() => setIsCollapsed((prev) => !prev)}
-          aria-expanded={!isCollapsed}
-          aria-label={isCollapsed ? "Expand DeepSeek AI chat panel" : "Collapse DeepSeek AI chat panel"}
-          className="p-1.5 hover:bg-teal-600 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors"
+          onClick={handleSendMessage}
+          aria-label="Send message"
+          className="bg-teal-600 hover:bg-teal-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 text-white font-medium text-sm py-2 px-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[60px]"
+          disabled={isLoading || !input.trim()}
         >
-          <svg
-            className={`w-4 h-4 transform transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-          </svg>
+          {isLoading ? (
+            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            'Send'
+          )}
         </button>
       </div>
-
-      {!isCollapsed && (
-        <>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            {messages.length === 0 && (
-              <p className="text-gray-400 text-sm text-center italic mt-4">
-                Ask anything about LOUGH bio-telemetry or Lancy Lough's techniques (Unlike Mikey, our AI actually has answers!).
-              </p>
-            )}
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] px-4 py-2 rounded-lg ${
-                    msg.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-700 text-gray-100'
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg">
-                  <span className="animate-pulse">Typing...</span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="border-t border-gray-700 p-4 flex items-center">
-            <input
-              type="text"
-              aria-label="Type your message"
-              className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 mr-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus:border-teal-500 disabled:opacity-50"
-              placeholder="Type your message..."
-              value={input}
-              maxLength={MAX_INPUT_LENGTH}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !isLoading && input.trim()) {
-                  handleSendMessage();
-                }
-              }}
-              disabled={isLoading}
-            />
-            <button
-              onClick={handleSendMessage}
-              aria-label="Send message"
-              className="bg-teal-600 hover:bg-teal-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[70px]"
-              disabled={isLoading || !input.trim()}
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                'Send'
-              )}
-            </button>
-          </div>
-        </>
-      )}
     </Card>
   );
 });

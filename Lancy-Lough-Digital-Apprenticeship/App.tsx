@@ -24,17 +24,12 @@ const App: React.FC = () => {
     geminiExplanationsRef.current = geminiExplanations;
   }, [geminiExplanations]);
 
-  // Performance optimization: Keep a ref to geminiExplanations to stabilize handleSelectSection reference,
-  // preventing unnecessary re-renders of the memoized <Sidebar /> component whenever AI explanations load.
-  const geminiExplanationsRef = useRef(geminiExplanations);
-  geminiExplanationsRef.current = geminiExplanations;
-
   // Performance optimization: Memoize current section name lookup to prevent O(N) array scans on render
   const activeSectionName = useMemo(() => {
     return NAV_ITEMS.find((item) => item.id === activeSection)?.name || '';
   }, [activeSection]);
 
-  const fetchExplanation = async (sectionId: string, prompt: string) => {
+  const fetchExplanation = useCallback(async (sectionId: string, prompt: string) => {
     setLoadingExplanation(true);
     // Removed apiKeyError related logic
     try {
