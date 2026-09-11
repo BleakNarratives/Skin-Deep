@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import SectionTitle from './components/SectionTitle';
@@ -19,6 +18,16 @@ const App: React.FC = () => {
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Performance optimization: Keep a ref to geminiExplanations to stabilize handleSelectSection reference,
+  // preventing unnecessary re-renders of the memoized <Sidebar /> component whenever AI explanations load.
+  const geminiExplanationsRef = useRef(geminiExplanations);
+  geminiExplanationsRef.current = geminiExplanations;
+
+  // Performance optimization: Memoize current section name lookup to prevent O(N) array scans on render
+  const activeSectionName = useMemo(() => {
+    return NAV_ITEMS.find((item) => item.id === activeSection)?.name || '';
+  }, [activeSection]);
 
   const fetchExplanation = async (sectionId: string, prompt: string) => {
     setLoadingExplanation(true);
@@ -78,10 +87,10 @@ const App: React.FC = () => {
       });
     }
     setActiveSection(id);
-    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanations[id]) {
+    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanationsRef.current[id]) {
       fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
     }
-  }, [geminiExplanations]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
@@ -95,7 +104,7 @@ const App: React.FC = () => {
           <Card className="mb-12 bg-gradient-to-br from-gray-800 to-gray-900 border-l-4 border-teal-500 shadow-2xl">
             <h3 className="text-2xl font-bold text-teal-400 mb-4 flex items-center">
               <img src="https://picsum.photos/30/30" alt="AI Icon" className="mr-3 rounded-full" />
-              DeepSeek AI Insights: {NAV_ITEMS.find(item => item.id === activeSection)?.name}
+              DeepSeek AI Insights: {activeSectionName}
             </h3>
             {loadingExplanation ? (
               <div className="flex items-center text-teal-300 text-lg">
