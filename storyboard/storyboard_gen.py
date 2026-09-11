@@ -329,7 +329,10 @@ def generate_image_for_panel(panel: dict, episode: dict) -> dict:
             break
 
     ep_slug = episode["slug"]
-    out_dir = IMAGES_DIR / ep_slug
+    out_dir = (IMAGES_DIR / ep_slug).resolve()
+    # Security: Ensure path remains inside IMAGES_DIR to prevent directory traversal attacks
+    if not out_dir.is_relative_to(IMAGES_DIR.resolve()):
+        raise ValueError(f"invalid episode slug for image generation: {ep_slug}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if image_bytes:

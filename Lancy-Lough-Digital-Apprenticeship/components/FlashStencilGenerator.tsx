@@ -85,8 +85,6 @@ function generateFlashDesign(style: FlashStyle, complexity: number, seed: number
   return paths;
 }
 
-// Performance & UX optimization: Memoize FlashStencilGenerator component to skip redundant re-renders
-// while providing clear keyboard focus rings, ARIA live feedback, and clipboard capabilities.
 const FlashStencilGenerator: React.FC = React.memo(() => {
   const [style, setStyle] = useState<FlashStyle>('traditional');
   const [complexity, setComplexity] = useState(6);
@@ -95,11 +93,10 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
   const [overlayScale, setOverlayScale] = useState(1);
   const [overlayOpacity, setOverlayOpacity] = useState(0.7);
   const [statusMessage, setStatusMessage] = useState<string>('Stencil ready.');
+  const [isDownloaded, setIsDownloaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Performance optimization: Memoize flash stencil SVG path generation to avoid costly
-  // PRNG and bezier curve mathematical calculations on unrelated re-renders.
   const paths = useMemo(() => generateFlashDesign(style, complexity, seed), [style, complexity, seed]);
 
   const reroll = useCallback(() => {
@@ -110,7 +107,7 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
 
   useEffect(() => {
     if (!arMode) return;
-    setStatusMessage("AR Trace Mode active. Unlike Mikey's shaky freehand, your overlay is locked in!");
+    setStatusMessage("AR Trace Mode active. Overlay locked in!");
     navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
       .then((stream) => {
         if (videoRef.current) videoRef.current.srcObject = stream;
@@ -135,6 +132,10 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
     a.click();
     URL.revokeObjectURL(url);
     setStatusMessage(`Downloaded ${style} stencil SVG.`);
+    setIsDownloaded(true);
+    setTimeout(() => {
+      setIsDownloaded(false);
+    }, 2000);
   };
 
   const copySvg = () => {
@@ -164,6 +165,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               }}
               aria-label="Select stencil style"
               className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+              aria-label="Select stencil style"
             >
               <option value="traditional">Traditional</option>
               <option value="fineline">Fine Line</option>
@@ -182,7 +184,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               min={2}
               max={14}
               value={complexity}
-              onChange={(e) => setComplexity(Number(e.target.value))}
               aria-label={`Stencil complexity level: ${complexity}`}
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
             />
@@ -208,10 +209,14 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <button
               type="button"
               onClick={downloadSvg}
-              aria-label="Download flash stencil as SVG"
-              className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+              aria-label={isDownloaded ? 'SVG downloaded' : 'Download flash stencil as SVG'}
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
+                isDownloaded
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+              }`}
             >
-              Download SVG
+              {isDownloaded ? '✓ SVG Saved!' : 'Download SVG'}
             </button>
             <button
               type="button"
@@ -243,9 +248,9 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={2.5}
                   step={0.05}
                   value={overlayScale}
-                  onChange={(e) => setOverlayScale(Number(e.target.value))}
                   aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
-                  className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
+                  onChange={(e) => setOverlayScale(Number(e.target.value))}
+                  className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
               </div>
               <div>
@@ -259,16 +264,15 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={1}
                   step={0.05}
                   value={overlayOpacity}
-                  onChange={(e) => setOverlayOpacity(Number(e.target.value))}
                   aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
-                  className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-md"
+                  onChange={(e) => setOverlayOpacity(Number(e.target.value))}
+                  className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
               </div>
               {cameraError && <p className="text-red-400 text-sm" role="alert">{cameraError}</p>}
             </div>
           )}
 
-          {/* Accessible status live region for user and screen-reader feedback */}
           <div aria-live="polite" className="text-xs text-teal-300 italic pt-1">
             🎨 {statusMessage}
           </div>
