@@ -165,3 +165,12 @@ def update_battle(battle_id: int, turns: int, status: str) -> None:
             "UPDATE battles SET turns = ?, status = ? WHERE id = ?",
             (turns, status, battle_id),
         )
+
+
+def insert_persona_custom(seed: dict) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO persona_custom (created, seed) VALUES (?, ?)",
+            (_now(), json.dumps(seed)),
+        )
+        return cur.lastrowid
