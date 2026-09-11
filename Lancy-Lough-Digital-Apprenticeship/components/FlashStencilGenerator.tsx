@@ -93,6 +93,7 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
   const [overlayScale, setOverlayScale] = useState(1);
   const [overlayOpacity, setOverlayOpacity] = useState(0.7);
   const [statusMessage, setStatusMessage] = useState<string>('Stencil ready.');
+  const [isDownloaded, setIsDownloaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -131,6 +132,10 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
     a.click();
     URL.revokeObjectURL(url);
     setStatusMessage(`Downloaded ${style} stencil SVG.`);
+    setIsDownloaded(true);
+    setTimeout(() => {
+      setIsDownloaded(false);
+    }, 2000);
   };
 
   return (
@@ -187,10 +192,14 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <button
               type="button"
               onClick={downloadSvg}
-              aria-label="Download flash stencil as SVG"
-              className="px-4 py-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+              aria-label={isDownloaded ? 'SVG downloaded' : 'Download flash stencil as SVG'}
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
+                isDownloaded
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+              }`}
             >
-              Download SVG
+              {isDownloaded ? '✓ SVG Saved!' : 'Download SVG'}
             </button>
             <button
               type="button"
