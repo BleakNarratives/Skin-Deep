@@ -156,6 +156,31 @@ def test_episode_create_slug_path_traversal_prevention(api):
 
 def test_esc_quotes_escaping(api):
     assert api._esc('test "double" & \'single\' <tag>') == 'test &quot;double&quot; &amp; &#x27;single&#x27; &lt;tag&gt;'
+
+
+def test_csv_formula_injection_sanitization(api, tmp_db):
+    assert api._sanitize_csv_cell("=1+1") == "'=1+1"
+    assert api._sanitize_csv_cell("+cmd") == "'+cmd"
+    assert api._sanitize_csv_cell("-cmd") == "'-cmd"
+    assert api._sanitize_csv_cell("@cmd") == "'@cmd"
+    assert api._sanitize_csv_cell("normal text") == "normal text"
+
+    ep = tmp_db.create_episode(1, 101, "test_csv_inj", "CSV Inj", "log", "")
+    scenes = [{"slug": "INT. SHOP - DAY", "synopsis": "s", "location": "=DANGEROUS()",
+               "time_of_day": "DAY", "characters": ["LANCY"]}]
+    tmp_db.replace_scenes(ep["id"], scenes, {"provider": "test"})
+    scenes_db = tmp_db.list_scenes(ep["id"])
+    tmp_db.replace_panels(scenes_db[0]["id"], [{
+        "shot_type": "CU", "action": "+cmd|' /C calc'!A0",
+        "duration_sec": 4, "visual_prompt": "prompt",
+    }], {"provider": "test"})
+
+    res = api.export_csv(ep["id"])
+    csv_text = bytes(res.body).decode("utf-8")
+    assert "'=DANGEROUS()" in csv_text
+    assert "'+cmd|' /C calc'!A0" in csv_text
+
+
 def test_outline_text_path_traversal_prevention(api, tmp_db):
     ep = tmp_db.create_episode(1, 100, "test_traversal", "Traversal", "log", outline_path="../backend/app.py")
     with pytest.raises(HTTPException) as ei:
