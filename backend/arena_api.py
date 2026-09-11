@@ -212,10 +212,7 @@ async def persona() -> dict:
 @router.put("/persona")
 async def persona_update(req: PersonaUpdate) -> dict:
     """Persist a customized seed to arena.db. NEVER touches the canonical seed."""
-    arena_db.get_conn().execute(
-        "INSERT INTO persona_custom (created, seed) VALUES (?, ?)",
-        (arena_db._now(), json.dumps(req.seed)),
-    )
+    arena_db.insert_persona_custom(req.seed)
     return {"status": "stored", "identifier": req.seed.get("identifier", "custom")}
 
 
