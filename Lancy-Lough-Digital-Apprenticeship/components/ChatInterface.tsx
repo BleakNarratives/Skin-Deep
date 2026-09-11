@@ -2,6 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from '../types';
 import { getChatResponse } from '../services/geminiService';
 
+// Performance optimization: Memoize ChatMessageItem component to avoid re-rendering existing
+// chat bubble DOM elements on every keystroke in the input text field.
+const ChatMessageItem = React.memo(({ message }: { message: ChatMessage }) => {
+  return (
+    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`max-w-[75%] px-4 py-2 rounded-lg ${
+          message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-100'
+        }`}
+      >
+        {message.text}
+      </div>
+    </div>
+  );
+});
+
 // Performance optimization: Memoize ChatInterface component to prevent redundant re-renders
 // when parent component updates state (e.g. active scroll section during user scrolling).
 const ChatInterface: React.FC = React.memo(() => {
@@ -26,7 +42,9 @@ const ChatInterface: React.FC = React.memo(() => {
   // Sentinel Security Enhancement: Limit input length to mitigate DoS / prompt bloat risks.
   const MAX_INPUT_LENGTH = 500;
 
-  const handleSendMessage = async () => {
+  // Performance optimization: Wrap handleSendMessage in useCallback to stabilize function reference
+  // across keystrokes and prevent unnecessary child component updates.
+  const handleSendMessage = useCallback(async () => {
     const sanitizedInput = input.trim().slice(0, MAX_INPUT_LENGTH);
     if (sanitizedInput === '') return;
 
@@ -47,7 +65,11 @@ const ChatInterface: React.FC = React.memo(() => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [input, messages]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  }, []);
 
   if (isMinimized) {
     return (
@@ -90,20 +112,7 @@ const ChatInterface: React.FC = React.memo(() => {
           </p>
         )}
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[75%] px-4 py-2 rounded-lg ${
-                msg.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-100'
-              }`}
-            >
-              {msg.text}
-            </div>
-          </div>
+          <ChatMessageItem key={index} message={msg} />
         ))}
         {isLoading && (
           <div className="flex justify-start">
@@ -122,7 +131,7 @@ const ChatInterface: React.FC = React.memo(() => {
           placeholder="Type your message..."
           value={input}
           maxLength={MAX_INPUT_LENGTH}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !isLoading && input.trim()) {
               handleSendMessage();
