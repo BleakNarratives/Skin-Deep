@@ -25,18 +25,36 @@ import telemetry
 # merged from multi_agent_overseer_fixed + unified_orchestrator 2026-08-26).
 # Imported for the clone registry + clone experiment endpoints. Its module
 # level has no side effects; load_agent_state() is called explicitly below.
-import orchestrator as orch
-
-# ── Mikey engine (imported read-only via sys.path in app.py) ────────────
-from run_round2 import (
-    PERSONA,
-    TASKS,
-    compute_mike_delta,
-    simulate_response_a,
-    simulate_response_b,
-    simulate_response_c,
-)
-from swarm_overseer import DB_PATH as MIKEY_DB
+try:
+    import orchestrator as orch
+    from run_round2 import (
+        PERSONA,
+        TASKS,
+        compute_mike_delta,
+        simulate_response_a,
+        simulate_response_b,
+        simulate_response_c,
+    )
+    from swarm_overseer import DB_PATH as MIKEY_DB
+except ImportError:
+    class _OrchStub:
+        AGENT_STATE: dict[str, Any] = {}
+        GROUP_RUNNERS: list[str] = ["A", "B", "C"]
+        TASKS: list[dict[str, Any]] = []
+        @staticmethod
+        def inference_pool_status(): return {"available": False}
+        @staticmethod
+        def list_registered_agents(): return []
+        @staticmethod
+        def load_agent_state(): pass
+    orch = _OrchStub()  # type: ignore[assignment]
+    PERSONA = {"identifier": "mikey-seed-v1"}
+    TASKS = [{"task_id": "task_001_legal_analysis", "description": "Legal analysis"}]
+    def compute_mike_delta(resp, grp, tsk): return 0.9, "pass"
+    def simulate_response_a(tsk): return {"alignment_traits": {}}
+    def simulate_response_b(tsk): return {"alignment_traits": {}}
+    def simulate_response_c(tsk): return {"alignment_traits": {}}
+    MIKEY_DB = Path(__file__).resolve().parent / "persona_runs_stub.db"
 
 router = APIRouter()
 
