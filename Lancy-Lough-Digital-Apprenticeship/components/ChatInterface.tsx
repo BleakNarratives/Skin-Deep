@@ -10,6 +10,7 @@ const ChatInterface: React.FC = React.memo(() => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -46,11 +47,37 @@ const ChatInterface: React.FC = React.memo(() => {
     }
   };
 
+  if (isMinimized) {
+    return (
+      <button
+        onClick={() => setIsMinimized(false)}
+        aria-label="Open DeepSeek AI Chat"
+        aria-expanded={false}
+        className="fixed bottom-4 right-4 bg-teal-700 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-full shadow-2xl z-50 flex items-center space-x-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-all duration-200"
+      >
+        <img src="https://picsum.photos/24/24" alt="AI Icon" className="rounded-full" />
+        <span className="text-sm">DeepSeek AI Chat</span>
+      </button>
+    );
+  }
+
   return (
     <Card className="fixed bottom-4 right-4 w-80 h-96 flex flex-col bg-gray-900 shadow-2xl z-50 p-0 overflow-hidden">
       <div className="bg-teal-700 text-white p-4 font-bold flex items-center justify-between">
-        <span>DeepSeek AI Chat</span>
-        <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full" />
+        <div className="flex items-center space-x-2">
+          <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full" />
+          <span>DeepSeek AI Chat</span>
+        </div>
+        <button
+          onClick={() => setIsMinimized(true)}
+          aria-label="Minimize DeepSeek AI Chat"
+          aria-expanded={true}
+          className="text-teal-100 hover:text-white p-1 rounded hover:bg-teal-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
         {messages.length === 0 && (
