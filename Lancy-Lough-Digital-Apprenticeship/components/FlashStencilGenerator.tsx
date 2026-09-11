@@ -85,8 +85,6 @@ function generateFlashDesign(style: FlashStyle, complexity: number, seed: number
   return paths;
 }
 
-// Performance & UX optimization: Memoize FlashStencilGenerator component to skip redundant re-renders
-// while providing clear keyboard focus rings and ARIA live feedback.
 const FlashStencilGenerator: React.FC = React.memo(() => {
   const [style, setStyle] = useState<FlashStyle>('traditional');
   const [complexity, setComplexity] = useState(6);
@@ -98,8 +96,6 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Performance optimization: Memoize flash stencil SVG path generation to avoid costly
-  // PRNG and bezier curve mathematical calculations on unrelated re-renders (e.g., overlay scale/opacity changes).
   const paths = useMemo(() => generateFlashDesign(style, complexity, seed), [style, complexity, seed]);
 
   const reroll = useCallback(() => {
@@ -110,7 +106,7 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
 
   useEffect(() => {
     if (!arMode) return;
-    setStatusMessage("AR Trace Mode active. Stencil overlay locked in.");
+    setStatusMessage("AR Trace Mode active. Overlay locked in!");
     navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
       .then((stream) => {
         if (videoRef.current) videoRef.current.srcObject = stream;
@@ -153,6 +149,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setStyle(newStyle);
                 setStatusMessage(`Style updated to ${newStyle}.`);
               }}
+              aria-label="Select stencil style"
               className="w-full bg-gray-800 text-gray-200 rounded-md px-3 py-2 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
               aria-label="Select stencil style"
             >
@@ -251,7 +248,6 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             </div>
           )}
 
-          {/* Accessible status live region for user and screen-reader feedback */}
           <div aria-live="polite" className="text-xs text-teal-300 italic pt-1">
             🎨 {statusMessage}
           </div>
