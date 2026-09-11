@@ -2,7 +2,7 @@
 
 This journal tracks critical security learnings, unique vulnerability patterns, and architectural constraints discovered within this codebase.
 
-## 2026-03-30 - Database Exception Detail Leakage in FastAPI Endpoints
-**Vulnerability:** SQLite exception strings (`str(e)`) were directly returned in `HTTPException` details in `arena_api.py`.
-**Learning:** Returning raw exception messages to HTTP clients exposes internal database structure, query formatting, and server filesystem paths during database failures.
-**Prevention:** Catch database exceptions and return generic, sanitized error detail messages (`"corpus read failed"`) in API responses.
+## 2026-09-04 - Unsanitized Exception Formatting in FastAPI Handlers
+**Vulnerability:** Raw `sqlite3.Error` string interpolation in FastAPI `HTTPException` detail fields leaked internal server paths (`/home/jules/MikeySwarm/persona_runs.db`) and database driver details.
+**Learning:** Formatting raw exception objects into API response payloads leaks backend directory layouts and internal error details to unauthenticated callers.
+**Prevention:** Always catch database exceptions and return sanitized, generic error details (`detail="corpus read failed"`) while logging exception details internally.

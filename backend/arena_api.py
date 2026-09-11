@@ -195,7 +195,7 @@ async def runs(group: str | None = None, limit: int = 50) -> list[dict]:
             conn.row_factory = sqlite3.Row
             rows = [dict(r) for r in conn.execute(q, args).fetchall()]
     except sqlite3.Error:
-        # Security: Do not leak raw database exception message (e.g. table structures or internal paths)
+        # Security: Do not expose raw SQLite exception strings to callers (prevents leakage of server filesystem paths/DB details).
         raise HTTPException(status_code=500, detail="corpus read failed")
     for r in rows:
         r.pop("response_summary", None)
@@ -230,10 +230,7 @@ async def persona() -> dict:
 @router.put("/persona")
 async def persona_update(req: PersonaUpdate) -> dict:
     """Persist a customized seed to arena.db. NEVER touches the canonical seed."""
-    arena_db.get_conn().execute(
-        "INSERT INTO persona_custom (created, seed) VALUES (?, ?)",
-        (arena_db._now(), json.dumps(req.seed)),
-    )
+    arena_db.insert_persona_custom(req.seed)
     return {"status": "stored", "identifier": req.seed.get("identifier", "custom")}
 
 
