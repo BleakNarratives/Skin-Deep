@@ -44,14 +44,14 @@ const App: React.FC = () => {
     } finally {
       setLoadingExplanation(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Fetch initial explanation for the active section
     if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanations[activeSection]) {
       fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection]);
     }
-  }, [activeSection, geminiExplanations]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSection, geminiExplanations, fetchExplanation]);
 
   // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
   // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
@@ -78,6 +78,8 @@ const App: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Performance optimization: Keep handleSelectSection reference stable with empty deps array
+  // to avoid breaking React.memo on Sidebar. Setting activeSection triggers fetchExplanation in useEffect.
   const handleSelectSection = useCallback((id: string) => {
     const ref = sectionRefs.current[id];
     if (ref) {
