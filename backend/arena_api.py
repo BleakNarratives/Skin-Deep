@@ -205,21 +205,25 @@ async def runs(group: str | None = None, limit: int = 50) -> list[dict]:
 
 @router.get("/groups")
 async def groups() -> list[dict]:
-    with sqlite3.connect(MIKEY_DB) as conn:
-        conn.row_factory = sqlite3.Row
-        rows = [
-            dict(r)
-            for r in conn.execute(
-                """
-                SELECT group_type, COUNT(*) AS runs,
-                       ROUND(AVG(mike_delta_score), 3) AS avg_score,
-                       SUM(CASE WHEN outcome='pass' THEN 1 ELSE 0 END) AS passes,
-                       SUM(CASE WHEN outcome='fail' THEN 1 ELSE 0 END) AS fails
-                FROM persona_runs GROUP BY group_type ORDER BY group_type
-                """
-            ).fetchall()
-        ]
-    return rows
+    try:
+        with sqlite3.connect(MIKEY_DB) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = [
+                dict(r)
+                for r in conn.execute(
+                    """
+                    SELECT group_type, COUNT(*) AS runs,
+                           ROUND(AVG(mike_delta_score), 3) AS avg_score,
+                           SUM(CASE WHEN outcome='pass' THEN 1 ELSE 0 END) AS passes,
+                           SUM(CASE WHEN outcome='fail' THEN 1 ELSE 0 END) AS fails
+                    FROM persona_runs GROUP BY group_type ORDER BY group_type
+                    """
+                ).fetchall()
+            ]
+        return rows
+    except sqlite3.Error:
+        # Security: Do not expose raw SQLite exception strings to callers (prevents leakage of server filesystem paths/DB details).
+        raise HTTPException(status_code=500, detail="corpus read failed")
 
 
 @router.get("/persona")
