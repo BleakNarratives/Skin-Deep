@@ -130,7 +130,7 @@ const ChatInterface: React.FC = React.memo(() => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-gray-700 p-3 flex items-center space-x-2 bg-gray-800">
+      <div className="border-t border-gray-700 p-4 flex items-center">
         <input
           type="text"
           aria-label="Type your chat message to DeepSeek AI"

@@ -189,7 +189,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setStatusMessage(`Stencil complexity set to ${newComp}.`);
               }}
               aria-label={`Stencil complexity level: ${complexity}`}
-              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
+              className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg cursor-pointer"
             />
           </div>
 
