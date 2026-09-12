@@ -94,6 +94,7 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
   const [overlayOpacity, setOverlayOpacity] = useState(0.7);
   const [statusMessage, setStatusMessage] = useState<string>('Stencil ready.');
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -143,7 +144,11 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
 ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round" />`).join('\n')}` +
 '\n</svg>';
     navigator.clipboard.writeText(svgContent)
-      .then(() => setStatusMessage(`Copied SVG stencil to clipboard! Unlike Mikey's shaky freehand, your stencil is pixel-perfect.`))
+      .then(() => {
+        setStatusMessage(`Copied SVG stencil to clipboard! Unlike Mikey's shaky freehand, your stencil is pixel-perfect.`);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      })
       .catch(() => setStatusMessage('Failed to copy SVG stencil.'));
   };
 
@@ -206,10 +211,15 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <button
               type="button"
               onClick={copySvg}
-              aria-label="Copy flash stencil SVG code to clipboard"
-              className="px-4 py-2 rounded-full bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+              aria-label={isCopied ? 'SVG stencil copied to clipboard' : 'Copy flash stencil SVG code to clipboard'}
+              title="Copy pixel-perfect SVG code — unlike Mikey's shaky freehand"
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
+                isCopied
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-emerald-700 hover:bg-emerald-600 text-white'
+              }`}
             >
-              Copy SVG
+              {isCopied ? '✓ Copied!' : 'Copy SVG'}
             </button>
             <button
               type="button"
