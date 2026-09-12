@@ -112,10 +112,14 @@ def create_episode(body: EpisodeCreate) -> dict:
         raise HTTPException(409, f"slug '{body.slug}' already exists")
     outline_rel = ""
     if body.outline.strip():
-        EPISODES_DIR.mkdir(parents=True, exist_ok=True)
-        f = EPISODES_DIR / f"{body.slug}.md"
-        f.write_text(body.outline, encoding="utf-8")
-        outline_rel = str(f.relative_to(SB_DIR))
+        try:
+            EPISODES_DIR.mkdir(parents=True, exist_ok=True)
+            f = EPISODES_DIR / f"{body.slug}.md"
+            f.write_text(body.outline, encoding="utf-8")
+            outline_rel = str(f.relative_to(SB_DIR))
+        except OSError:
+            # Security: Catch filesystem errors to prevent leaking server directory structure or raw OS error details to callers.
+            raise HTTPException(500, "failed to write outline file")
     ep = db.create_episode(body.season, body.number, body.slug, body.title,
                            body.logline, outline_rel)
     return ep
