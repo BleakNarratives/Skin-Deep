@@ -388,3 +388,22 @@ def test_arena_db_insert_persona_custom(tmp_path):
         row = conn.execute("SELECT * FROM persona_custom WHERE id = ?", (row_id,)).fetchone()
         assert row is not None
         assert "test-security-seed" in row["seed"]
+
+
+@pytest.mark.anyio
+async def test_agents_register_sanitized_exceptions():
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_api
+
+    req = arena_api.AgentRegisterRequest(agent_id="test_sanitized_agent", template="variant")
+
+    # Call agents_register directly when _OrchStub does not have AgentClone attribute
+    with pytest.raises(HTTPException) as exc_info:
+        await arena_api.agents_register(req)
+
+    assert exc_info.value.status_code == 500
+    assert exc_info.value.detail == "orchestrator failed to register agent"
+    assert "AttributeError" not in str(exc_info.value.detail)
+    assert "_OrchStub" not in str(exc_info.value.detail)
