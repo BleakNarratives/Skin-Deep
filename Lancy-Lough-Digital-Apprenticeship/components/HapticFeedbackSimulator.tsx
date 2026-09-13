@@ -124,9 +124,9 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               Spring-Damping
             </button>
           </div>
-          <p className="text-gray-400 text-md italic mt-2">
+          <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
-          </p>
+          </div>
         </div>
         <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
           <div
