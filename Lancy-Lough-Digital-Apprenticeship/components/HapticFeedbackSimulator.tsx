@@ -10,9 +10,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
   const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [isPaused, setIsPaused] = useState<boolean>(false);
 
   // Simulate hand movement
   useEffect(() => {
+    if (isPaused) return;
     const interval = setInterval(() => {
       setHandPosition(prev => ({
         x: Math.min(100, Math.max(0, prev.x + (Math.random() - 0.5) * 10)),
@@ -20,7 +22,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       }));
     }, 200);
     return () => clearInterval(interval);
-  }, []);
+  }, [isPaused]);
 
   // Apply feedback logic
   useEffect(() => {
@@ -123,12 +125,35 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={() => setIsPaused(prev => !prev)}
+              aria-pressed={isPaused}
+              aria-label={isPaused ? "Resume hand position simulation" : "Pause hand position simulation"}
+              className="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 bg-amber-700 hover:bg-amber-600 text-white"
+            >
+              {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setHandPosition({ x: 50, y: 50 })}
+              aria-label="Reset hand position to target center (unlike Mikey's shaky freehand, start with a centered grip!)"
+              title="Reset hand position to target center — unlike Mikey's shaky freehand"
+              className="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 bg-emerald-700 hover:bg-emerald-600 text-white"
+            >
+              ↺ Reset Position
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            {isPaused && <span className="text-amber-400 ml-2 font-medium">(Simulation Paused)</span>}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          role="region"
+          aria-label="Haptic simulator canvas area showing target position and animated hand movement dot"
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
