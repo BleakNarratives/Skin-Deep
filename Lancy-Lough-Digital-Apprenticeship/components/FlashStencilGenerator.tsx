@@ -194,6 +194,10 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setStatusMessage(`Stencil complexity set to ${newComp}.`);
               }}
               aria-label={`Stencil complexity level: ${complexity}`}
+              aria-valuemin={2}
+              aria-valuemax={14}
+              aria-valuenow={complexity}
+              aria-valuetext={`Complexity level ${complexity}`}
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg cursor-pointer"
             />
           </div>
@@ -264,6 +268,10 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   step={0.05}
                   value={overlayScale}
                   aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
+                  aria-valuemin={0.3}
+                  aria-valuemax={2.5}
+                  aria-valuenow={overlayScale}
+                  aria-valuetext={`Overlay scale ${overlayScale.toFixed(2)} times`}
                   onChange={(e) => setOverlayScale(Number(e.target.value))}
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
@@ -280,6 +288,10 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   step={0.05}
                   value={overlayOpacity}
                   aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
+                  aria-valuemin={0.1}
+                  aria-valuemax={1}
+                  aria-valuenow={overlayOpacity}
+                  aria-valuetext={`Overlay opacity ${Math.round(overlayOpacity * 100)} percent`}
                   onChange={(e) => setOverlayOpacity(Number(e.target.value))}
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
