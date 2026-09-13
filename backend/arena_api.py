@@ -274,8 +274,11 @@ async def agents_register(req: AgentRegisterRequest) -> dict:
         raise HTTPException(status_code=409, detail=f"agent already registered: {req.agent_id}")
     try:
         cfg = orch.AgentClone.create_from_template(req.agent_id, req.template)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid template or agent registration parameters")
+    except Exception:
+        # Security: Catch any internal attribute/runtime exceptions to prevent leaking raw Python exception details/stack traces.
+        raise HTTPException(status_code=500, detail="orchestrator failed to register agent")
     ok = orch.register_agent_clone(cfg)
     if not ok:
         raise HTTPException(status_code=500, detail="orchestrator failed to register agent")
