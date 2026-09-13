@@ -47,11 +47,11 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch initial explanation for the active section
-    if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanations[activeSection]) {
+    // Fetch explanation when activeSection changes if not already fetched/cached
+    if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanationsRef.current[activeSection]) {
       fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection]);
     }
-  }, [activeSection, geminiExplanations, fetchExplanation]);
+  }, [activeSection, fetchExplanation]);
 
   // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
   // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
@@ -89,9 +89,6 @@ const App: React.FC = () => {
       });
     }
     setActiveSection(id);
-    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanationsRef.current[id]) {
-      fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
-    }
   }, []);
 
   return (
