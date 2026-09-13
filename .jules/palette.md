@@ -9,3 +9,7 @@
 ## 2026-09-05 - Floating Chat Widget Collapsibility & Expandability
 **Learning:** Floating overlay components (like AI chat assistants) can obscure data charts and interactive canvas areas on smaller viewports. Providing an explicit minimize/expand toggle button with `aria-expanded` and `aria-label` attributes ensures screen reader accessibility while allowing users to reclaim screen real estate without losing active conversation state.
 **Action:** When creating or updating floating overlay UI elements, include a toggle button with `aria-expanded` and `focus-visible:ring-2` focus styling to support viewport customization and keyboard accessibility.
+
+## 2026-09-13 - Animated Canvas & Interactive Simulation Pause/Reset Controls
+**Learning:** Continuous animation or random movement in interactive canvas simulators can be distracting or cause motion discomfort. Adding explicit Pause/Resume (`aria-pressed`) and Reset Position controls accompanied by `aria-live="polite"` status updates provides accessible user control and supports screen readers without interrupting simulation state.
+**Action:** When working on animated simulation or canvas components, include toggleable Pause/Resume and Reset controls with `focus-visible:ring-2` and `aria-pressed` attributes.
