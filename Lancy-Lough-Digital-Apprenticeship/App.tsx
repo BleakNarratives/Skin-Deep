@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('introduction');
   const [geminiExplanations, setGeminiExplanations] = useState<Record<string, string>>({});
   const [loadingExplanation, setLoadingExplanation] = useState<boolean>(true);
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -23,6 +24,18 @@ const App: React.FC = () => {
   useEffect(() => {
     geminiExplanationsRef.current = geminiExplanations;
   }, [geminiExplanations]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Performance optimization: Memoize current section name lookup to prevent O(N) array scans on render
   const activeSectionName = useMemo(() => {
@@ -444,6 +457,19 @@ const App: React.FC = () => {
 
         </div>
       </main>
+
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="Scroll to top of page"
+          className="fixed bottom-4 left-4 lg:left-[16.5rem] bg-gray-900/90 hover:bg-teal-700 text-teal-400 hover:text-white p-3 rounded-full shadow-2xl z-40 border border-teal-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-all duration-200 flex items-center justify-center"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+      )}
 
       <ChatInterface />
     </div>
