@@ -212,6 +212,28 @@ def test_panels_require_scenes(api):
     assert ei.value.status_code == 400
 
 
+def test_scene_generate_request_validation(api):
+    req = api.SceneGenerateRequest(outline="short outline")
+    assert req.outline == "short outline"
+
+    with pytest.raises(ValidationError):
+        api.SceneGenerateRequest(outline="x" * 50001)
+
+
+def test_boardroom_request_validation(api):
+    req = api.BoardroomRequest(outline="outline", rounds=3)
+    assert req.rounds == 3
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=0)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=11)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(outline="x" * 50001)
+
+
 # ── API: generation stages (mocked LLM) ──────────────────────────────────
 
 def test_generation_pipeline_mocked(api, monkeypatch):
