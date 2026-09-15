@@ -19,6 +19,8 @@ const App: React.FC = () => {
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const geminiExplanationsRef = useRef(geminiExplanations);
+  // Performance optimization: Track pending in-flight requests to eliminate duplicate API calls
+  const pendingRequestsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     geminiExplanationsRef.current = geminiExplanations;
@@ -30,6 +32,8 @@ const App: React.FC = () => {
   }, [activeSection]);
 
   const fetchExplanation = useCallback(async (sectionId: string, prompt: string) => {
+    if (pendingRequestsRef.current.has(sectionId)) return;
+    pendingRequestsRef.current.add(sectionId);
     setLoadingExplanation(true);
     // Removed apiKeyError related logic
     try {
@@ -42,16 +46,18 @@ const App: React.FC = () => {
       console.error(`Error fetching explanation for ${sectionId}`);
       setGeminiExplanations((prev) => ({ ...prev, [sectionId]: "Failed to load AI explanation. Please try again later." }));
     } finally {
+      pendingRequestsRef.current.delete(sectionId);
       setLoadingExplanation(false);
     }
   }, []);
 
   useEffect(() => {
-    // Fetch initial explanation for the active section
-    if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanations[activeSection]) {
+    // Performance optimization: Check ref to prevent redundant re-fetching and remove geminiExplanations
+    // from effect dependencies to prevent secondary re-runs on state updates.
+    if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanationsRef.current[activeSection]) {
       fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection]);
     }
-  }, [activeSection, geminiExplanations, fetchExplanation]);
+  }, [activeSection, fetchExplanation]);
 
   // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
   // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
@@ -79,7 +85,8 @@ const App: React.FC = () => {
   }, []);
 
   // Performance optimization: Keep handleSelectSection reference stable with empty deps array
-  // to avoid breaking React.memo on Sidebar. Setting activeSection triggers fetchExplanation in useEffect.
+  // to avoid breaking React.memo on Sidebar. Setting activeSection triggers fetchExplanation via useEffect,
+  // avoiding duplicate simultaneous calls.
   const handleSelectSection = useCallback((id: string) => {
     const ref = sectionRefs.current[id];
     if (ref) {
@@ -89,9 +96,6 @@ const App: React.FC = () => {
       });
     }
     setActiveSection(id);
-    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanationsRef.current[id]) {
-      fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
-    }
   }, []);
 
   return (
