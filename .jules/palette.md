@@ -9,3 +9,7 @@
 ## 2026-09-05 - Floating Chat Widget Collapsibility & Expandability
 **Learning:** Floating overlay components (like AI chat assistants) can obscure data charts and interactive canvas areas on smaller viewports. Providing an explicit minimize/expand toggle button with `aria-expanded` and `aria-label` attributes ensures screen reader accessibility while allowing users to reclaim screen real estate without losing active conversation state.
 **Action:** When creating or updating floating overlay UI elements, include a toggle button with `aria-expanded` and `focus-visible:ring-2` focus styling to support viewport customization and keyboard accessibility.
+
+## 2026-09-08 - Interactive Canvas Trajectory Alignment & Live Accessibility Feedback
+**Learning:** Real-time canvas simulations benefit from instantaneous visual accuracy metrics paired with explicit ARIA `role="region"` and `role="img"` attributes with dynamically computed `aria-label` values, providing clear feedback for all users during interactive simulations.
+**Action:** When building interactive canvas or trajectory tracking tools, include a live accuracy badge with color-coded feedback states and explicit ARIA descriptors.
