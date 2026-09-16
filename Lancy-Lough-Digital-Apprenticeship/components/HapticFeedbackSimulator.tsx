@@ -9,7 +9,16 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 });
+  const [statusMessage, setStatusMessage] = useState<string>('');
+
+  const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(90, Math.max(10, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
+    const y = Math.min(90, Math.max(10, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+    setTargetPosition({ x, y });
+    setStatusMessage(`Target moved to (${x}%, ${y}%). Unlike Mikey's wild, unguided hand, your target is set with precision.`);
+  };
 
   // Simulate hand movement
   useEffect(() => {
@@ -126,9 +135,25 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            {statusMessage && <div className="text-teal-300 text-xs mt-1 font-normal">🎨 {statusMessage}</div>}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label={`Simulated Training Surface. Target is at (${targetPosition.x}%, ${targetPosition.y}%). Click or press Space to reposition target.`}
+          onClick={handleSurfaceClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              const x = Math.floor(20 + Math.random() * 60);
+              const y = Math.floor(20 + Math.random() * 60);
+              setTargetPosition({ x, y });
+              setStatusMessage(`Target repositioned to (${x}%, ${y}%). Unlike Mikey's shaky lines, precision target is set.`);
+            }
+          }}
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
