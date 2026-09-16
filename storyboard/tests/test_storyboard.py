@@ -314,6 +314,41 @@ def test_generation_fail_loud(api, monkeypatch):
     assert ei.value.detail["stage"] == "scenes"
 
 
+def test_boardroom_mode_unexpected_exception_sanitized(api, monkeypatch):
+    ep = api.create_episode(api.EpisodeCreate(
+        season=1, number=8, slug="test_boardroom_err", title="Boardroom Err Ep", outline="beats"))
+
+    def bad_boardroom(outline, rounds=2):
+        raise RuntimeError("Secret internal path /var/secrets/keys leaked")
+
+    monkeypatch.setattr(gen, "boardroom_notes", bad_boardroom)
+
+    with pytest.raises(HTTPException) as ei:
+        api.boardroom_mode(ep["id"])
+
+    assert ei.value.status_code == 502
+    assert ei.value.detail == "boardroom conductor failed"
+
+
+def test_image_provider_exception_sanitization(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test")
+    monkeypatch.setenv("NOVITA_API_KEY", "sk-test")
+
+    def failing_get(*args, **kwargs):
+        raise RuntimeError("Connection error to /internal/secret/endpoint with key=sk-test")
+
+    monkeypatch.setattr(gen.requests, "get", failing_get)
+    monkeypatch.setattr(gen.requests, "post", failing_get)
+
+    _, meta_or = gen.openrouter_image("prompt")
+    assert meta_or["error"] == "image generation request failed"
+    assert "/internal/secret" not in meta_or["error"]
+
+    _, meta_nov = gen.novita_image("prompt")
+    assert meta_nov["error"] == "image generation request failed"
+    assert "/internal/secret" not in meta_nov["error"]
+
+
 # ── image provider chain (fake provider) ─────────────────────────────────
 
 def _seed_one_panel(api, monkeypatch, slug):

@@ -263,7 +263,8 @@ def openrouter_image(prompt: str) -> tuple[bytes | None, dict]:
             "cost_usd": r.json().get("usage", {}).get("cost"),
         }
     except Exception as e:
-        return None, {"provider": "openrouter", "model": model, "error": str(e)[:300]}
+        # Security: Do not expose raw exception strings to callers (prevents leakage of internal error/network details).
+        return None, {"provider": "openrouter", "model": model, "error": "image generation request failed"}
 
 
 def novita_image(prompt: str) -> tuple[bytes | None, dict]:
@@ -291,7 +292,8 @@ def novita_image(prompt: str) -> tuple[bytes | None, dict]:
         img.raise_for_status()
         return img.content, {"provider": "novita", "model": "sdxl-v1"}
     except Exception as e:
-        return None, {"provider": "novita", "error": str(e)[:300]}
+        # Security: Do not expose raw exception strings to callers (prevents leakage of internal error/network details).
+        return None, {"provider": "novita", "error": "image generation request failed"}
 
 
 def gemini_image(prompt: str) -> tuple[bytes | None, dict]:
