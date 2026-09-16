@@ -180,7 +180,8 @@ def boardroom_mode(episode_id: int, body: dict | None = None) -> dict:
         notes = gen.boardroom_notes(outline, rounds=rounds)
     except gen.GenerationError as e:
         raise _gen_fail(e)
-    except Exception:  # conductor runtime failure — fail loud
+    except Exception:
+        # Security: Catch unexpected runtime errors to prevent leaking internal exception details or stack traces to callers.
         raise HTTPException(502, "boardroom conductor failed")
     db.update_episode(episode_id, director_notes=json.dumps(notes, ensure_ascii=False))
     return notes

@@ -315,7 +315,8 @@ async def agents_run(agent_id: str, req: AgentRunRequest) -> dict:
         agent_id, req.task_id, req.group, cfg, dry_run=not req.persist
     )
     if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "clone run failed"))
+        # Security: Do not expose raw orchestrator exception strings or stack traces to callers.
+        raise HTTPException(status_code=500, detail="clone run failed")
     return {
         "agent_id": agent_id,
         "task_id": result["task_id"],
