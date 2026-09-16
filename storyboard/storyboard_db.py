@@ -301,15 +301,43 @@ def list_panels(scene_id: int) -> list[dict]:
 
 
 def episode_tree(episode_id: int) -> dict | None:
-    ep = get_episode(episode_id)
-    if ep is None:
-        return None
-    tree = dict(ep)
-    tree["scenes"] = []
-    for scene in list_scenes(episode_id):
-        scene["panels"] = list_panels(scene["id"])
-        tree["scenes"].append(scene)
-    return tree
+    # Performance optimization: Fetch episode, scenes, and panels in a single read transaction
+    # with batched queries. Eliminates N+1 DB connections and per-scene query overhead (reduces
+    # connections from N+2 to 1 and queries from N+2 to 3 for an episode with N scenes).
+    with _ro() as conn:
+        ep = conn.execute(
+            "SELECT * FROM episodes WHERE id = ?", (episode_id,)
+        ).fetchone()
+        if ep is None:
+            return None
+        tree = dict(ep)
+
+        scenes_rows = conn.execute(
+            "SELECT * FROM scenes WHERE episode_id = ? ORDER BY ord",
+            (episode_id,),
+        ).fetchall()
+
+        panels_rows = conn.execute(
+            "SELECT p.* FROM panels p JOIN scenes s ON p.scene_id = s.id"
+            " WHERE s.episode_id = ? ORDER BY p.scene_id, p.ord",
+            (episode_id,),
+        ).fetchall()
+
+        panels_by_scene: dict[int, list[dict]] = {}
+        for r in panels_rows:
+            d = dict(r)
+            d["ai_meta"] = json.loads(d["ai_meta"] or "{}")
+            panels_by_scene.setdefault(d["scene_id"], []).append(d)
+
+        tree["scenes"] = []
+        for r in scenes_rows:
+            s = dict(r)
+            s["characters"] = json.loads(s["characters"] or "[]")
+            s["ai_meta"] = json.loads(s["ai_meta"] or "{}")
+            s["panels"] = panels_by_scene.get(s["id"], [])
+            tree["scenes"].append(s)
+
+        return tree
 
 
 def _num(v: Any) -> float:
