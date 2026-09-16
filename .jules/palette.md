@@ -9,3 +9,7 @@
 ## 2026-09-05 - Floating Chat Widget Collapsibility & Expandability
 **Learning:** Floating overlay components (like AI chat assistants) can obscure data charts and interactive canvas areas on smaller viewports. Providing an explicit minimize/expand toggle button with `aria-expanded` and `aria-label` attributes ensures screen reader accessibility while allowing users to reclaim screen real estate without losing active conversation state.
 **Action:** When creating or updating floating overlay UI elements, include a toggle button with `aria-expanded` and `focus-visible:ring-2` focus styling to support viewport customization and keyboard accessibility.
+
+## 2026-09-07 - Interactive Simulation Canvas Target Repositioning & Keyboard Control
+**Learning:** Interactive canvas/simulation containers with stateful target coordinates benefit from direct click/touch coordinate mapping combined with `role="button"`, `tabIndex={0}`, and `focus-visible:ring-2` focus indicators, paired with `aria-live` status announcements when target coordinates update.
+**Action:** When making static or semi-static simulation containers interactive, attach mouse click and keydown handlers with explicit `aria-label` descriptions and `aria-live` updates so keyboard and screen reader users can interact seamlessly.
