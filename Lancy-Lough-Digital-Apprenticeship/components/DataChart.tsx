@@ -19,26 +19,32 @@ interface DataChartProps {
 const DataChart: React.FC<DataChartProps> = React.memo(({ data, title, dataKey, unit, color }) => {
   return (
     <Card title={title}>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#4a4a4a" />
-          <XAxis dataKey="name" stroke="#a0a0a0" />
-          <YAxis stroke="#a0a0a0" unit={unit} />
-          <Tooltip
-            contentStyle={{ backgroundColor: '#2a2a2a', border: 'none', borderRadius: '5px' }}
-            labelStyle={{ color: '#e0e0e0' }}
-            itemStyle={{ color: color }}
-          />
-          <Line
-            type="monotone"
-            dataKey={dataKey}
-            stroke={color}
-            strokeWidth={2}
-            dot={{ r: 3, strokeWidth: 1 }}
-            activeDot={{ r: 6, stroke: color, strokeWidth: 2, fill: '#fff' }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <div
+        role="img"
+        aria-label={`${title}: Interactive telemetry line chart (${unit}). Unlike Mikey's wild estimates, this data is precision-measured.`}
+        className="w-full"
+      >
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#4a4a4a" />
+            <XAxis dataKey="name" stroke="#a0a0a0" />
+            <YAxis stroke="#a0a0a0" unit={unit} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#2a2a2a', border: 'none', borderRadius: '5px' }}
+              labelStyle={{ color: '#e0e0e0' }}
+              itemStyle={{ color: color }}
+            />
+            <Line
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              strokeWidth={2}
+              dot={{ r: 3, strokeWidth: 1 }}
+              activeDot={{ r: 6, stroke: color, strokeWidth: 2, fill: '#fff' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </Card>
   );
 });
