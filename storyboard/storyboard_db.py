@@ -301,15 +301,49 @@ def list_panels(scene_id: int) -> list[dict]:
 
 
 def episode_tree(episode_id: int) -> dict | None:
-    ep = get_episode(episode_id)
-    if ep is None:
-        return None
-    tree = dict(ep)
-    tree["scenes"] = []
-    for scene in list_scenes(episode_id):
-        scene["panels"] = list_panels(scene["id"])
-        tree["scenes"].append(scene)
-    return tree
+    # Bolt Performance Optimization: Fetch episode, all scenes, and all panels in a single
+    # read transaction (O(1) database connection/query roundtrips instead of N+1 connections/queries).
+    with _ro() as conn:
+        ep = conn.execute(
+            "SELECT * FROM episodes WHERE id = ?", (episode_id,)
+        ).fetchone()
+        if ep is None:
+            return None
+        tree = dict(ep)
+
+        scene_rows = conn.execute(
+            "SELECT * FROM scenes WHERE episode_id = ? ORDER BY ord",
+            (episode_id,),
+        ).fetchall()
+
+        scenes: list[dict] = []
+        scene_map: dict[int, dict] = {}
+        for r in scene_rows:
+            d = dict(r)
+            d["characters"] = json.loads(d["characters"] or "[]")
+            d["ai_meta"] = json.loads(d["ai_meta"] or "{}")
+            d["panels"] = []
+            scenes.append(d)
+            scene_map[d["id"]] = d
+
+        if scenes:
+            panel_rows = conn.execute(
+                """
+                SELECT p.* FROM panels p
+                JOIN scenes s ON p.scene_id = s.id
+                WHERE s.episode_id = ?
+                ORDER BY p.scene_id, p.ord
+                """,
+                (episode_id,),
+            ).fetchall()
+            for r in panel_rows:
+                pd = dict(r)
+                pd["ai_meta"] = json.loads(pd["ai_meta"] or "{}")
+                if pd["scene_id"] in scene_map:
+                    scene_map[pd["scene_id"]]["panels"].append(pd)
+
+        tree["scenes"] = scenes
+        return tree
 
 
 def _num(v: Any) -> float:
