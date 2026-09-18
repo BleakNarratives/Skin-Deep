@@ -267,8 +267,15 @@ def export_json(episode_id: int) -> Response:
     if tree is None:
         raise HTTPException(404, "episode not found")
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    path = EXPORTS_DIR / f"{tree['slug']}.json"
-    path.write_text(json.dumps(tree, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Security: Prevent path traversal attacks when writing export files.
+    path = (EXPORTS_DIR / f"{tree['slug']}.json").resolve()
+    if not path.is_relative_to(EXPORTS_DIR.resolve()):
+        raise HTTPException(400, "invalid episode slug")
+    try:
+        path.write_text(json.dumps(tree, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        # Security: Prevent leaking internal filesystem errors/paths.
+        raise HTTPException(500, "failed to write export file")
     return Response(
         path.read_text(encoding="utf-8"),
         media_type="application/json",
@@ -313,9 +320,16 @@ def export_sheet(episode_id: int) -> HTMLResponse:
     if tree is None:
         raise HTTPException(404, "episode not found")
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    # Security: Prevent path traversal attacks when writing export files.
+    path = (EXPORTS_DIR / f"{tree['slug']}_contact_sheet.html").resolve()
+    if not path.is_relative_to(EXPORTS_DIR.resolve()):
+        raise HTTPException(400, "invalid episode slug")
     html = _render_sheet(tree)
-    path = EXPORTS_DIR / f"{tree['slug']}_contact_sheet.html"
-    path.write_text(html, encoding="utf-8")
+    try:
+        path.write_text(html, encoding="utf-8")
+    except OSError:
+        # Security: Prevent leaking internal filesystem errors/paths.
+        raise HTTPException(500, "failed to write export file")
     return HTMLResponse(html)
 
 
