@@ -204,6 +204,38 @@ def test_outline_text_path_traversal_prevention(api, tmp_db):
     assert ei.value.detail == "invalid outline path"
 
 
+def test_export_path_traversal_prevention(api, tmp_db):
+    ep = tmp_db.create_episode(1, 102, "../evil_export_slug", "Evil Slug Ep", "log", "")
+    with pytest.raises(HTTPException) as ei_json:
+        api.export_json(ep["id"])
+    assert ei_json.value.status_code == 400
+    assert ei_json.value.detail == "invalid episode slug"
+
+    with pytest.raises(HTTPException) as ei_sheet:
+        api.export_sheet(ep["id"])
+    assert ei_sheet.value.status_code == 400
+    assert ei_sheet.value.detail == "invalid episode slug"
+
+
+def test_export_oserror_sanitizes_500(api, tmp_db, monkeypatch):
+    ep = tmp_db.create_episode(1, 103, "test_export_oserror", "Export OSError Ep", "log", "")
+
+    def fake_write_text(*args, **kwargs):
+        raise OSError("[Errno 13] Permission denied: '/exports/test_export_oserror.json'")
+
+    monkeypatch.setattr(Path, "write_text", fake_write_text)
+
+    with pytest.raises(HTTPException) as ei_json:
+        api.export_json(ep["id"])
+    assert ei_json.value.status_code == 500
+    assert ei_json.value.detail == "failed to write export file"
+
+    with pytest.raises(HTTPException) as ei_sheet:
+        api.export_sheet(ep["id"])
+    assert ei_sheet.value.status_code == 500
+    assert ei_sheet.value.detail == "failed to write export file"
+
+
 def test_panels_require_scenes(api):
     ep = api.create_episode(api.EpisodeCreate(
         season=1, number=3, slug="test_no_scenes", title="NoScenes"))
