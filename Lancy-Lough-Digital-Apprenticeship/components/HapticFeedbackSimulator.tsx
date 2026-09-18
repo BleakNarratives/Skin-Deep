@@ -9,7 +9,8 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Target position
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
   // Simulate hand movement
   useEffect(() => {
@@ -58,6 +59,24 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(applyFeedback);
   }, [feedbackType, targetPosition]);
 
+
+  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
+    const y = Math.min(100, Math.max(0, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+    setTargetPosition({ x, y });
+    setStatusMessage(`Relocated target to X: ${x}%, Y: ${y}%. Directing trajectory with Lancy-level precision!`);
+  };
+
+  const handleCanvasKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const newX = Math.floor(Math.random() * 80) + 10;
+      const newY = Math.floor(Math.random() * 80) + 10;
+      setTargetPosition({ x: newX, y: newY });
+      setStatusMessage(`Keyboard relocated target to X: ${newX}%, Y: ${newY}%. Way better alignment than Mikey's attempts!`);
+    }
+  };
 
   const getFeedbackDescription = (type: FeedbackType) => {
     switch (type) {
@@ -126,9 +145,18 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            {statusMessage && <span className="block text-teal-300 text-sm mt-1">🎯 {statusMessage}</span>}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleCanvasClick}
+          onKeyDown={handleCanvasKeyDown}
+          aria-label={`Interactive training canvas. Target at X ${targetPosition.x} percent, Y ${targetPosition.y} percent. Click or press Enter to move target.`}
+          title="Click surface or press Enter to set new target trajectory"
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
