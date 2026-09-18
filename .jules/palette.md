@@ -13,3 +13,7 @@
 ## 2026-09-16 - Range Input ARIA Value Attributes
 **Learning:** Interpolating variable numeric values directly inside `aria-label` on range inputs can cause screen readers to announce the full label name repeatedly as slider values change. Keeping `aria-label` static and using explicit `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and descriptive `aria-valuetext` provides precise value announcements for assistive technologies.
 **Action:** On range inputs, pair static `aria-label` descriptors with `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and human-friendly `aria-valuetext` strings.
+
+## 2026-09-18 - Mobile Drawer Navigation Accessibility & State Sync
+**Learning:** When sidebars or navigation drawers are hidden on small screens (`lg:block`), adding a header toggle button with `aria-expanded`, `aria-controls="main-sidebar"`, and explicit `aria-label` ensures mobile users and screen readers can easily reveal navigation links. Auto-closing the drawer upon selecting a section prevents obscuring main view content.
+**Action:** For responsive navigation drawers, connect the toggle button's `aria-controls` to the `<nav id="...">` element, manage `aria-expanded` state, and auto-close the drawer on item selection.
