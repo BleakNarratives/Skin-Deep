@@ -388,3 +388,34 @@ def test_arena_db_insert_persona_custom(tmp_path):
         row = conn.execute("SELECT * FROM persona_custom WHERE id = ?", (row_id,)).fetchone()
         assert row is not None
         assert "test-security-seed" in row["seed"]
+
+
+def test_arena_api_input_validation():
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_api
+
+    # Valid AgentRegisterRequest
+    req = arena_api.AgentRegisterRequest(agent_id="valid_agent_123", template="variant")
+    assert req.agent_id == "valid_agent_123"
+
+    # Invalid agent_id with path traversal characters
+    with pytest.raises(ValidationError):
+        arena_api.AgentRegisterRequest(agent_id="../../evil_path", template="variant")
+
+    # Invalid agent_id with spaces / special characters
+    with pytest.raises(ValidationError):
+        arena_api.AgentRegisterRequest(agent_id="agent with spaces!", template="variant")
+
+    # Invalid task_id with path traversal / special characters
+    with pytest.raises(ValidationError):
+        arena_api.ScoreRequest(task_id="../bad_task_id", response_text="test")
+
+    # Excessive response_text length exceeding 50,000 max_length limit
+    with pytest.raises(ValidationError):
+        arena_api.ScoreRequest(task_id="task_1", response_text="a" * 50001)
+
+    # Excessive groups list length exceeding max_length 10
+    with pytest.raises(ValidationError):
+        arena_api.ArenaRunRequest(groups=["A"] * 11)
