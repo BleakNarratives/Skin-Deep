@@ -9,7 +9,18 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 });
+
+  const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round(Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100)));
+    const y = Math.round(Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100)));
+    setTargetPosition({ x, y });
+  };
+
+  const handleResetTarget = () => {
+    setTargetPosition({ x: 50, y: 50 });
+  };
 
   // Simulate hand movement
   useEffect(() => {
@@ -123,12 +134,32 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={handleResetTarget}
+              aria-label="Reset target position to center"
+              title="Reset target position to center — unlike Mikey's wild drift, your haptic guide stays locked"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-rose-900/80 hover:bg-rose-800 text-rose-200 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            >
+              Reset Target
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label={`Simulated training surface. Target set at ${targetPosition.x}% horizontal and ${targetPosition.y}% vertical. Click anywhere to relocate target.`}
+          onClick={handleSurfaceClick}
+          onKeyDown={(e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+              handleResetTarget();
+            }
+          }}
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
