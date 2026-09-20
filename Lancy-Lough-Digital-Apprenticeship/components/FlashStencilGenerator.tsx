@@ -208,7 +208,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               onClick={reroll}
               aria-label="Reroll flash design seed"
               title="Generate a crisp procedural variation — way better than Mikey's attempts"
-              className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+              className="px-4 py-2 rounded-full bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 transition-colors duration-200"
             >
               Reroll
             </button>
@@ -217,7 +217,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               onClick={copySvg}
               aria-label={isCopied ? 'SVG stencil copied to clipboard' : 'Copy flash stencil SVG code to clipboard'}
               title="Copy pixel-perfect SVG code — unlike Mikey's shaky freehand"
-              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 transition-colors duration-200 ${
                 isCopied
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'bg-emerald-700 hover:bg-emerald-600 text-white'
@@ -229,7 +229,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               type="button"
               onClick={downloadSvg}
               aria-label={isDownloaded ? 'SVG downloaded' : 'Download flash stencil as SVG'}
-              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
+              title="Save vector SVG stencil file"
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 transition-colors duration-200 ${
                 isDownloaded
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
@@ -246,7 +247,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               }}
               aria-label={arMode ? 'Exit AR trace mode' : 'Enter AR trace mode'}
               aria-pressed={arMode}
-              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
+              title={arMode ? 'Exit AR tracing overlay' : 'Toggle AR tracing overlay view'}
+              className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 transition-colors duration-200 ${
                 arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'
               }`}
             >
@@ -310,6 +312,8 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
             <>
               <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
               <svg
+                role="img"
+                aria-label={`AR Overlay: Generated ${style} stencil variation #${seed} at complexity level ${complexity}`}
                 viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
                 className="absolute inset-0 w-full h-full"
                 style={{ opacity: overlayOpacity, transform: `scale(${overlayScale})`, pointerEvents: 'none' }}
@@ -328,7 +332,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               </svg>
             </>
           ) : (
-            <svg viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`} className="w-full h-full">
+            <svg
+              role="img"
+              aria-label={`Generated ${style} flash stencil variation #${seed} at complexity level ${complexity}`}
+              viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
+              className="w-full h-full"
+            >
               {paths.map((p, i) => (
                 <path
                   key={i}
