@@ -17,3 +17,7 @@
 ## 2026-09-17 - SVG Data Chart Accessibility & Dynamic AI Live Regions
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
+
+## 2026-09-21 - Data Specification Table ARIA Semantics
+**Learning:** In complex bio-telemetry dashboards, specification tables require `<caption className="sr-only">`, static `aria-label`s, `<th scope="col">` for column headings, and `<th scope="row">` for primary specification features so screen readers can properly associate matrix cell data during table navigation.
+**Action:** When rendering tabular specification or comparison data, convert standard row header `<td>` elements to `<th scope="row">` and wrap tables with explicit screen reader captions.

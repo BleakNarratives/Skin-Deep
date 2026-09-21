@@ -176,19 +176,20 @@ const App: React.FC = () => {
               </p>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-gray-800 rounded-lg shadow-md border border-gray-700">
+                <table className="min-w-full bg-gray-800 rounded-lg shadow-md border border-gray-700" aria-label="Bio-Kinetic Sensor Specifications">
+                  <caption className="sr-only">Bio-Kinetic Sensor Specifications Comparison</caption>
                   <thead>
                     <tr className="bg-gray-700 text-teal-300 uppercase text-sm leading-normal">
-                      <th className="py-3 px-6 text-left">Specification</th>
-                      <th className="py-3 px-6 text-left">Rokoko Smartgloves (Hybrid)</th>
-                      <th className="py-3 px-6 text-left">CapturyLive (Markerless)</th>
-                      <th className="py-3 px-6 text-left">Xsens Metagloves by Manus</th>
+                      <th scope="col" className="py-3 px-6 text-left">Specification</th>
+                      <th scope="col" className="py-3 px-6 text-left">Rokoko Smartgloves (Hybrid)</th>
+                      <th scope="col" className="py-3 px-6 text-left">CapturyLive (Markerless)</th>
+                      <th scope="col" className="py-3 px-6 text-left">Xsens Metagloves by Manus</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-300 text-sm font-light">
                     {SENSOR_SPECS.map((spec, index) => (
-                      <tr key={index} className="border-b border-gray-600 hover:bg-gray-700">
-                        <td className="py-3 px-6 text-left whitespace-nowrap font-medium text-white">{spec.feature}</td>
+                      <tr key={index} className="border-b border-gray-600 hover:bg-gray-700 transition-colors">
+                        <th scope="row" className="py-3 px-6 text-left whitespace-nowrap font-normal text-white">{spec.feature}</th>
                         <td className="py-3 px-6 text-left">{spec.rokoko}</td>
                         <td className="py-3 px-6 text-left">{spec.capturyLive}</td>
                         <td className="py-3 px-6 text-left">{spec.xsens}</td>
@@ -275,18 +276,19 @@ const App: React.FC = () => {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-gray-800 rounded-lg shadow-md border border-gray-700">
+                <table className="min-w-full bg-gray-800 rounded-lg shadow-md border border-gray-700" aria-label="Tattoo Machine Specifications">
+                  <caption className="sr-only">Tattoo Machine Specifications Comparison</caption>
                   <thead>
                     <tr className="bg-gray-700 text-teal-300 uppercase text-sm leading-normal">
-                      <th className="py-3 px-6 text-left">Feature</th>
-                      <th className="py-3 px-6 text-left">Coil Machine</th>
-                      <th className="py-3 px-6 text-left">Rotary Pen</th>
+                      <th scope="col" className="py-3 px-6 text-left">Feature</th>
+                      <th scope="col" className="py-3 px-6 text-left">Coil Machine</th>
+                      <th scope="col" className="py-3 px-6 text-left">Rotary Pen</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-300 text-sm font-light">
                     {MACHINE_SPECS.map((spec, index) => (
-                      <tr key={index} className="border-b border-gray-600 hover:bg-gray-700">
-                        <td className="py-3 px-6 text-left whitespace-nowrap font-medium text-white">{spec.feature}</td>
+                      <tr key={index} className="border-b border-gray-600 hover:bg-gray-700 transition-colors">
+                        <th scope="row" className="py-3 px-6 text-left whitespace-nowrap font-normal text-white">{spec.feature}</th>
                         <td className="py-3 px-6 text-left">{spec.coilMachine}</td>
                         <td className="py-3 px-6 text-left">{spec.rotaryPen}</td>
                       </tr>
