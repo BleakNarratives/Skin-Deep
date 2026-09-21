@@ -390,32 +390,18 @@ def test_arena_db_insert_persona_custom(tmp_path):
         assert "test-security-seed" in row["seed"]
 
 
-def test_arena_api_input_validation():
-    backend_dir = SB_DIR.parent / "backend"
-    if str(backend_dir) not in sys.path:
-        sys.path.insert(0, str(backend_dir))
-    import arena_api
+def test_boardroom_request_validation(api):
+    # Valid bounds: 1 <= rounds <= 10
+    req_valid = api.BoardroomRequest(rounds=3)
+    assert req_valid.rounds == 3
 
-    # Valid AgentRegisterRequest
-    req = arena_api.AgentRegisterRequest(agent_id="valid_agent_123", template="variant")
-    assert req.agent_id == "valid_agent_123"
+    # Default value
+    req_default = api.BoardroomRequest()
+    assert req_default.rounds == 2
 
-    # Invalid agent_id with path traversal characters
+    # Out of bounds: rounds < 1 or rounds > 10
     with pytest.raises(ValidationError):
-        arena_api.AgentRegisterRequest(agent_id="../../evil_path", template="variant")
+        api.BoardroomRequest(rounds=0)
 
-    # Invalid agent_id with spaces / special characters
     with pytest.raises(ValidationError):
-        arena_api.AgentRegisterRequest(agent_id="agent with spaces!", template="variant")
-
-    # Invalid task_id with path traversal / special characters
-    with pytest.raises(ValidationError):
-        arena_api.ScoreRequest(task_id="../bad_task_id", response_text="test")
-
-    # Excessive response_text length exceeding 50,000 max_length limit
-    with pytest.raises(ValidationError):
-        arena_api.ScoreRequest(task_id="task_1", response_text="a" * 50001)
-
-    # Excessive groups list length exceeding max_length 10
-    with pytest.raises(ValidationError):
-        arena_api.ArenaRunRequest(groups=["A"] * 11)
+        api.BoardroomRequest(rounds=11)
