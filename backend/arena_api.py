@@ -102,9 +102,10 @@ class ArenaRunRequest(BaseModel):
 
 
 class BattleRequest(BaseModel):
-    duress_level: str = "none"  # none | pressure | critical
-    contradiction_seed: str | None = None
-    identity_shift: str | None = None
+    # Security: Restrict input string lengths to prevent memory exhaustion / DoS attacks in battle simulations.
+    duress_level: str = Field(default="none", max_length=32, pattern=r"^[a-zA-Z0-9_-]+$")
+    contradiction_seed: str | None = Field(default=None, max_length=5000)
+    identity_shift: str | None = Field(default=None, max_length=5000)
     turns: int = Field(default=3, ge=1, le=10)
 
 
@@ -120,8 +121,9 @@ class AgentRegisterRequest(BaseModel):
 
 
 class AgentRunRequest(BaseModel):
-    task_id: str
-    group: str = "A"
+    # Security: Restrict task_id and group to prevent injection risks and resource exhaustion.
+    task_id: str = Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    group: str = Field(default="A", min_length=1, max_length=10, pattern=r"^[a-zA-Z0-9_-]+$")
     persist: bool = False  # False = dry run (no corpus/state/comms writes)
 
 
