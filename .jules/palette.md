@@ -17,3 +17,7 @@
 ## 2026-09-17 - SVG Data Chart Accessibility & Dynamic AI Live Regions
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
+
+## 2026-09-22 - Interactive Canvas Container Click Target Calculation & ARIA
+**Learning:** When making simulated canvas or surface containers interactable (`role="button"`, `tabIndex={0}`), absolute child elements inside the surface container must have `pointer-events-none` applied. This prevents child elements from intercepting clicks and warping relative coordinate calculations (`e.clientX - rect.left`).
+**Action:** Always apply `pointer-events-none` to decorative or state-indicator child elements on interactive click-to-target canvas surfaces while supplying dynamic `aria-label` and `onKeyDown` support (`Enter`/`Space`).

@@ -59,6 +59,13 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, [feedbackType, targetPosition]);
 
 
+  const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    setTargetPosition({ x: Math.min(90, Math.max(10, x)), y: Math.min(90, Math.max(10, y)) });
+  };
+
   const getFeedbackDescription = (type: FeedbackType) => {
     switch (type) {
       case 'spring': return 'Pulls hand toward ideal trajectory.';
@@ -74,8 +81,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
         <div className="flex-1">
           <p className="text-gray-300 mb-4">
             Experience simulated haptic feedback for precision training.
-            <span className="block text-sm text-gray-500">
-              Target trajectory represented by the teal circle. Your "hand" is the glowing blue dot.
+            <span className="block text-sm text-gray-400 mt-1">
+              Target trajectory: teal circle at ({Math.round(targetPosition.x)}%, {Math.round(targetPosition.y)}%). Click or press Enter on the surface to relocate it (Unlike Mikey, who misses target depth every time!).
             </span>
           </p>
           <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Haptic Feedback Mode">
@@ -128,9 +135,21 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label={`Interactive training surface. Target set at X ${Math.round(targetPosition.x)} percent, Y ${Math.round(targetPosition.y)} percent. Click or press Enter to set a new target trajectory. Unlike Mikey, who misses target depth every time!`}
+          onClick={handleSurfaceClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setTargetPosition({ x: Math.floor(20 + Math.random() * 60), y: Math.floor(20 + Math.random() * 60) });
+            }
+          }}
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
           <div
-            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
+            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white pointer-events-none"
             style={{
               left: `${targetPosition.x - 4}%`,
               top: `${targetPosition.y - 4}%`,
