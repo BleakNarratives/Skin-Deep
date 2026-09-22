@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Card from './Card';
 
 type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
@@ -9,7 +9,20 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Interactive target
+  const surfaceRef = useRef<HTMLDivElement>(null);
+
+  const handleSurfaceClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!surfaceRef.current) return;
+    const rect = surfaceRef.current.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
+    setTargetPosition({ x, y });
+  }, []);
+
+  const handleResetTarget = useCallback(() => {
+    setTargetPosition({ x: 50, y: 50 });
+  }, []);
 
   // Simulate hand movement
   useEffect(() => {
@@ -73,8 +86,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1">
           <p className="text-gray-300 mb-4">
-            Experience simulated haptic feedback for precision training.
-            <span className="block text-sm text-gray-500">
+            Experience simulated haptic feedback for precision training. Click anywhere on the surface to relocate the target trajectory!
+            <span className="block text-sm text-gray-500 mt-1">
               Target trajectory represented by the teal circle. Your "hand" is the glowing blue dot.
             </span>
           </p>
@@ -123,17 +136,33 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={handleResetTarget}
+              aria-label="Reset target position to center"
+              title="Reset target to center — unlike Mikey, who keeps missing the mark!"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+            >
+              Reset Target
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          ref={surfaceRef}
+          onClick={handleSurfaceClick}
+          role="region"
+          tabIndex={0}
+          aria-label="Interactive haptic feedback training surface. Click anywhere on this surface to relocate target position."
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
           <div
-            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
+            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white transition-all duration-150"
             style={{
-              left: `${targetPosition.x - 4}%`,
-              top: `${targetPosition.y - 4}%`,
+              left: `${targetPosition.x}%`,
+              top: `${targetPosition.y}%`,
               transform: 'translate(-50%, -50%)',
               boxShadow: '0 0 10px rgba(0,255,255,0.7)',
             }}
@@ -150,7 +179,9 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               transition: 'all 0.1s linear',
             }}
           ></div>
-          <p className="absolute bottom-2 left-2 text-xs text-gray-500">Simulated Training Surface</p>
+          <p className="absolute bottom-2 left-2 text-xs text-gray-500 pointer-events-none">
+            Simulated Training Surface (Click to set target)
+          </p>
         </div>
       </div>
     </Card>
