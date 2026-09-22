@@ -405,3 +405,37 @@ def test_boardroom_request_validation(api):
 
     with pytest.raises(ValidationError):
         api.BoardroomRequest(rounds=11)
+
+
+def test_arena_request_validation_security():
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_api
+
+    # Test AgentRunRequest task_id and group pattern/length validation
+    req_agent = arena_api.AgentRunRequest(task_id="task_001_legal_analysis", group="A")
+    assert req_agent.task_id == "task_001_legal_analysis"
+    assert req_agent.group == "A"
+
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="invalid/task_id")
+
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="a" * 101)
+
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="valid_task", group="group;SELECT *")
+
+    # Test BattleRequest duress_level and string input limits
+    req_battle = arena_api.BattleRequest(duress_level="pressure", contradiction_seed="seed", turns=3)
+    assert req_battle.duress_level == "pressure"
+
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(duress_level="invalid status; drop table")
+
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(contradiction_seed="x" * 5001)
+
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(identity_shift="x" * 5001)
