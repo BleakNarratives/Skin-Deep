@@ -405,3 +405,43 @@ def test_boardroom_request_validation(api):
 
     with pytest.raises(ValidationError):
         api.BoardroomRequest(rounds=11)
+
+    # Out of bounds: outline exceeding max_length=100000
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(outline="a" * 100001)
+
+
+def test_panel_patch_length_validation(api):
+    # Valid patch
+    patch_valid = api.PanelPatch(action="short action", shot_type="MCU")
+    assert patch_valid.action == "short action"
+
+    # Invalid patch: action exceeding max_length=5000
+    with pytest.raises(ValidationError):
+        api.PanelPatch(action="x" * 5001)
+
+
+def test_arena_api_request_validation():
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_api
+
+    # Valid AgentRunRequest
+    run_req = arena_api.AgentRunRequest(task_id="task_123", group="A")
+    assert run_req.task_id == "task_123"
+
+    # Invalid task_id pattern / length
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="invalid task id with spaces!")
+
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="a" * 101)
+
+    # Valid BattleRequest
+    battle_req = arena_api.BattleRequest(duress_level="pressure")
+    assert battle_req.duress_level == "pressure"
+
+    # Invalid duress_level pattern
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(duress_level="pressure!@#$")

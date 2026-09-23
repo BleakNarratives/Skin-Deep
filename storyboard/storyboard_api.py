@@ -38,35 +38,37 @@ EPISODES_DIR = gen.EPISODES_DIR
 # ── request bodies ───────────────────────────────────────────────────────
 
 class EpisodeCreate(BaseModel):
-    season: int = 1
-    number: int = 1
+    season: int = Field(default=1, ge=1, le=100)
+    number: int = Field(default=1, ge=1, le=1000)
     # Security: Restrict slug to safe alphanumeric characters, hyphens, and underscores.
     # Prevents directory traversal attacks when writing markdown outlines to filesystem (episodes/{slug}.md).
     slug: str = Field(min_length=2, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
     title: str = Field(min_length=1, max_length=200)
-    logline: str = ""
-    outline: str = ""  # markdown; written to episodes/{slug}.md
+    logline: str = Field(default="", max_length=1000)
+    outline: str = Field(default="", max_length=100000)  # markdown; written to episodes/{slug}.md
 
 
 class PanelPatch(BaseModel):
-    shot_type: str | None = None
-    camera_move: str | None = None
-    action: str | None = None
-    vo_speaker: str | None = None
-    vo_line: str | None = None
-    on_screen_text: str | None = None
+    # Security: Enforce max_length on text attributes to prevent memory exhaustion / DoS attacks.
+    shot_type: str | None = Field(default=None, max_length=32)
+    camera_move: str | None = Field(default=None, max_length=64)
+    action: str | None = Field(default=None, max_length=5000)
+    vo_speaker: str | None = Field(default=None, max_length=64)
+    vo_line: str | None = Field(default=None, max_length=2000)
+    on_screen_text: str | None = Field(default=None, max_length=1000)
     duration_sec: float | None = Field(default=None, gt=0.1, le=60)
-    visual_prompt: str | None = None
-    ord: int | None = None
+    visual_prompt: str | None = Field(default=None, max_length=2000)
+    ord: int | None = Field(default=None, ge=1, le=1000)
 
 
 class SceneCreateRequest(BaseModel):
-    outline: str = ""
+    # Security: Enforce max_length on outline string to prevent memory exhaustion / DoS.
+    outline: str = Field(default="", max_length=100000)
 
 
 class BoardroomRequest(BaseModel):
-    outline: str = ""
-    # Security: Limit rounds to [1, 10] to prevent DoS via excessive simulation iterations.
+    # Security: Enforce max_length on outline and limit rounds to prevent DoS.
+    outline: str = Field(default="", max_length=100000)
     rounds: int = Field(default=2, ge=1, le=10)
 
 
