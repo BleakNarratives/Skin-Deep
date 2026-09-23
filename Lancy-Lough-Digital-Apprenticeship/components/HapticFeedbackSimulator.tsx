@@ -10,6 +10,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
   const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [actionNotice, setActionNotice] = useState<string>('');
 
   // Simulate hand movement
   useEffect(() => {
@@ -21,6 +22,12 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     }, 200);
     return () => clearInterval(interval);
   }, []);
+
+  const handleResetPosition = () => {
+    setHandPosition({ x: 50, y: 50 });
+    setActionNotice('Hand position reset to target center.');
+    setTimeout(() => setActionNotice(''), 3000);
+  };
 
   // Apply feedback logic
   useEffect(() => {
@@ -123,9 +130,19 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={handleResetPosition}
+              aria-label="Reset hand position to center target"
+              title="Reset position to center — unlike Mikey, we don't let our hand drift into chaotic wobble."
+              className="px-4 py-2 rounded-full text-sm font-medium bg-gray-700 hover:bg-gray-600 text-teal-300 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            >
+              Reset Position
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            {actionNotice && <span className="block text-teal-300 font-medium mt-1">{actionNotice}</span>}
           </div>
         </div>
         <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
