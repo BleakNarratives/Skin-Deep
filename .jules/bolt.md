@@ -9,3 +9,7 @@
 ## 2025-05-20 - Unstable Callback Dependencies Invalidating Memoized Child Navigation
 **Learning:** Passing unstable callback functions to memoized navigation components (`Sidebar` wrapped in `React.memo`) causes full component tree re-renders whenever state objects change. Additionally, triggering state updates (`setActiveSection`) that already run side-effects in `useEffect` creates duplicate API calls.
 **Action:** Memoize API handlers with `useCallback` and keep section navigation callbacks clean with empty dependency arrays `[]` so memoized children skip re-renders.
+
+## 2025-05-21 - N+1 Relational DB Queries in Nested Tree Serialization
+**Learning:** When constructing hierarchical data trees (e.g. Episode -> Scenes -> Panels) in SQLite backends, querying child relations inside nested loops causes $1 + 1 + N$ queries and opens/closes database handles $N+2$ times. Joining child tables in a single batch query reduces database connection checkouts and roundtrips by >75%.
+**Action:** Batch fetch child entities using `JOIN` queries within a single read connection context (`with _ro() as conn:`), and map children to parent entities in-memory using hash maps.
