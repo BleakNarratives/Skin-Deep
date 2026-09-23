@@ -107,7 +107,12 @@ const ChatInterface: React.FC = React.memo(() => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {messages.length === 0 && (
           <p className="text-gray-400 text-sm text-center italic mt-4">
             Ask anything about LOUGH bio-telemetry or Lancy Lough's techniques (Unlike Mikey, our AI actually gives useful answers!).
@@ -149,7 +154,8 @@ const ChatInterface: React.FC = React.memo(() => {
         <button
           type="button"
           onClick={handleSendMessage}
-          aria-label="Send message"
+          aria-label="Send message to DeepSeek AI"
+          title="Send message — unlike Mikey, our AI actually gives useful answers!"
           className="bg-teal-600 hover:bg-teal-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 text-white font-medium text-sm py-2 px-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[60px]"
           disabled={isLoading || !input.trim()}
         >
