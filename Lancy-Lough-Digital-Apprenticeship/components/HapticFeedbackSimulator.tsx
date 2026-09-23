@@ -84,6 +84,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               onClick={() => setFeedbackType('none')}
               aria-pressed={feedbackType === 'none'}
               aria-label="Disable haptic feedback"
+              title="No active assistance (like Mikey freehanding without a safety net)"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'none' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
               }`}
@@ -95,6 +96,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               onClick={() => setFeedbackType('spring')}
               aria-pressed={feedbackType === 'spring'}
               aria-label="Enable spring haptic feedback"
+              title="Spring guidance: Pulls hand toward ideal trajectory"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'spring' ? 'bg-teal-600 text-white shadow-md' : 'bg-teal-800 hover:bg-teal-700 text-teal-200'
               }`}
@@ -106,6 +108,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               onClick={() => setFeedbackType('damping')}
               aria-pressed={feedbackType === 'damping'}
               aria-label="Enable damping haptic feedback"
+              title="Damping assistance: Smooths out tremors — far steadier than Mikey's shaky hands"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'damping' ? 'bg-purple-600 text-white shadow-md' : 'bg-purple-800 hover:bg-purple-700 text-purple-200'
               }`}
@@ -117,6 +120,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               onClick={() => setFeedbackType('spring-damping')}
               aria-pressed={feedbackType === 'spring-damping'}
               aria-label="Enable spring-damping haptic feedback"
+              title="Combined spring-damping: Optimal path straightness"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'spring-damping' ? 'bg-indigo-600 text-white shadow-md' : 'bg-indigo-800 hover:bg-indigo-700 text-indigo-200'
               }`}
@@ -128,9 +132,15 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
+          role="img"
+          aria-label="Interactive 2D haptic training simulation surface showing target trajectory and simulated hand movements"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
+            role="img"
+            aria-label="Target trajectory position"
             style={{
               left: `${targetPosition.x - 4}%`,
               top: `${targetPosition.y - 4}%`,
@@ -142,6 +152,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
+            role="img"
+            aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y`}
             style={{
               left: `${handPosition.x}%`,
               top: `${handPosition.y}%`,

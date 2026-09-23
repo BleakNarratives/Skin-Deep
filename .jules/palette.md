@@ -17,3 +17,7 @@
 ## 2026-09-17 - SVG Data Chart Accessibility & Dynamic AI Live Regions
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
+
+## 2026-09-23 - Interactive Chat Logs & Animated Simulation ARIA Attributes
+**Learning:** Chat message containers require `role="log"`, `aria-live="polite"`, and `aria-relevant="additions"` so assistive tech automatically announces newly appended messages and typing states. Furthermore, custom 2D animated canvas elements and simulated hand positions need `role="img"` and clear `aria-label` attributes to convey active positioning and state to screen reader users.
+**Action:** Add `role="log"` with `aria-live="polite"` to chat message lists and add `role="img"` with static or dynamic coordinate `aria-label` descriptors to interactive 2D simulation containers.
