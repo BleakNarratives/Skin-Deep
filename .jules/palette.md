@@ -17,3 +17,7 @@
 ## 2026-09-17 - SVG Data Chart Accessibility & Dynamic AI Live Regions
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
+
+## 2026-09-18 - Interactive Haptic/Physics Simulation Reset Controls
+**Learning:** Animated or continuous canvas/simulation widgets (like haptic trajectory simulators) can drift out of bounds or create visual fatigue. Adding an explicit Reset Position action button with full ARIA labeling (`aria-label`), visible keyboard focus rings (`focus-visible:ring-2`), and dedicated status updates inside an `aria-live="polite"` region allows screen reader users to remain aware of position resets.
+**Action:** On continuous canvas or stateful simulation controls, pair reset action buttons with `aria-label`, visible focus indicators, and transient screen reader notifications in `aria-live="polite"` regions.
