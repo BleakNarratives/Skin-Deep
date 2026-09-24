@@ -9,7 +9,21 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 });
+  const [statusMessage, setStatusMessage] = useState<string>('Click canvas to set target trajectory.');
+
+  const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(95, Math.max(5, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(95, Math.max(5, ((e.clientY - rect.top) / rect.height) * 100));
+    setTargetPosition({ x, y });
+    setStatusMessage(`Target set to (${Math.round(x)}%, ${Math.round(y)}%) — precision Mikey could only dream of!`);
+  };
+
+  const handleResetTarget = () => {
+    setTargetPosition({ x: 50, y: 50 });
+    setStatusMessage('Target reset to center.');
+  };
 
   // Simulate hand movement
   useEffect(() => {
@@ -123,12 +137,33 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={handleResetTarget}
+              aria-label="Reset target trajectory to center position"
+              className="px-3 py-2 rounded-full text-xs font-medium bg-gray-700 hover:bg-gray-600 text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200"
+            >
+              Reset Target
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            <span className="block text-teal-300 text-xs mt-1">🎨 {statusMessage}</span>
           </div>
         </div>
-        <div className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleSurfaceClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleResetTarget();
+            }
+          }}
+          aria-label="Interactive training surface. Click to set target trajectory."
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
           <div
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
