@@ -149,7 +149,20 @@ const ChatInterface: React.FC = React.memo(() => {
         <button
           type="button"
           onClick={handleSendMessage}
-          aria-label="Send message"
+          aria-label={
+            isLoading
+              ? "DeepSeek AI is processing your request..."
+              : !input.trim()
+              ? "Send message (disabled: enter a message first)"
+              : "Send message to DeepSeek AI"
+          }
+          title={
+            isLoading
+              ? "DeepSeek AI is generating a response..."
+              : !input.trim()
+              ? "Type a message to send to DeepSeek AI"
+              : "Send message to DeepSeek AI"
+          }
           className="bg-teal-600 hover:bg-teal-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 text-white font-medium text-sm py-2 px-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[60px]"
           disabled={isLoading || !input.trim()}
         >
