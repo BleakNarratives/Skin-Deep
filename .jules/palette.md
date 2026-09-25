@@ -17,3 +17,7 @@
 ## 2026-09-17 - SVG Data Chart Accessibility & Dynamic AI Live Regions
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
+
+## 2026-09-25 - Mobile Navigation Dropdown Fallback for Hidden Sidebars
+**Learning:** When sidebars or persistent navigation menus are hidden on smaller viewports (e.g. `hidden lg:block`), mobile users are left without structural navigation controls. Providing a compact header section dropdown (`lg:hidden`) with `aria-label` and `focus-visible:ring-2` styling ensures instant section switching and screen reader accessibility on mobile devices without cluttering the layout.
+**Action:** Always provide an accessible header or toolbar dropdown fallback when main navigation sidebars are hidden on small screen viewports.

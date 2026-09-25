@@ -96,7 +96,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
-      <Header />
+      <Header navItems={NAV_ITEMS} activeSection={activeSection} onSelectSection={handleSelectSection} />
       <Sidebar navItems={NAV_ITEMS} activeSection={activeSection} onSelectSection={handleSelectSection} />
 
       <main id="main-content" tabIndex={-1} className="lg:ml-64 pt-20 p-8 outline-none">
