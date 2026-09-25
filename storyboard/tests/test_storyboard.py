@@ -204,6 +204,20 @@ def test_outline_text_path_traversal_prevention(api, tmp_db):
     assert ei.value.detail == "invalid outline path"
 
 
+def test_export_path_traversal_prevention(api, tmp_db):
+    ep = tmp_db.create_episode(1, 102, "../evil_export_json", "Export Traversal", "log", "")
+    with pytest.raises(HTTPException) as ei_json:
+        api.export_json(ep["id"])
+    assert ei_json.value.status_code == 400
+    assert ei_json.value.detail == "invalid export path"
+
+    ep_sheet = tmp_db.create_episode(1, 103, "../evil_export_sheet", "Sheet Traversal", "log", "")
+    with pytest.raises(HTTPException) as ei_sheet:
+        api.export_sheet(ep_sheet["id"])
+    assert ei_sheet.value.status_code == 400
+    assert ei_sheet.value.detail == "invalid export path"
+
+
 def test_panels_require_scenes(api):
     ep = api.create_episode(api.EpisodeCreate(
         season=1, number=3, slug="test_no_scenes", title="NoScenes"))

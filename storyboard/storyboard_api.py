@@ -278,7 +278,10 @@ def export_json(episode_id: int) -> Response:
     if tree is None:
         raise HTTPException(404, "episode not found")
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    path = EXPORTS_DIR / f"{tree['slug']}.json"
+    path = (EXPORTS_DIR / f"{tree['slug']}.json").resolve()
+    # Security: Ensure export path remains inside EXPORTS_DIR to prevent directory traversal attacks
+    if not path.is_relative_to(EXPORTS_DIR.resolve()):
+        raise HTTPException(400, "invalid export path")
     path.write_text(json.dumps(tree, ensure_ascii=False, indent=2), encoding="utf-8")
     return Response(
         path.read_text(encoding="utf-8"),
@@ -325,7 +328,10 @@ def export_sheet(episode_id: int) -> HTMLResponse:
         raise HTTPException(404, "episode not found")
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
     html = _render_sheet(tree)
-    path = EXPORTS_DIR / f"{tree['slug']}_contact_sheet.html"
+    path = (EXPORTS_DIR / f"{tree['slug']}_contact_sheet.html").resolve()
+    # Security: Ensure export path remains inside EXPORTS_DIR to prevent directory traversal attacks
+    if not path.is_relative_to(EXPORTS_DIR.resolve()):
+        raise HTTPException(400, "invalid export path")
     path.write_text(html, encoding="utf-8")
     return HTMLResponse(html)
 
