@@ -18,7 +18,19 @@ const App: React.FC = () => {
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sectionRefCallbacks = useRef<Record<string, (el: HTMLDivElement | null) => void>>({});
   const geminiExplanationsRef = useRef(geminiExplanations);
+
+  // Performance optimization: Cache ref callbacks for section DOM elements to avoid allocating
+  // 11 inline arrow functions on every render, preventing React from detaching/re-attaching refs.
+  const getSectionRef = useCallback((id: string) => {
+    if (!sectionRefCallbacks.current[id]) {
+      sectionRefCallbacks.current[id] = (el: HTMLDivElement | null) => {
+        sectionRefs.current[id] = el;
+      };
+    }
+    return sectionRefCallbacks.current[id];
+  }, []);
 
   useEffect(() => {
     geminiExplanationsRef.current = geminiExplanations;
@@ -120,7 +132,7 @@ const App: React.FC = () => {
             </div>
           </Card>
 
-          <section id="introduction" ref={(el) => (sectionRefs.current['introduction'] = el)}>
+          <section id="introduction" ref={getSectionRef('introduction')}>
             <SectionTitle
               id="introduction"
               title="Computational Architecture for the Legacy Overlay Unified Graphics Hub (LOUGH)"
@@ -142,7 +154,7 @@ const App: React.FC = () => {
           </section>
 
 
-          <section id="flash-generator" ref={(el) => (sectionRefs.current['flash-generator'] = el)}>
+          <section id="flash-generator" ref={getSectionRef('flash-generator')}>
             <SectionTitle
               id="flash-generator"
               title="Flash & Stencil Generator"
@@ -151,7 +163,7 @@ const App: React.FC = () => {
             <FlashStencilGenerator />
           </section>
 
-          <section id="bio-kinetic-acquisition" ref={(el) => (sectionRefs.current['bio-kinetic-acquisition'] = el)}>
+          <section id="bio-kinetic-acquisition" ref={getSectionRef('bio-kinetic-acquisition')}>
             <SectionTitle
               id="bio-kinetic-acquisition"
               title="High-Fidelity Bio-Kinetic Acquisition"
@@ -197,7 +209,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="biometric-telemetry" ref={(el) => (sectionRefs.current['biometric-telemetry'] = el)}>
+          <section id="biometric-telemetry" ref={getSectionRef('biometric-telemetry')}>
             <SectionTitle
               id="biometric-telemetry"
               title="Biometric Telemetry and the Internal State"
@@ -230,7 +242,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="machine-telemetry" ref={(el) => (sectionRefs.current['machine-telemetry'] = el)}>
+          <section id="machine-telemetry" ref={getSectionRef('machine-telemetry')}>
             <SectionTitle
               id="machine-telemetry"
               title="Tattoo Machine Telemetry"
@@ -294,7 +306,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="white-paper-engine" ref={(el) => (sectionRefs.current['white-paper-engine'] = el)}>
+          <section id="white-paper-engine" ref={getSectionRef('white-paper-engine')}>
             <SectionTitle
               id="white-paper-engine"
               title='"White Paper" Engine'
@@ -314,7 +326,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="haptic-guidance" ref={(el) => (sectionRefs.current['haptic-guidance'] = el)}>
+          <section id="haptic-guidance" ref={getSectionRef('haptic-guidance')}>
             <SectionTitle
               id="haptic-guidance"
               title="Haptic Guidance and Skill Transfer"
@@ -336,7 +348,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="multimodal-ai" ref={(el) => (sectionRefs.current['multimodal-ai'] = el)}>
+          <section id="multimodal-ai" ref={getSectionRef('multimodal-ai')}>
             <SectionTitle
               id="multimodal-ai"
               title="Multimodal AI and Transformer Architectures"
@@ -367,7 +379,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="robotic-revitalization" ref={(el) => (sectionRefs.current['robotic-revitalization'] = el)}>
+          <section id="robotic-revitalization" ref={getSectionRef('robotic-revitalization')}>
             <SectionTitle
               id="robotic-revitalization"
               title="Robotic Revitalization and the Autonomous Layer"
@@ -394,7 +406,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="socio-technical-integrity" ref={(el) => (sectionRefs.current['socio-technical-integrity'] = el)}>
+          <section id="socio-technical-integrity" ref={getSectionRef('socio-technical-integrity')}>
             <SectionTitle
               id="socio-technical-integrity"
               title="Socio-Technical Integrity and the Lough Legacy"
@@ -419,7 +431,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="conclusion" ref={(el) => (sectionRefs.current['conclusion'] = el)}>
+          <section id="conclusion" ref={getSectionRef('conclusion')}>
             <SectionTitle
               id="conclusion"
               title="Conclusion: The Integrated Legacy Overlay"
