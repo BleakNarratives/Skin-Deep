@@ -5,6 +5,8 @@ interface SidebarProps {
   navItems: NavItem[];
   activeSection: string;
   onSelectSection: (id: string) => void;
+  isMobileMenuOpen?: boolean;
+  onCloseMobileMenu?: () => void;
 }
 
 interface SidebarNavItemProps {
@@ -37,16 +39,29 @@ const SidebarNavItem = React.memo<SidebarNavItemProps>(({ item, isActive, onSele
 SidebarNavItem.displayName = 'SidebarNavItem';
 
 // Performance optimization: Memoize Sidebar container to skip redundant re-renders.
-const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, onSelectSection }) => {
+const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, onSelectSection, isMobileMenuOpen = false, onCloseMobileMenu }) => {
+  const handleItemSelect = (id: string) => {
+    onSelectSection(id);
+    if (onCloseMobileMenu) {
+      onCloseMobileMenu();
+    }
+  };
+
   return (
-    <nav aria-label="Main Navigation" className="fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto z-40 hidden lg:block">
+    <nav
+      id="main-sidebar"
+      aria-label="Main Navigation"
+      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-gray-900 border-r border-gray-700 p-6 overflow-y-auto z-40 transition-all duration-200 ${
+        isMobileMenuOpen ? 'block shadow-2xl' : 'hidden lg:block'
+      }`}
+    >
       <ul>
         {navItems.map((item) => (
           <SidebarNavItem
             key={item.id}
             item={item}
             isActive={activeSection === item.id}
-            onSelectSection={onSelectSection}
+            onSelectSection={handleItemSelect}
           />
         ))}
       </ul>

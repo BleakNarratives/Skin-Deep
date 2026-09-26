@@ -13,3 +13,7 @@
 ## 2026-09-16 - Range Input ARIA Value Attributes
 **Learning:** Interpolating variable numeric values directly inside `aria-label` on range inputs can cause screen readers to announce the full label name repeatedly as slider values change. Keeping `aria-label` static and using explicit `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and descriptive `aria-valuetext` provides precise value announcements for assistive technologies.
 **Action:** On range inputs, pair static `aria-label` descriptors with `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and human-friendly `aria-valuetext` strings.
+
+## 2026-09-17 - SVG Data Chart Accessibility & Dynamic AI Live Regions
+**Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
+**Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
