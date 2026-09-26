@@ -60,12 +60,13 @@ class PanelPatch(BaseModel):
     ord: int | None = None
 
 
-class SceneGenerateRequest(BaseModel):
-    outline: str = Field(default="", max_length=50000)
+class SceneCreateRequest(BaseModel):
+    outline: str = ""
 
 
 class BoardroomRequest(BaseModel):
-    outline: str = Field(default="", max_length=50000)
+    outline: str = ""
+    # Security: Limit rounds to [1, 10] to prevent DoS via excessive simulation iterations.
     rounds: int = Field(default=2, ge=1, le=10)
 
 
@@ -152,11 +153,10 @@ def delete_episode(episode_id: int) -> dict:
 # ── AI generation stages ─────────────────────────────────────────────────
 
 @router.post("/episodes/{episode_id}/scenes")
-def generate_scenes(
-    episode_id: int, body: SceneGenerateRequest = SceneGenerateRequest()
-) -> dict:
+def generate_scenes(episode_id: int, body: SceneCreateRequest | None = None) -> dict:
     ep = _episode_or_404(episode_id)
-    outline = _outline_text(ep, body.outline)
+    req = body or SceneCreateRequest()
+    outline = _outline_text(ep, req.outline)
     try:
         scenes, provider = gen.generate_scenes(outline)
     except gen.GenerationError as e:
@@ -183,14 +183,12 @@ def generate_panels(episode_id: int) -> dict:
 
 
 @router.post("/episodes/{episode_id}/boardroom")
-def boardroom_mode(
-    episode_id: int, body: BoardroomRequest = BoardroomRequest()
-) -> dict:
+def boardroom_mode(episode_id: int, body: BoardroomRequest | None = None) -> dict:
     ep = _episode_or_404(episode_id)
-    outline = _outline_text(ep, body.outline)
-    rounds = body.rounds
+    req = body or BoardroomRequest()
+    outline = _outline_text(ep, req.outline)
     try:
-        notes = gen.boardroom_notes(outline, rounds=rounds)
+        notes = gen.boardroom_notes(outline, rounds=req.rounds)
     except gen.GenerationError as e:
         raise _gen_fail(e)
     except Exception:  # conductor runtime failure — fail loud
