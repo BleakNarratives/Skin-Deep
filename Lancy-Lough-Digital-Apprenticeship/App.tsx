@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [geminiExplanations, setGeminiExplanations] = useState<Record<string, string>>({});
   const [loadingExplanation, setLoadingExplanation] = useState<boolean>(true);
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -110,6 +111,18 @@ const App: React.FC = () => {
 
   const handleCloseMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   return (
@@ -470,6 +483,20 @@ const App: React.FC = () => {
 
         </div>
       </main>
+
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="Scroll to top of page"
+          title="Scroll to top"
+          className="fixed bottom-6 left-6 lg:left-72 z-40 bg-teal-700 hover:bg-teal-600 text-white p-3 rounded-full shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-all duration-200 flex items-center justify-center"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+      )}
 
       <ChatInterface />
     </div>
