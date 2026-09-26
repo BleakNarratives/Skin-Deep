@@ -10,6 +10,6 @@
 **Learning:** Passing unstable callback functions to memoized navigation components (`Sidebar` wrapped in `React.memo`) causes full component tree re-renders whenever state objects change. Additionally, triggering state updates (`setActiveSection`) that already run side-effects in `useEffect` creates duplicate API calls.
 **Action:** Memoize API handlers with `useCallback` and keep section navigation callbacks clean with empty dependency arrays `[]` so memoized children skip re-renders.
 
-## 2025-05-21 - N+1 Connection & Query Overhead in SQLite Tree Traversal
-**Learning:** When retrieving hierarchical entities (like episodes -> scenes -> panels), invoking `list_panels` inside a per-scene loop in `storyboard_db.py` opens and closes individual `_ro()` SQLite connections for each scene. For an episode with N scenes, this creates N+2 separate database connections and queries.
-**Action:** Use a single `with _ro()` connection context and execute batched JOIN queries for child records, grouping them in memory using a hash map lookup.
+## 2025-05-21 - N+1 Query Elimination in Storyboard DB Hierarchy
+**Learning:** Building nested tree structures (e.g. Episode -> Scenes -> Panels) by issuing separate queries for child entities inside loops causes severe N+1 database connection churn and query multiplication. Batch-fetching child entities using `IN (SELECT ...)` within a single read connection reduces DB roundtrips from O(N) to 3 queries.
+**Action:** Batch child queries using `SQL IN` subqueries within a single context manager session and group child records into a `defaultdict(list)` dictionary in memory before attaching to parent trees.

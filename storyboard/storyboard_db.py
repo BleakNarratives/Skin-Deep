@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections import defaultdict
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -301,9 +302,8 @@ def list_panels(scene_id: int) -> list[dict]:
 
 
 def episode_tree(episode_id: int) -> dict | None:
-    # Performance optimization: Fetch episode, scenes, and panels in a single read transaction
-    # with batched queries. Eliminates N+1 DB connections and per-scene query overhead (reduces
-    # connections from N+2 to 1 and queries from N+2 to 3 for an episode with N scenes).
+    # Performance optimization: Execute queries within a single read connection and batch-fetch
+    # panels in 1 query instead of N queries per scene (eliminating N+1 database queries & connection churn).
     with _ro() as conn:
         ep = conn.execute(
             "SELECT * FROM episodes WHERE id = ?", (episode_id,)
@@ -312,31 +312,36 @@ def episode_tree(episode_id: int) -> dict | None:
             return None
         tree = dict(ep)
 
-        scenes_rows = conn.execute(
+        scene_rows = conn.execute(
             "SELECT * FROM scenes WHERE episode_id = ? ORDER BY ord",
             (episode_id,),
         ).fetchall()
 
-        panels_rows = conn.execute(
-            "SELECT p.* FROM panels p JOIN scenes s ON p.scene_id = s.id"
-            " WHERE s.episode_id = ? ORDER BY p.scene_id, p.ord",
-            (episode_id,),
-        ).fetchall()
-
-        panels_by_scene: dict[int, list[dict]] = {}
-        for r in panels_rows:
+        scenes = []
+        for r in scene_rows:
             d = dict(r)
+            d["characters"] = json.loads(d["characters"] or "[]")
             d["ai_meta"] = json.loads(d["ai_meta"] or "{}")
-            panels_by_scene.setdefault(d["scene_id"], []).append(d)
+            d["panels"] = []
+            scenes.append(d)
 
-        tree["scenes"] = []
-        for r in scenes_rows:
-            s = dict(r)
-            s["characters"] = json.loads(s["characters"] or "[]")
-            s["ai_meta"] = json.loads(s["ai_meta"] or "{}")
-            s["panels"] = panels_by_scene.get(s["id"], [])
-            tree["scenes"].append(s)
+        if scenes:
+            panel_rows = conn.execute(
+                "SELECT * FROM panels WHERE scene_id IN"
+                " (SELECT id FROM scenes WHERE episode_id = ?) ORDER BY scene_id, ord",
+                (episode_id,),
+            ).fetchall()
 
+            panels_by_scene: dict[int, list[dict]] = defaultdict(list)
+            for r in panel_rows:
+                p = dict(r)
+                p["ai_meta"] = json.loads(p["ai_meta"] or "{}")
+                panels_by_scene[p["scene_id"]].append(p)
+
+            for scene in scenes:
+                scene["panels"] = panels_by_scene[scene["id"]]
+
+        tree["scenes"] = scenes
         return tree
 
 
