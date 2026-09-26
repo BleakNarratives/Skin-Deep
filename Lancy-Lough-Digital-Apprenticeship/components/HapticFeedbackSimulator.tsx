@@ -8,12 +8,14 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 // when parent component state updates on scroll.
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
+  const [isPaused, setIsPaused] = useState(false);
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
   const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Target position
   const [statusMessage, setStatusMessage] = useState<string>('');
 
   // Simulate hand movement
   useEffect(() => {
+    if (isPaused) return;
     const interval = setInterval(() => {
       setHandPosition(prev => ({
         x: Math.min(100, Math.max(0, prev.x + (Math.random() - 0.5) * 10)),
@@ -21,11 +23,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       }));
     }, 200);
     return () => clearInterval(interval);
-  }, []);
+  }, [isPaused]);
 
   // Apply feedback logic
   useEffect(() => {
-    if (feedbackType === 'none') return;
+    if (feedbackType === 'none' || isPaused) return;
 
     const feedbackStrength = 0.05; // How much feedback affects movement
 
@@ -60,30 +62,14 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, [feedbackType, targetPosition]);
 
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.min(100, Math.max(0, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
-    const y = Math.min(100, Math.max(0, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
-    setTargetPosition({ x, y });
-    setStatusMessage(`Relocated target to X: ${x}%, Y: ${y}%. Directing trajectory with Lancy-level precision!`);
-  };
-
-  const handleCanvasKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      const newX = Math.floor(Math.random() * 80) + 10;
-      const newY = Math.floor(Math.random() * 80) + 10;
-      setTargetPosition({ x: newX, y: newY });
-      setStatusMessage(`Keyboard relocated target to X: ${newX}%, Y: ${newY}%. Way better alignment than Mikey's attempts!`);
-    }
-  };
+  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
   const getFeedbackDescription = (type: FeedbackType) => {
     switch (type) {
       case 'spring': return 'Pulls hand toward ideal trajectory.';
       case 'damping': return 'Smooths out tremors and erratic movements.';
-      case 'spring-damping': return 'Combines both methods for improved path straightness.';
-      default: return 'No active feedback.';
+      case 'spring-damping': return 'Combines both methods for master-level path straightness.';
+      default: return 'No active feedback (resembling Mikey’s unguided freehand).';
     }
   };
 
@@ -142,22 +128,38 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={() => setIsPaused((prev) => !prev)}
+              aria-pressed={isPaused}
+              aria-label={isPaused ? 'Resume hand movement simulation' : 'Pause hand movement simulation'}
+              title={isPaused ? 'Resume movement simulation' : 'Pause movement simulation — unlike Mikey, you can pause to inspect!'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                isPaused ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
             {statusMessage && <span className="block text-teal-300 text-sm mt-1">🎯 {statusMessage}</span>}
           </div>
+          <div className="mt-3 flex items-center space-x-2">
+            <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
+            <span className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}>
+              {alignmentAccuracy}%
+            </span>
+          </div>
         </div>
         <div
-          role="button"
-          tabIndex={0}
-          onClick={handleCanvasClick}
-          onKeyDown={handleCanvasKeyDown}
-          aria-label={`Interactive training canvas. Target at X ${targetPosition.x} percent, Y ${targetPosition.y} percent. Click or press Enter to move target.`}
-          title="Click surface or press Enter to set new target trajectory"
-          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+          role="img"
+          aria-label={`Simulated haptic training surface with target at ${targetPosition.x}%, ${targetPosition.y}% and hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%`}
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
         >
           <div
+            role="img"
+            aria-label="Target trajectory center anchor"
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
               left: `${targetPosition.x - 4}%`,
@@ -169,6 +171,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             Target
           </div>
           <div
+            role="img"
+            aria-label={`Simulated hand position pointer (${alignmentAccuracy}% aligned)`}
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
             style={{
               left: `${handPosition.x}%`,
