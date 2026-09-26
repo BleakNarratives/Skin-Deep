@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Card from './Card';
 
 type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
@@ -166,8 +166,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             aria-label="Target trajectory center anchor"
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
-              left: `${targetPosition.x - 4}%`,
-              top: `${targetPosition.y - 4}%`,
+              left: `${targetPosition.x}%`,
+              top: `${targetPosition.y}%`,
               transform: 'translate(-50%, -50%)',
               boxShadow: '0 0 10px rgba(0,255,255,0.7)',
             }}
