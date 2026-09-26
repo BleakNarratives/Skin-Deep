@@ -301,6 +301,8 @@ def list_panels(scene_id: int) -> list[dict]:
         return out
 
 
+# Performance optimization: Use batch query in a single connection to eliminate N+1 queries.
+# Previously executed 1 query for episode, 1 for scenes, and N queries for panels across N+2 connection handles.
 def episode_tree(episode_id: int) -> dict | None:
     # Performance optimization: Execute queries within a single read connection and batch-fetch
     # panels in 1 query instead of N queries per scene (eliminating N+1 database queries & connection churn).

@@ -25,6 +25,12 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  const handleResetPosition = () => {
+    setHandPosition({ x: 50, y: 50 });
+    setActionNotice('Hand position reset to target center.');
+    setTimeout(() => setActionNotice(''), 3000);
+  };
+
   // Apply feedback logic
   useEffect(() => {
     if (feedbackType === 'none' || isPaused) return;
@@ -165,6 +171,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             role="img"
             aria-label="Target trajectory center anchor"
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
+            role="img"
+            aria-label="Target trajectory position"
             style={{
               left: `${targetPosition.x}%`,
               top: `${targetPosition.y}%`,
@@ -178,6 +186,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             role="img"
             aria-label={`Simulated hand position pointer (${alignmentAccuracy}% aligned)`}
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
+            role="img"
+            aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y`}
             style={{
               left: `${handPosition.x}%`,
               top: `${handPosition.y}%`,

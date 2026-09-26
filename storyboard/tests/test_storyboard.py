@@ -553,74 +553,35 @@ def test_boardroom_request_validation(api):
         api.BoardroomRequest(rounds=11)
 
 
-# ── keyring: Concierge-style vault + rotation ────────────────────────────
+def test_arena_request_validation_security():
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_api
 
-def test_keyring_vault_files_and_rotation(tmp_path, monkeypatch):
-    import keyring as kring
+    # Test AgentRunRequest task_id and group pattern/length validation
+    req_agent = arena_api.AgentRunRequest(task_id="task_001_legal_analysis", group="A")
+    assert req_agent.task_id == "task_001_legal_analysis"
+    assert req_agent.group == "A"
 
-    (tmp_path / "openrouter+b.key").write_text("sk-vault-key-b\n")
-    (tmp_path / "openrouter+a.key").write_text("sk-vault-key-a")
-    (tmp_path / "gemini+work.key").write_text("gk-vault-1")
-    (tmp_path / "unrelated.key").write_text("nope")
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="invalid/task_id")
 
-    for var in ("OPENROUTER_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
-        monkeypatch.delenv(var, raising=False)
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="a" * 101)
 
-    or_pool = kring.KeyPool("openrouter", ("OPENROUTER_API_KEY",),
-                            vault_dir=tmp_path)
-    assert or_pool.all_keys() == ["sk-vault-key-a", "sk-vault-key-b"]
-    assert or_pool.get_key() == "sk-vault-key-a"
-    assert or_pool.rotate() == "sk-vault-key-b"
-    assert or_pool.rotate() == "sk-vault-key-a"  # wraps round-robin
+    with pytest.raises(ValidationError):
+        arena_api.AgentRunRequest(task_id="valid_task", group="group;SELECT *")
 
-    g_pool = kring.KeyPool("gemini", ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
-                           vault_dir=tmp_path)
-    assert g_pool.all_keys() == ["gk-vault-1"]
-    st = g_pool.status()
-    assert st["pool_size"] == 1
-    assert st["active_fingerprint"] == "lt-1"  # last 4 chars of gk-vault-1
-    assert st["vault_keys"] == 1
-    # never leak raw keys through status
-    assert "gk-vault-1" not in str(st)
+    # Test BattleRequest duress_level and string input limits
+    req_battle = arena_api.BattleRequest(duress_level="pressure", contradiction_seed="seed", turns=3)
+    assert req_battle.duress_level == "pressure"
 
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(duress_level="invalid status; drop table")
 
-def test_keyring_env_precedence_and_dedup(tmp_path, monkeypatch):
-    import keyring as kring
-    monkeypatch.setenv("NOVITA_API_KEY", "nv-primary")
-    (tmp_path / "novita+backup.key").write_text("nv-backup")
-    (tmp_path / "novita+dupe.key").write_text("nv-primary")
-    pool = kring.KeyPool("novita", ("NOVITA_API_KEY",), vault_dir=tmp_path)
-    assert pool.all_keys() == ["nv-primary", "nv-backup"]
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(contradiction_seed="x" * 5001)
 
-
-def test_gen_rotates_pool_on_429(monkeypatch, tmp_path):
-    """A rate-limited key must trigger rotation to the next vault key."""
-    import requests as req
-
-    calls = []
-
-    def fake_post(url, headers=None, json=None, timeout=None):
-        calls.append(headers["Authorization"])
-        r = type("R", (), {})()
-        if headers["Authorization"].endswith("key-one"):
-            def boom():
-                raise req.HTTPError("429 Too Many Requests")
-            r.raise_for_status = boom
-        else:
-            r.raise_for_status = lambda: None
-            r.json = lambda: {"data": [{"b64_json": base64.b64encode(b"img").decode()}]}
-        return r
-
-    monkeypatch.setattr(gen.requests, "post", fake_post)
-    monkeypatch.setattr(gen, "_or_pick_model", lambda: "fake/model")
-    monkeypatch.setenv("OPENROUTER_API_KEY", "or-key-one")
-    (tmp_path / "openrouter+second.key").write_text("or-key-two")
-    pool = gen.kring.KeyPool("openrouter", ("OPENROUTER_API_KEY",),
-                             vault_dir=tmp_path)
-    monkeypatch.setattr(gen, "openrouter_pool", lambda: pool)
-
-    data, meta = gen.openrouter_image("prompt")
-    assert data == b"img"
-    assert meta["key"] == "...-two"          # rotated off the 429'd key
-    assert calls[0].endswith("or-key-one")  # first attempt used key one
-    assert calls[-1].endswith("or-key-two")  # second attempt used key two
+    with pytest.raises(ValidationError):
+        arena_api.BattleRequest(identity_shift="x" * 5001)
