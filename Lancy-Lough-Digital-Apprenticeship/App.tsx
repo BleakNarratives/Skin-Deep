@@ -13,6 +13,7 @@ import { generateExplanation, checkApiKeyAndPrompt } from './services/geminiServ
 
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('introduction');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [geminiExplanations, setGeminiExplanations] = useState<Record<string, string>>({});
   const [loadingExplanation, setLoadingExplanation] = useState<boolean>(true);
   // Removed apiKeyError state as we are mocking API calls
@@ -103,10 +104,24 @@ const App: React.FC = () => {
     setActiveSection(id);
   }, []);
 
+  const handleToggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen((prev) => !prev);
+  }, []);
+
+  const handleCloseMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
-      <Header />
-      <Sidebar navItems={NAV_ITEMS} activeSection={activeSection} onSelectSection={handleSelectSection} />
+      <Header isMobileMenuOpen={isMobileMenuOpen} onToggleMobileMenu={handleToggleMobileMenu} />
+      <Sidebar
+        navItems={NAV_ITEMS}
+        activeSection={activeSection}
+        onSelectSection={handleSelectSection}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobileMenu={handleCloseMobileMenu}
+      />
 
       <main id="main-content" tabIndex={-1} className="lg:ml-64 pt-20 p-8 outline-none">
         <div className="container mx-auto">
