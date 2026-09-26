@@ -245,11 +245,11 @@ def test_panels_require_scenes(api):
 
 
 def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):

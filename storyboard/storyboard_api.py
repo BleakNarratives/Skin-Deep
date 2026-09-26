@@ -216,7 +216,7 @@ def regenerate_panel(panel_id: int) -> dict:
     scene_row = db.get_scene(p["scene_id"])
     if scene_row is None:
         raise HTTPException(404, "parent scene missing")
-    ep = db.get_episode(scene_row["episode_id"])
+    ep = _episode_or_404(scene_row["episode_id"])
     neighbors = [x for x in db.list_panels(p["scene_id"]) if x["id"] != panel_id]
     try:
         fresh, provider = gen.regenerate_panel(
