@@ -123,15 +123,12 @@ def create_round(round_id: str, groups: list[str]) -> None:
 
 
 def append_round_event(round_id: str, event: dict) -> None:
+    # Performance optimization: Atomic in-database JSON array append using SQLite json_insert.
+    # Eliminates O(N^2) quadratic read-modify-write and full JSON array des/reserialization overhead per event.
     with get_conn() as conn:
-        row = conn.execute(
-            "SELECT events FROM rounds WHERE round_id = ?", (round_id,)
-        ).fetchone()
-        events = json.loads(row["events"]) if row else []
-        events.append(event)
         conn.execute(
-            "UPDATE rounds SET events = ? WHERE round_id = ?",
-            (json.dumps(events, default=str), round_id),
+            "UPDATE rounds SET events = json_insert(COALESCE(NULLIF(events, ''), '[]'), '$[#]', json(?)) WHERE round_id = ?",
+            (json.dumps(event, default=str), round_id),
         )
 
 
