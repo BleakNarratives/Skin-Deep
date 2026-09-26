@@ -5,16 +5,13 @@ interface HeaderProps {
   navItems?: NavItem[];
   activeSection?: string;
   onSelectSection?: (id: string) => void;
-}
-
-interface HeaderProps {
   isMobileMenuOpen?: boolean;
   onToggleMobileMenu?: () => void;
 }
 
 // Performance optimization: Memoize Header component to skip redundant re-renders
 // when parent App updates active section or state.
-const Header: React.FC<HeaderProps> = React.memo(({ isMobileMenuOpen = false, onToggleMobileMenu }) => {
+const Header: React.FC<HeaderProps> = React.memo(({ navItems, activeSection, onSelectSection, isMobileMenuOpen = false, onToggleMobileMenu }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-700 py-4 px-6 shadow-lg">
       <a
