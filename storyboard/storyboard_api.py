@@ -44,29 +44,32 @@ class EpisodeCreate(BaseModel):
     # Prevents directory traversal attacks when writing markdown outlines to filesystem (episodes/{slug}.md).
     slug: str = Field(min_length=2, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
     title: str = Field(min_length=1, max_length=200)
-    logline: str = ""
-    outline: str = ""  # markdown; written to episodes/{slug}.md
+    # Security: Limit field string length to prevent resource exhaustion / DoS attacks.
+    logline: str = Field(default="", max_length=1000)
+    outline: str = Field(default="", max_length=100000)  # markdown; written to episodes/{slug}.md
 
 
 class PanelPatch(BaseModel):
-    shot_type: str | None = None
-    camera_move: str | None = None
-    action: str | None = None
-    vo_speaker: str | None = None
-    vo_line: str | None = None
-    on_screen_text: str | None = None
+    # Security: Limit field string lengths and numerical ranges to prevent resource/memory exhaustion DoS.
+    shot_type: str | None = Field(default=None, max_length=32)
+    camera_move: str | None = Field(default=None, max_length=64)
+    action: str | None = Field(default=None, max_length=5000)
+    vo_speaker: str | None = Field(default=None, max_length=64)
+    vo_line: str | None = Field(default=None, max_length=2000)
+    on_screen_text: str | None = Field(default=None, max_length=500)
     duration_sec: float | None = Field(default=None, gt=0.1, le=60)
-    visual_prompt: str | None = None
-    ord: int | None = None
+    visual_prompt: str | None = Field(default=None, max_length=5000)
+    ord: int | None = Field(default=None, ge=1, le=1000)
 
 
 class SceneCreateRequest(BaseModel):
-    outline: str = ""
+    # Security: Limit outline length to prevent excessive payload sizes and memory DoS.
+    outline: str = Field(default="", max_length=100000)
 
 
 class BoardroomRequest(BaseModel):
-    outline: str = ""
-    # Security: Limit rounds to [1, 10] to prevent DoS via excessive simulation iterations.
+    # Security: Limit outline length and rounds to prevent excessive simulation iterations / DoS.
+    outline: str = Field(default="", max_length=100000)
     rounds: int = Field(default=2, ge=1, le=10)
 
 
@@ -278,8 +281,15 @@ def export_json(episode_id: int) -> Response:
     if tree is None:
         raise HTTPException(404, "episode not found")
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    path = EXPORTS_DIR / f"{tree['slug']}.json"
-    path.write_text(json.dumps(tree, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Security: Prevent path traversal attacks when writing export files.
+    path = (EXPORTS_DIR / f"{tree['slug']}.json").resolve()
+    if not path.is_relative_to(EXPORTS_DIR.resolve()):
+        raise HTTPException(400, "invalid episode slug")
+    try:
+        path.write_text(json.dumps(tree, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        # Security: Prevent leaking internal filesystem errors/paths.
+        raise HTTPException(500, "failed to write export file")
     return Response(
         path.read_text(encoding="utf-8"),
         media_type="application/json",
@@ -324,9 +334,16 @@ def export_sheet(episode_id: int) -> HTMLResponse:
     if tree is None:
         raise HTTPException(404, "episode not found")
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    # Security: Prevent path traversal attacks when writing export files.
+    path = (EXPORTS_DIR / f"{tree['slug']}_contact_sheet.html").resolve()
+    if not path.is_relative_to(EXPORTS_DIR.resolve()):
+        raise HTTPException(400, "invalid episode slug")
     html = _render_sheet(tree)
-    path = EXPORTS_DIR / f"{tree['slug']}_contact_sheet.html"
-    path.write_text(html, encoding="utf-8")
+    try:
+        path.write_text(html, encoding="utf-8")
+    except OSError:
+        # Security: Prevent leaking internal filesystem errors/paths.
+        raise HTTPException(500, "failed to write export file")
     return HTMLResponse(html)
 
 

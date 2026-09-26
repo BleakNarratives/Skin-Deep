@@ -123,14 +123,12 @@ def create_round(round_id: str, groups: list[str]) -> None:
 
 
 def append_round_event(round_id: str, event: dict) -> None:
-    # Performance optimization: Use native SQLite json_insert to append directly in database.
-    # Eliminates SELECT query overhead, Python JSON deserialization of growing event history,
-    # and full array JSON re-serialization (~5.8x faster write performance).
-    event_json = json.dumps(event, default=str)
+    # Performance optimization: Atomic in-database JSON array append using SQLite json_insert.
+    # Eliminates O(N^2) quadratic read-modify-write and full JSON array des/reserialization overhead per event.
     with get_conn() as conn:
         conn.execute(
             "UPDATE rounds SET events = json_insert(COALESCE(NULLIF(events, ''), '[]'), '$[#]', json(?)) WHERE round_id = ?",
-            (event_json, round_id),
+            (json.dumps(event, default=str), round_id),
         )
 
 

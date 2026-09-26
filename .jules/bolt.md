@@ -10,6 +10,6 @@
 **Learning:** Passing unstable callback functions to memoized navigation components (`Sidebar` wrapped in `React.memo`) causes full component tree re-renders whenever state objects change. Additionally, triggering state updates (`setActiveSection`) that already run side-effects in `useEffect` creates duplicate API calls.
 **Action:** Memoize API handlers with `useCallback` and keep section navigation callbacks clean with empty dependency arrays `[]` so memoized children skip re-renders.
 
-## 2026-08-27 - O(N²) Quadratic Serialization Bottleneck in Streaming Database Appends
-**Learning:** Appending telemetry or event history to JSON array fields in SQLite via a Python read-modify-write cycle (`SELECT` -> `json.loads` -> `append` -> `json.dumps` -> `UPDATE`) creates an O(N²) serialization overhead on every streaming event tick. Native SQLite 3.38+ `json_insert(COALESCE(NULLIF(events, ''), '[]'), '$[#]', json(?))` performs array appends in-database in a single atomic `UPDATE`, reducing query count by 50% and improving write throughput by ~5.8x.
-**Action:** Use native SQLite `json_insert` for array appends in database persistent stores instead of Python-side JSON string re-serialization.
+## 2025-05-21 - N+1 Query Elimination in Storyboard DB Hierarchy
+**Learning:** Building nested tree structures (e.g. Episode -> Scenes -> Panels) by issuing separate queries for child entities inside loops causes severe N+1 database connection churn and query multiplication. Batch-fetching child entities using `IN (SELECT ...)` within a single read connection reduces DB roundtrips from O(N) to 3 queries.
+**Action:** Batch child queries using `SQL IN` subqueries within a single context manager session and group child records into a `defaultdict(list)` dictionary in memory before attaching to parent trees.

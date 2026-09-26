@@ -98,7 +98,7 @@ export const MACHINE_SPECS: MachineSpec[] = [
 ];
 
 // Placeholder content for AI explanations to be replaced by actual Gemini calls
-export const AI_EXPLANATION_PROMPTS = {
+export const AI_EXPLANATION_PROMPTS: Record<string, string> = {
   'introduction': `Explain the core purpose and key integrations of the LOUGH computational architecture in the context of Lancy Lough's digital apprenticeship.`,
   'flash-generator': `Describe the procedural Flash & Stencil Generator, its style/complexity parameters, and the AR Trace Mode for camera-assisted stencil transfer.`,
   'bio-kinetic-acquisition': `Describe the methods used for high-fidelity bio-kinetic data acquisition in LOUGH, focusing on markerless optical tracking and hybrid sensor fusion for finger tracking.`,

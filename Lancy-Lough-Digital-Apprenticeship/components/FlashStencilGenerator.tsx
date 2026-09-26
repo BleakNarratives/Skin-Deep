@@ -229,6 +229,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               type="button"
               onClick={downloadSvg}
               aria-label={isDownloaded ? 'SVG downloaded' : 'Download flash stencil as SVG'}
+              title="Save clean SVG vector stencil — far cleaner than Mikey's shaky hand tracing"
               className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
                 isDownloaded
                   ? 'bg-emerald-600 text-white shadow-md'
@@ -246,6 +247,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               }}
               aria-label={arMode ? 'Exit AR trace mode' : 'Enter AR trace mode'}
               aria-pressed={arMode}
+              title="Toggle live camera feed to overlay stencil directly onto skin — unlike Mikey's guessing game"
               className={`px-4 py-2 rounded-full text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors duration-200 ${
                 arMode ? 'bg-indigo-600 text-white' : 'bg-indigo-900 text-indigo-200'
               }`}
@@ -308,9 +310,18 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
         <div className="flex-1 relative h-80 border border-gray-600 rounded-lg overflow-hidden bg-white">
           {arMode ? (
             <>
-              <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                aria-label="Live camera feed for AR stencil tracing"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
               <svg
                 viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
+                role="img"
+                aria-label={`AR overlay preview of ${style} stencil variation #${seed}`}
                 className="absolute inset-0 w-full h-full"
                 style={{ opacity: overlayOpacity, transform: `scale(${overlayScale})`, pointerEvents: 'none' }}
               >
@@ -328,7 +339,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
               </svg>
             </>
           ) : (
-            <svg viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`} className="w-full h-full">
+            <svg
+              viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
+              role="img"
+              aria-label={`Preview of ${style} stencil variation #${seed}`}
+              className="w-full h-full"
+            >
               {paths.map((p, i) => (
                 <path
                   key={i}
