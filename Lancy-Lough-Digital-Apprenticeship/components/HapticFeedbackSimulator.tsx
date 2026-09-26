@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Card from './Card';
 
 type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
@@ -8,11 +8,14 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 // when parent component state updates on scroll.
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
+  const [isPaused, setIsPaused] = useState(false);
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Target position
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
   // Simulate hand movement
   useEffect(() => {
+    if (isPaused) return;
     const interval = setInterval(() => {
       setHandPosition(prev => ({
         x: Math.min(100, Math.max(0, prev.x + (Math.random() - 0.5) * 10)),
@@ -20,11 +23,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       }));
     }, 200);
     return () => clearInterval(interval);
-  }, []);
+  }, [isPaused]);
 
   // Apply feedback logic
   useEffect(() => {
-    if (feedbackType === 'none') return;
+    if (feedbackType === 'none' || isPaused) return;
 
     const feedbackStrength = 0.05; // How much feedback affects movement
 
@@ -59,12 +62,14 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, [feedbackType, targetPosition]);
 
 
+  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
+
   const getFeedbackDescription = (type: FeedbackType) => {
     switch (type) {
       case 'spring': return 'Pulls hand toward ideal trajectory.';
       case 'damping': return 'Smooths out tremors and erratic movements.';
-      case 'spring-damping': return 'Combines both methods for improved path straightness.';
-      default: return 'No active feedback.';
+      case 'spring-damping': return 'Combines both methods for master-level path straightness.';
+      default: return 'No active feedback (resembling Mikey’s unguided freehand).';
     }
   };
 
@@ -74,8 +79,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
         <div className="flex-1">
           <p className="text-gray-300 mb-4">
             Experience simulated haptic feedback for precision training.
-            <span className="block text-sm text-gray-500">
-              Target trajectory represented by the teal circle. Your "hand" is the glowing blue dot.
+            <span className="block text-sm text-gray-400 mt-1">
+              Target trajectory is the teal circle. Your "hand" is the glowing blue dot (stabilizing precision way better than Mikey's shaky wrist).
             </span>
           </p>
           <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Haptic Feedback Mode">
@@ -83,8 +88,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               type="button"
               onClick={() => setFeedbackType('none')}
               aria-pressed={feedbackType === 'none'}
-              aria-label="Disable haptic feedback"
-              title="No active assistance (like Mikey freehanding without a safety net)"
+              aria-label="Disable haptic feedback (raw unguided movement like Mikey's shaky hands)"
+              title="Disable haptic guidance"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'none' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
               }`}
@@ -95,8 +100,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               type="button"
               onClick={() => setFeedbackType('spring')}
               aria-pressed={feedbackType === 'spring'}
-              aria-label="Enable spring haptic feedback"
-              title="Spring guidance: Pulls hand toward ideal trajectory"
+              aria-label="Enable spring haptic feedback to pull hand toward target trajectory"
+              title="Enable spring feedback trajectory pull"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'spring' ? 'bg-teal-600 text-white shadow-md' : 'bg-teal-800 hover:bg-teal-700 text-teal-200'
               }`}
@@ -107,8 +112,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               type="button"
               onClick={() => setFeedbackType('damping')}
               aria-pressed={feedbackType === 'damping'}
-              aria-label="Enable damping haptic feedback"
-              title="Damping assistance: Smooths out tremors — far steadier than Mikey's shaky hands"
+              aria-label="Enable damping haptic feedback to smooth out hand tremors"
+              title="Enable damping tremor reduction"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'damping' ? 'bg-purple-600 text-white shadow-md' : 'bg-purple-800 hover:bg-purple-700 text-purple-200'
               }`}
@@ -119,31 +124,52 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               type="button"
               onClick={() => setFeedbackType('spring-damping')}
               aria-pressed={feedbackType === 'spring-damping'}
-              aria-label="Enable spring-damping haptic feedback"
-              title="Combined spring-damping: Optimal path straightness"
+              aria-label="Enable spring-damping haptic feedback for combined trajectory stabilization"
+              title="Enable combined spring and damping feedback"
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                 feedbackType === 'spring-damping' ? 'bg-indigo-600 text-white shadow-md' : 'bg-indigo-800 hover:bg-indigo-700 text-indigo-200'
               }`}
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={() => setIsPaused((prev) => !prev)}
+              aria-pressed={isPaused}
+              aria-label={isPaused ? 'Resume hand movement simulation' : 'Pause hand movement simulation'}
+              title={isPaused ? 'Resume movement simulation' : 'Pause movement simulation — unlike Mikey, you can pause to inspect!'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                isPaused ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            {statusMessage && <span className="block text-teal-300 text-sm mt-1">🎯 {statusMessage}</span>}
+          </div>
+          <div className="mt-3 flex items-center space-x-2">
+            <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
+            <span className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}>
+              {alignmentAccuracy}%
+            </span>
           </div>
         </div>
         <div
-          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
           role="img"
-          aria-label="Interactive 2D haptic training simulation surface showing target trajectory and simulated hand movements"
+          aria-label={`Simulated haptic training surface with target at ${targetPosition.x}%, ${targetPosition.y}% and hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%`}
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
         >
           <div
+            role="img"
+            aria-label="Target trajectory center anchor"
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             role="img"
             aria-label="Target trajectory position"
             style={{
-              left: `${targetPosition.x - 4}%`,
-              top: `${targetPosition.y - 4}%`,
+              left: `${targetPosition.x}%`,
+              top: `${targetPosition.y}%`,
               transform: 'translate(-50%, -50%)',
               boxShadow: '0 0 10px rgba(0,255,255,0.7)',
             }}
@@ -151,6 +177,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             Target
           </div>
           <div
+            role="img"
+            aria-label={`Simulated hand position pointer (${alignmentAccuracy}% aligned)`}
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
             role="img"
             aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y`}
@@ -162,7 +190,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               transition: 'all 0.1s linear',
             }}
           ></div>
-          <p className="absolute bottom-2 left-2 text-xs text-gray-500">Simulated Training Surface</p>
+          <p className="absolute bottom-2 left-2 text-xs text-gray-400">Simulated Training Surface</p>
         </div>
       </div>
     </Card>
