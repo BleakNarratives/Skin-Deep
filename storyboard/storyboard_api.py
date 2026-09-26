@@ -44,29 +44,32 @@ class EpisodeCreate(BaseModel):
     # Prevents directory traversal attacks when writing markdown outlines to filesystem (episodes/{slug}.md).
     slug: str = Field(min_length=2, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
     title: str = Field(min_length=1, max_length=200)
-    logline: str = ""
-    outline: str = ""  # markdown; written to episodes/{slug}.md
+    # Security: Limit field string length to prevent resource exhaustion / DoS attacks.
+    logline: str = Field(default="", max_length=1000)
+    outline: str = Field(default="", max_length=100000)  # markdown; written to episodes/{slug}.md
 
 
 class PanelPatch(BaseModel):
-    shot_type: str | None = None
-    camera_move: str | None = None
-    action: str | None = None
-    vo_speaker: str | None = None
-    vo_line: str | None = None
-    on_screen_text: str | None = None
+    # Security: Limit field string lengths and numerical ranges to prevent resource/memory exhaustion DoS.
+    shot_type: str | None = Field(default=None, max_length=32)
+    camera_move: str | None = Field(default=None, max_length=64)
+    action: str | None = Field(default=None, max_length=5000)
+    vo_speaker: str | None = Field(default=None, max_length=64)
+    vo_line: str | None = Field(default=None, max_length=2000)
+    on_screen_text: str | None = Field(default=None, max_length=500)
     duration_sec: float | None = Field(default=None, gt=0.1, le=60)
-    visual_prompt: str | None = None
-    ord: int | None = None
+    visual_prompt: str | None = Field(default=None, max_length=5000)
+    ord: int | None = Field(default=None, ge=1, le=1000)
 
 
 class SceneCreateRequest(BaseModel):
-    outline: str = ""
+    # Security: Limit outline length to prevent excessive payload sizes and memory DoS.
+    outline: str = Field(default="", max_length=100000)
 
 
 class BoardroomRequest(BaseModel):
-    outline: str = ""
-    # Security: Limit rounds to [1, 10] to prevent DoS via excessive simulation iterations.
+    # Security: Limit outline length and rounds to prevent excessive simulation iterations / DoS.
+    outline: str = Field(default="", max_length=100000)
     rounds: int = Field(default=2, ge=1, le=10)
 
 
