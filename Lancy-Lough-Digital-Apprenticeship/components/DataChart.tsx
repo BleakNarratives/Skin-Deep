@@ -19,11 +19,7 @@ interface DataChartProps {
 const DataChart: React.FC<DataChartProps> = React.memo(({ data, title, dataKey, unit, color }) => {
   return (
     <Card title={title}>
-      <div
-        role="img"
-        aria-label={`${title}: Interactive telemetry line chart (${unit}). Unlike Mikey's wild estimates, this data is precision-measured.`}
-        className="w-full"
-      >
+      <div role="img" aria-label={`Line chart displaying ${title} measured in ${unit}`}>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#4a4a4a" />
