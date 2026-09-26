@@ -10,7 +10,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
   const [isPaused, setIsPaused] = useState(false);
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
-  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
+  const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Target position
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
   // Simulate hand movement
   useEffect(() => {
@@ -142,6 +143,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            {statusMessage && <span className="block text-teal-300 text-sm mt-1">🎯 {statusMessage}</span>}
           </div>
           <div className="mt-3 flex items-center space-x-2">
             <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
