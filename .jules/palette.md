@@ -18,6 +18,6 @@
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
 
-## 2026-09-25 - Mobile Navigation Dropdown Fallback for Hidden Sidebars
-**Learning:** When sidebars or persistent navigation menus are hidden on smaller viewports (e.g. `hidden lg:block`), mobile users are left without structural navigation controls. Providing a compact header section dropdown (`lg:hidden`) with `aria-label` and `focus-visible:ring-2` styling ensures instant section switching and screen reader accessibility on mobile devices without cluttering the layout.
-**Action:** Always provide an accessible header or toolbar dropdown fallback when main navigation sidebars are hidden on small screen viewports.
+## 2026-09-22 - Interactive Simulation Canvas & Relative Target Positioning
+**Learning:** 2D simulation canvas surfaces require `role="region"`, `tabIndex={0}`, and clear `aria-label` descriptors explaining interaction semantics. Overlay text must use `pointer-events-none` so mouse clicks are registered on the surface container, and explicit reset controls with `focus-visible:ring-2` styling ensure full keyboard accessibility and easy state reset.
+**Action:** When making canvas/simulation areas interactive, apply `role="region"`, `aria-label`, `pointer-events-none` on overlay elements, and pair with an accessible Reset button.
