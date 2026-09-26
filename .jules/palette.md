@@ -18,6 +18,6 @@
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
 
-## 2026-09-18 - Interactive Haptic/Physics Simulation Reset Controls
-**Learning:** Animated or continuous canvas/simulation widgets (like haptic trajectory simulators) can drift out of bounds or create visual fatigue. Adding an explicit Reset Position action button with full ARIA labeling (`aria-label`), visible keyboard focus rings (`focus-visible:ring-2`), and dedicated status updates inside an `aria-live="polite"` region allows screen reader users to remain aware of position resets.
-**Action:** On continuous canvas or stateful simulation controls, pair reset action buttons with `aria-label`, visible focus indicators, and transient screen reader notifications in `aria-live="polite"` regions.
+## 2026-09-22 - Interactive Simulation Canvas & Relative Target Positioning
+**Learning:** 2D simulation canvas surfaces require `role="region"`, `tabIndex={0}`, and clear `aria-label` descriptors explaining interaction semantics. Overlay text must use `pointer-events-none` so mouse clicks are registered on the surface container, and explicit reset controls with `focus-visible:ring-2` styling ensure full keyboard accessibility and easy state reset.
+**Action:** When making canvas/simulation areas interactive, apply `role="region"`, `aria-label`, `pointer-events-none` on overlay elements, and pair with an accessible Reset button.
