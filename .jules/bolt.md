@@ -13,3 +13,7 @@
 ## 2025-05-21 - N+1 Query Elimination in Storyboard DB Hierarchy
 **Learning:** Building nested tree structures (e.g. Episode -> Scenes -> Panels) by issuing separate queries for child entities inside loops causes severe N+1 database connection churn and query multiplication. Batch-fetching child entities using `IN (SELECT ...)` within a single read connection reduces DB roundtrips from O(N) to 3 queries.
 **Action:** Batch child queries using `SQL IN` subqueries within a single context manager session and group child records into a `defaultdict(list)` dictionary in memory before attaching to parent trees.
+
+## 2026-09-26 - Rollup Manual Chunks & Image Lazy Loading
+**Learning:** Monolithic Vite production bundles containing heavy UI chart libraries (Recharts) degrade initial script parse times and trigger build warnings (>500kB). Configuring Rollup `manualChunks` in `vite.config.ts` using module path checks (`id.includes('node_modules/recharts')`) splits dependencies into separate cacheable chunks, reducing the main application JS bundle size by >90% (615kB down to 58kB).
+**Action:** Use functional `manualChunks` inspection in `vite.config.ts` for large third-party libraries (`recharts`, `react-dom`), and add `loading="lazy"` with explicit `width`/`height` dimensions to offscreen images.

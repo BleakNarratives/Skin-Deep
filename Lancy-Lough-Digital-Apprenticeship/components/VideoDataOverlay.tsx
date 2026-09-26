@@ -18,6 +18,9 @@ const VideoDataOverlay: React.FC = React.memo(() => {
         <img
           src="https://picsum.photos/1280/720?grayscale&blur=2"
           alt="Tattoo Session Placeholder"
+          width={1280}
+          height={720}
+          loading="lazy"
           className="w-full h-full object-cover opacity-60"
         />
         <div className="absolute inset-0 flex flex-col justify-between p-4 bg-gradient-to-t from-black/50 to-transparent">
