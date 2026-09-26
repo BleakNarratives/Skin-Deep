@@ -61,12 +61,14 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, [feedbackType, targetPosition]);
 
 
+  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
+
   const getFeedbackDescription = (type: FeedbackType) => {
     switch (type) {
       case 'spring': return 'Pulls hand toward ideal trajectory.';
       case 'damping': return 'Smooths out tremors and erratic movements.';
-      case 'spring-damping': return 'Combines both methods for improved path straightness.';
-      default: return 'No active feedback.';
+      case 'spring-damping': return 'Combines both methods for master-level path straightness.';
+      default: return 'No active feedback (resembling Mikey’s unguided freehand).';
     }
   };
 
@@ -141,6 +143,12 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
           </div>
+          <div className="mt-3 flex items-center space-x-2">
+            <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
+            <span className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}>
+              {alignmentAccuracy}%
+            </span>
+          </div>
         </div>
         <div
           role="img"
@@ -148,6 +156,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
         >
           <div
+            role="img"
+            aria-label="Target trajectory center anchor"
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
               left: `${targetPosition.x - 4}%`,
@@ -159,6 +169,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             Target
           </div>
           <div
+            role="img"
+            aria-label={`Simulated hand position pointer (${alignmentAccuracy}% aligned)`}
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
             style={{
               left: `${handPosition.x}%`,
