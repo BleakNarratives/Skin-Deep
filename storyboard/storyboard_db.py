@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections import defaultdict
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -301,15 +302,47 @@ def list_panels(scene_id: int) -> list[dict]:
 
 
 def episode_tree(episode_id: int) -> dict | None:
-    ep = get_episode(episode_id)
-    if ep is None:
-        return None
-    tree = dict(ep)
-    tree["scenes"] = []
-    for scene in list_scenes(episode_id):
-        scene["panels"] = list_panels(scene["id"])
-        tree["scenes"].append(scene)
-    return tree
+    # Performance optimization: Execute queries within a single read connection and batch-fetch
+    # panels in 1 query instead of N queries per scene (eliminating N+1 database queries & connection churn).
+    with _ro() as conn:
+        ep = conn.execute(
+            "SELECT * FROM episodes WHERE id = ?", (episode_id,)
+        ).fetchone()
+        if ep is None:
+            return None
+        tree = dict(ep)
+
+        scene_rows = conn.execute(
+            "SELECT * FROM scenes WHERE episode_id = ? ORDER BY ord",
+            (episode_id,),
+        ).fetchall()
+
+        scenes = []
+        for r in scene_rows:
+            d = dict(r)
+            d["characters"] = json.loads(d["characters"] or "[]")
+            d["ai_meta"] = json.loads(d["ai_meta"] or "{}")
+            d["panels"] = []
+            scenes.append(d)
+
+        if scenes:
+            panel_rows = conn.execute(
+                "SELECT * FROM panels WHERE scene_id IN"
+                " (SELECT id FROM scenes WHERE episode_id = ?) ORDER BY scene_id, ord",
+                (episode_id,),
+            ).fetchall()
+
+            panels_by_scene: dict[int, list[dict]] = defaultdict(list)
+            for r in panel_rows:
+                p = dict(r)
+                p["ai_meta"] = json.loads(p["ai_meta"] or "{}")
+                panels_by_scene[p["scene_id"]].append(p)
+
+            for scene in scenes:
+                scene["panels"] = panels_by_scene[scene["id"]]
+
+        tree["scenes"] = scenes
+        return tree
 
 
 def _num(v: Any) -> float:

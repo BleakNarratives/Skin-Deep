@@ -18,6 +18,6 @@
 **Learning:** Complex SVG data charts (such as Recharts line graphs) are read as unlabelled graphics by screen readers unless wrapped in a container with `role="img"` and a descriptive `aria-label`. Similarly, asynchronous AI section insights require an `aria-live="polite"` region with `aria-atomic="true"` to announce content updates when switching sections without disrupting the screen reader cursor.
 **Action:** Wrap chart containers with `role="img"` and descriptive `aria-label` strings, and enclose asynchronous AI status containers in `aria-live="polite"` containers with `aria-hidden="true"` on decorative loading spinners.
 
-## 2026-09-22 - Interactive Canvas Container Click Target Calculation & ARIA
-**Learning:** When making simulated canvas or surface containers interactable (`role="button"`, `tabIndex={0}`), absolute child elements inside the surface container must have `pointer-events-none` applied. This prevents child elements from intercepting clicks and warping relative coordinate calculations (`e.clientX - rect.left`).
-**Action:** Always apply `pointer-events-none` to decorative or state-indicator child elements on interactive click-to-target canvas surfaces while supplying dynamic `aria-label` and `onKeyDown` support (`Enter`/`Space`).
+## 2026-09-22 - Interactive Simulation Canvas & Relative Target Positioning
+**Learning:** 2D simulation canvas surfaces require `role="region"`, `tabIndex={0}`, and clear `aria-label` descriptors explaining interaction semantics. Overlay text must use `pointer-events-none` so mouse clicks are registered on the surface container, and explicit reset controls with `focus-visible:ring-2` styling ensure full keyboard accessibility and easy state reset.
+**Action:** When making canvas/simulation areas interactive, apply `role="region"`, `aria-label`, `pointer-events-none` on overlay elements, and pair with an accessible Reset button.
