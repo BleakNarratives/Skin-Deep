@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 import json
 import base64
@@ -289,7 +290,9 @@ for idx, shot in enumerate(st.session_state.storyboard_shots):
         col_edit, col_vis = st.columns([1.2, 1])
 
         with col_edit:
-            st.markdown(f'<div class="shot-header">Shot #{shot["shot_number"]}: {shot["title"]}</div>', unsafe_allow_html=True)
+            # Security: Sanitize user-controlled/imported shot title to prevent HTML injection and XSS in Streamlit
+            safe_title = html.escape(str(shot["title"]))
+            st.markdown(f'<div class="shot-header">Shot #{shot["shot_number"]}: {safe_title}</div>', unsafe_allow_html=True)
 
             c1, c2 = st.columns(2)
             with c1:

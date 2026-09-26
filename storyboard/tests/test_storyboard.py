@@ -212,6 +212,28 @@ def test_panels_require_scenes(api):
     assert ei.value.status_code == 400
 
 
+def test_scene_generate_request_validation(api):
+    req = api.SceneGenerateRequest(outline="short outline")
+    assert req.outline == "short outline"
+
+    with pytest.raises(ValidationError):
+        api.SceneGenerateRequest(outline="x" * 50001)
+
+
+def test_boardroom_request_validation(api):
+    req = api.BoardroomRequest(outline="outline", rounds=3)
+    assert req.rounds == 3
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=0)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=11)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(outline="x" * 50001)
+
+
 # ── API: generation stages (mocked LLM) ──────────────────────────────────
 
 def test_generation_pipeline_mocked(api, monkeypatch):
@@ -388,3 +410,20 @@ def test_arena_db_insert_persona_custom(tmp_path):
         row = conn.execute("SELECT * FROM persona_custom WHERE id = ?", (row_id,)).fetchone()
         assert row is not None
         assert "test-security-seed" in row["seed"]
+
+
+def test_boardroom_request_validation(api):
+    # Valid bounds: 1 <= rounds <= 10
+    req_valid = api.BoardroomRequest(rounds=3)
+    assert req_valid.rounds == 3
+
+    # Default value
+    req_default = api.BoardroomRequest()
+    assert req_default.rounds == 2
+
+    # Out of bounds: rounds < 1 or rounds > 10
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=0)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=11)

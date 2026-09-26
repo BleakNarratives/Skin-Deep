@@ -86,8 +86,9 @@ def _spawn(coro: Any) -> asyncio.Task:
 
 
 class ScoreRequest(BaseModel):
-    task_id: str
-    response_text: str = ""
+    # Security: Restrict task_id and limit response_text size to prevent injection and DoS risks.
+    task_id: str = Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    response_text: str = Field(default="", max_length=50000)
     traits: dict[str, float] = Field(
         default_factory=dict,
         description="Optional explicit 5-dim traits (0-1). Empty = simulated group A traits.",
@@ -95,14 +96,16 @@ class ScoreRequest(BaseModel):
 
 
 class ArenaRunRequest(BaseModel):
-    groups: list[str] = Field(default_factory=lambda: ["A", "B", "C"])
-    task_ids: list[str] = Field(default_factory=list)  # empty = all tasks
+    # Security: Limit maximum list elements to prevent resource exhaustion / DoS attacks.
+    groups: list[str] = Field(default_factory=lambda: ["A", "B", "C"], max_length=10)
+    task_ids: list[str] = Field(default_factory=list, max_length=50)  # empty = all tasks
 
 
 class BattleRequest(BaseModel):
-    duress_level: str = "none"  # none | pressure | critical
-    contradiction_seed: str | None = None
-    identity_shift: str | None = None
+    # Security: Limit input sizes and restrict format to prevent DoS via excessive memory allocation or payload injection.
+    duress_level: str = Field(default="none", max_length=32, pattern=r"^[a-zA-Z0-9_-]+$")  # none | pressure | critical
+    contradiction_seed: str | None = Field(default=None, max_length=500)
+    identity_shift: str | None = Field(default=None, max_length=500)
     turns: int = Field(default=3, ge=1, le=10)
 
 
@@ -111,13 +114,16 @@ class PersonaUpdate(BaseModel):
 
 
 class AgentRegisterRequest(BaseModel):
-    agent_id: str = Field(min_length=1, max_length=64)
-    template: str = "variant"
+    # Security: Restrict agent_id and template to safe alphanumeric characters, hyphens, and underscores.
+    # Prevents directory traversal and injection risks when registering clone agents in orchestrator state.
+    agent_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+    template: str = Field(default="variant", min_length=1, max_length=32, pattern=r"^[a-zA-Z0-9_-]+$")
 
 
 class AgentRunRequest(BaseModel):
-    task_id: str
-    group: str = "A"
+    # Security: Enforce min/max length and alphanumeric pattern to prevent injection and DoS risks.
+    task_id: str = Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
+    group: str = Field(default="A", min_length=1, max_length=10, pattern=r"^[a-zA-Z0-9_-]+$")
     persist: bool = False  # False = dry run (no corpus/state/comms writes)
 
 
