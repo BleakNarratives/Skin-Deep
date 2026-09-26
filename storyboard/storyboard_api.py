@@ -61,7 +61,12 @@ class PanelPatch(BaseModel):
 
 
 class SceneCreateRequest(BaseModel):
-    outline: str = ""
+    # Security: cap outline length to bound prompt size / token spend.
+    outline: str = Field(default="", max_length=50000)
+
+
+# Backward-compatible alias (tests and older clients use this name).
+SceneGenerateRequest = SceneCreateRequest
 
 
 class BoardroomRequest(BaseModel):
@@ -417,6 +422,16 @@ def health() -> dict:
     out["image_chain"] = [
         {"provider": "openrouter", "key": bool(gen._openrouter_key())},
         {"provider": "novita", "key": bool(gen.os.environ.get("NOVITA_API_KEY"))},
-        {"provider": "gemini", "enabled": gen.os.environ.get("STORYBOARD_ALLOW_GEMINI") == "1"},
     ]
+    gemini_enabled = gen.os.environ.get("STORYBOARD_ALLOW_GEMINI") == "1"
+    gemini_auth = None
+    if gemini_enabled:
+        try:
+            _, gemini_auth = gen._gemini_client()
+        except Exception as e:
+            gemini_auth = f"error: {str(e)[:120]}"
+    out["image_chain"].append({
+        "provider": "gemini", "enabled": gemini_enabled,
+        "auth": gemini_auth, "model": gen.GEMINI_IMAGE_MODEL,
+    })
     return out

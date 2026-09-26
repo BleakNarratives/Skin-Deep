@@ -294,13 +294,60 @@ def novita_image(prompt: str) -> tuple[bytes | None, dict]:
         return None, {"provider": "novita", "error": str(e)[:300]}
 
 
+GEMINI_IMAGE_MODEL = os.environ.get("STORYBOARD_GEMINI_IMAGE_MODEL",
+                                    "gemini-2.5-flash-image")
+
+
+def _gemini_client():
+    """Client for image gen. Auth order: GEMINI_API_KEY env, then ADC
+    (gcloud application-default credentials — what gemini-cli uses when you
+    run it signed in / with GOOGLE_GENAI_USE_VERTEXAI). Returns
+    (client, auth_mode) or raises RuntimeError with a clear message."""
+    from google import genai
+
+    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if key:
+        return genai.Client(api_key=key), "api_key"
+    try:
+        return genai.Client(vertexai=True), "vertex_adc"
+    except Exception as e:  # no ADC configured
+        raise RuntimeError(
+            "no GEMINI_API_KEY and no application-default credentials "
+            f"(run `gcloud auth application-default login`): {e}") from e
+
+
 def gemini_image(prompt: str) -> tuple[bytes | None, dict]:
-    # Image gen left Gemini's free tier (Aug 2026). Kept as an explicit
-    # billing-required stub so the chain documents itself.
-    return None, {
-        "provider": "gemini",
-        "error": "requires paid tier (billing) — enable via STORYBOARD_ALLOW_GEMINI=1",
-    }
+    """Native Gemini image generation via google-genai. Wired up after the
+    CLI handoff (2026-09): API-key or Vertex ADC auth, Nano Banana
+    (gemini-2.5-flash-image). Still gated behind STORYBOARD_ALLOW_GEMINI=1
+    because image gen left the free tier — set the flag to spend pennies."""
+    if os.environ.get("STORYBOARD_ALLOW_GEMINI") != "1":
+        return None, {
+            "provider": "gemini",
+            "error": "billing required — enable via STORYBOARD_ALLOW_GEMINI=1",
+        }
+    try:
+        client, auth = _gemini_client()
+        resp = client.models.generate_content(
+            model=GEMINI_IMAGE_MODEL,
+            contents=prompt,
+            config={
+                "response_modalities": ["IMAGE"],
+                "image_config": {"aspect_ratio": "16:9"},
+            },
+        )
+        for part in (resp.candidates[0].content.parts if resp.candidates else []):
+            data = getattr(part, "inline_data", None)
+            if data and getattr(data, "data", None):
+                return bytes(data.data), {
+                    "provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                    "auth": auth, "media_type": data.mime_type or "image/png",
+                }
+        return None, {"provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                      "auth": auth, "error": "no inline image in response"}
+    except Exception as e:
+        return None, {"provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                      "error": str(e)[:300]}
 
 
 PROVIDER_CHAIN: list[Callable[[str], tuple[bytes | None, dict]]] = [
