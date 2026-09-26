@@ -204,12 +204,66 @@ def test_outline_text_path_traversal_prevention(api, tmp_db):
     assert ei.value.detail == "invalid outline path"
 
 
+def test_export_path_traversal_prevention(api, tmp_db):
+    ep = tmp_db.create_episode(1, 102, "../evil_export_slug", "Evil Slug Ep", "log", "")
+    with pytest.raises(HTTPException) as ei_json:
+        api.export_json(ep["id"])
+    assert ei_json.value.status_code == 400
+    assert ei_json.value.detail == "invalid episode slug"
+
+    with pytest.raises(HTTPException) as ei_sheet:
+        api.export_sheet(ep["id"])
+    assert ei_sheet.value.status_code == 400
+    assert ei_sheet.value.detail == "invalid episode slug"
+
+
+def test_export_oserror_sanitizes_500(api, tmp_db, monkeypatch):
+    ep = tmp_db.create_episode(1, 103, "test_export_oserror", "Export OSError Ep", "log", "")
+
+    def fake_write_text(*args, **kwargs):
+        raise OSError("[Errno 13] Permission denied: '/exports/test_export_oserror.json'")
+
+    monkeypatch.setattr(Path, "write_text", fake_write_text)
+
+    with pytest.raises(HTTPException) as ei_json:
+        api.export_json(ep["id"])
+    assert ei_json.value.status_code == 500
+    assert ei_json.value.detail == "failed to write export file"
+
+    with pytest.raises(HTTPException) as ei_sheet:
+        api.export_sheet(ep["id"])
+    assert ei_sheet.value.status_code == 500
+    assert ei_sheet.value.detail == "failed to write export file"
+
+
 def test_panels_require_scenes(api):
     ep = api.create_episode(api.EpisodeCreate(
         season=1, number=3, slug="test_no_scenes", title="NoScenes"))
     with pytest.raises(HTTPException) as ei:
         api.generate_panels(ep["id"])
     assert ei.value.status_code == 400
+
+
+def test_scene_generate_request_validation(api):
+    req = api.SceneGenerateRequest(outline="short outline")
+    assert req.outline == "short outline"
+
+    with pytest.raises(ValidationError):
+        api.SceneGenerateRequest(outline="x" * 50001)
+
+
+def test_boardroom_request_validation(api):
+    req = api.BoardroomRequest(outline="outline", rounds=3)
+    assert req.rounds == 3
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=0)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=11)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(outline="x" * 50001)
 
 
 # ── API: generation stages (mocked LLM) ──────────────────────────────────
@@ -388,3 +442,20 @@ def test_arena_db_insert_persona_custom(tmp_path):
         row = conn.execute("SELECT * FROM persona_custom WHERE id = ?", (row_id,)).fetchone()
         assert row is not None
         assert "test-security-seed" in row["seed"]
+
+
+def test_boardroom_request_validation(api):
+    # Valid bounds: 1 <= rounds <= 10
+    req_valid = api.BoardroomRequest(rounds=3)
+    assert req_valid.rounds == 3
+
+    # Default value
+    req_default = api.BoardroomRequest()
+    assert req_default.rounds == 2
+
+    # Out of bounds: rounds < 1 or rounds > 10
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=0)
+
+    with pytest.raises(ValidationError):
+        api.BoardroomRequest(rounds=11)

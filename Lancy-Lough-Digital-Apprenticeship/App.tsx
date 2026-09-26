@@ -13,12 +13,26 @@ import { generateExplanation, checkApiKeyAndPrompt } from './services/geminiServ
 
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('introduction');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [geminiExplanations, setGeminiExplanations] = useState<Record<string, string>>({});
   const [loadingExplanation, setLoadingExplanation] = useState<boolean>(true);
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   // Removed apiKeyError state as we are mocking API calls
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sectionRefCallbacks = useRef<Record<string, (el: HTMLDivElement | null) => void>>({});
   const geminiExplanationsRef = useRef(geminiExplanations);
+
+  // Performance optimization: Cache ref callbacks for section DOM elements to avoid allocating
+  // 11 inline arrow functions on every render, preventing React from detaching/re-attaching refs.
+  const getSectionRef = useCallback((id: string) => {
+    if (!sectionRefCallbacks.current[id]) {
+      sectionRefCallbacks.current[id] = (el: HTMLDivElement | null) => {
+        sectionRefs.current[id] = el;
+      };
+    }
+    return sectionRefCallbacks.current[id];
+  }, []);
 
   useEffect(() => {
     geminiExplanationsRef.current = geminiExplanations;
@@ -47,11 +61,11 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch initial explanation for the active section
-    if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanations[activeSection]) {
+    // Fetch explanation when activeSection changes if not already fetched/cached
+    if (AI_EXPLANATION_PROMPTS[activeSection] && !geminiExplanationsRef.current[activeSection]) {
       fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection]);
     }
-  }, [activeSection, geminiExplanations, fetchExplanation]);
+  }, [activeSection, fetchExplanation]);
 
   // Performance optimization: Use IntersectionObserver instead of a scroll event listener reading
   // offsetTop/offsetHeight properties. IntersectionObserver runs asynchronously in browser compositor
@@ -89,15 +103,38 @@ const App: React.FC = () => {
       });
     }
     setActiveSection(id);
-    if (AI_EXPLANATION_PROMPTS[id] && !geminiExplanationsRef.current[id]) {
-      fetchExplanation(id, AI_EXPLANATION_PROMPTS[id]);
-    }
+  }, []);
+
+  const handleToggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen((prev) => !prev);
+  }, []);
+
+  const handleCloseMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
-      <Header />
-      <Sidebar navItems={NAV_ITEMS} activeSection={activeSection} onSelectSection={handleSelectSection} />
+      <Header isMobileMenuOpen={isMobileMenuOpen} onToggleMobileMenu={handleToggleMobileMenu} />
+      <Sidebar
+        navItems={NAV_ITEMS}
+        activeSection={activeSection}
+        onSelectSection={handleSelectSection}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobileMenu={handleCloseMobileMenu}
+      />
 
       <main id="main-content" tabIndex={-1} className="lg:ml-64 pt-20 p-8 outline-none">
         <div className="container mx-auto">
@@ -108,20 +145,22 @@ const App: React.FC = () => {
               <img src="https://picsum.photos/30/30" alt="AI Icon" className="mr-3 rounded-full" />
               DeepSeek AI Insights: {activeSectionName}
             </h3>
-            {loadingExplanation ? (
-              <div className="flex items-center text-teal-300 text-lg">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-teal-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Fetching DeepSeek AI's wisdom...
-              </div>
-            ) : (
-              <p className="text-gray-200 leading-relaxed text-lg whitespace-pre-wrap">{geminiExplanations[activeSection] || "No AI explanation available for this section."}</p>
-            )}
+            <div aria-live="polite" aria-atomic="true">
+              {loadingExplanation ? (
+                <div className="flex items-center text-teal-300 text-lg">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-teal-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Fetching DeepSeek AI's wisdom...
+                </div>
+              ) : (
+                <p className="text-gray-200 leading-relaxed text-lg whitespace-pre-wrap">{geminiExplanations[activeSection] || "No AI explanation available for this section."}</p>
+              )}
+            </div>
           </Card>
 
-          <section id="introduction" ref={(el) => (sectionRefs.current['introduction'] = el)}>
+          <section id="introduction" ref={getSectionRef('introduction')}>
             <SectionTitle
               id="introduction"
               title="Computational Architecture for the Legacy Overlay Unified Graphics Hub (LOUGH)"
@@ -143,7 +182,7 @@ const App: React.FC = () => {
           </section>
 
 
-          <section id="flash-generator" ref={(el) => (sectionRefs.current['flash-generator'] = el)}>
+          <section id="flash-generator" ref={getSectionRef('flash-generator')}>
             <SectionTitle
               id="flash-generator"
               title="Flash & Stencil Generator"
@@ -152,7 +191,7 @@ const App: React.FC = () => {
             <FlashStencilGenerator />
           </section>
 
-          <section id="bio-kinetic-acquisition" ref={(el) => (sectionRefs.current['bio-kinetic-acquisition'] = el)}>
+          <section id="bio-kinetic-acquisition" ref={getSectionRef('bio-kinetic-acquisition')}>
             <SectionTitle
               id="bio-kinetic-acquisition"
               title="High-Fidelity Bio-Kinetic Acquisition"
@@ -198,7 +237,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="biometric-telemetry" ref={(el) => (sectionRefs.current['biometric-telemetry'] = el)}>
+          <section id="biometric-telemetry" ref={getSectionRef('biometric-telemetry')}>
             <SectionTitle
               id="biometric-telemetry"
               title="Biometric Telemetry and the Internal State"
@@ -231,7 +270,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="machine-telemetry" ref={(el) => (sectionRefs.current['machine-telemetry'] = el)}>
+          <section id="machine-telemetry" ref={getSectionRef('machine-telemetry')}>
             <SectionTitle
               id="machine-telemetry"
               title="Tattoo Machine Telemetry"
@@ -295,7 +334,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="white-paper-engine" ref={(el) => (sectionRefs.current['white-paper-engine'] = el)}>
+          <section id="white-paper-engine" ref={getSectionRef('white-paper-engine')}>
             <SectionTitle
               id="white-paper-engine"
               title='"White Paper" Engine'
@@ -315,7 +354,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="haptic-guidance" ref={(el) => (sectionRefs.current['haptic-guidance'] = el)}>
+          <section id="haptic-guidance" ref={getSectionRef('haptic-guidance')}>
             <SectionTitle
               id="haptic-guidance"
               title="Haptic Guidance and Skill Transfer"
@@ -337,7 +376,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="multimodal-ai" ref={(el) => (sectionRefs.current['multimodal-ai'] = el)}>
+          <section id="multimodal-ai" ref={getSectionRef('multimodal-ai')}>
             <SectionTitle
               id="multimodal-ai"
               title="Multimodal AI and Transformer Architectures"
@@ -368,7 +407,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="robotic-revitalization" ref={(el) => (sectionRefs.current['robotic-revitalization'] = el)}>
+          <section id="robotic-revitalization" ref={getSectionRef('robotic-revitalization')}>
             <SectionTitle
               id="robotic-revitalization"
               title="Robotic Revitalization and the Autonomous Layer"
@@ -395,7 +434,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="socio-technical-integrity" ref={(el) => (sectionRefs.current['socio-technical-integrity'] = el)}>
+          <section id="socio-technical-integrity" ref={getSectionRef('socio-technical-integrity')}>
             <SectionTitle
               id="socio-technical-integrity"
               title="Socio-Technical Integrity and the Lough Legacy"
@@ -420,7 +459,7 @@ const App: React.FC = () => {
             </Card>
           </section>
 
-          <section id="conclusion" ref={(el) => (sectionRefs.current['conclusion'] = el)}>
+          <section id="conclusion" ref={getSectionRef('conclusion')}>
             <SectionTitle
               id="conclusion"
               title="Conclusion: The Integrated Legacy Overlay"
@@ -444,6 +483,20 @@ const App: React.FC = () => {
 
         </div>
       </main>
+
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="Scroll to top of page"
+          title="Scroll to top"
+          className="fixed bottom-6 left-6 lg:left-72 z-40 bg-teal-700 hover:bg-teal-600 text-white p-3 rounded-full shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-all duration-200 flex items-center justify-center"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+      )}
 
       <ChatInterface />
     </div>
