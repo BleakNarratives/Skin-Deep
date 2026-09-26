@@ -76,8 +76,12 @@ text attached — never silently re-generated into mush.
   catalog churns, so discovery > hardcoded slug. |
 | 2 | novita | optional key | Purpose-built SDXL/flux, pennies per image.
   Recommended upgrade if OpenRouter free models vanish. |
-| 3 | gemini | REQUIRES BILLING | image gen left the free tier (Aug 2026).
-  Stub present, off by default. |
+| 3 | gemini | WIRED (2026-09) | Native `google-genai` image gen, Nano Banana
+  (`gemini-2.5-flash-image`, override via `STORYBOARD_GEMINI_IMAGE_MODEL`).
+  Auth: `GEMINI_API_KEY`/`GOOGLE_API_KEY` env, else Vertex ADC (what
+  gemini-cli uses — `gcloud auth application-default login`). Image gen left
+  the free tier, so it stays billing-gated: set `STORYBOARD_ALLOW_GEMINI=1`
+  to arm it. `/health` reports which auth path resolved. |
 | 4 | placeholder | always | No provider call — panel renders text-only,
   visual_prompt saved, image_status="placeholder". NOTHING blocks. |
 
