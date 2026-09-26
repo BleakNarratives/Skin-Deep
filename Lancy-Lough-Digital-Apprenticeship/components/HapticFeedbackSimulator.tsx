@@ -25,6 +25,12 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  const handleResetPosition = () => {
+    setHandPosition({ x: 50, y: 50 });
+    setActionNotice('Hand position reset to target center.');
+    setTimeout(() => setActionNotice(''), 3000);
+  };
+
   // Apply feedback logic
   useEffect(() => {
     if (feedbackType === 'none' || isPaused) return;
