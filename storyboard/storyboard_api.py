@@ -421,7 +421,7 @@ def health() -> dict:
     out: dict[str, Any] = {"text_providers": text_providers}
     out["image_chain"] = [
         {"provider": "openrouter", "key": bool(gen._openrouter_key())},
-        {"provider": "novita", "key": bool(gen.os.environ.get("NOVITA_API_KEY"))},
+        {"provider": "novita", "key": bool(gen.novita_pool().get_key())},
     ]
     gemini_enabled = gen.os.environ.get("STORYBOARD_ALLOW_GEMINI") == "1"
     gemini_auth = None
@@ -434,4 +434,11 @@ def health() -> dict:
         "provider": "gemini", "enabled": gemini_enabled,
         "auth": gemini_auth, "model": gen.GEMINI_IMAGE_MODEL,
     })
+    # Concierge-style keyring status (pool sizes + active key fingerprints)
+    out["keyring"] = {
+        "vault_dir": str(gen.kring.VAULT_DIR),
+        "pools": [gen.openrouter_pool().status(),
+                  gen.novita_pool().status(),
+                  gen.gemini_pool().status()],
+    }
     return out

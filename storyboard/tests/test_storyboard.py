@@ -13,6 +13,7 @@ handlers and skip the broken middleware layer entirely.
 
 from __future__ import annotations
 
+import base64
 import json
 import sys
 from pathlib import Path
@@ -297,7 +298,7 @@ def test_gemini_api_key_path(monkeypatch):
     monkeypatch.setenv("STORYBOARD_ALLOW_GEMINI", "1")
     monkeypatch.setenv("GEMINI_API_KEY", "test-key-not-real")
     monkeypatch.setattr(gen, "_gemini_client",
-                        lambda: (_FakeClient(), "api_key"))
+                        lambda key=None: (_FakeClient(), "api_key"))
     data, meta = gen.gemini_image("ECU gloved hand on tattoo machine")
     assert data == b"\x89PNG-fake"
     assert meta["provider"] == "gemini"
@@ -310,8 +311,8 @@ def test_gemini_api_key_path(monkeypatch):
 def test_gemini_error_is_swallowed_into_meta(monkeypatch):
     monkeypatch.setenv("STORYBOARD_ALLOW_GEMINI", "1")
 
-    def boom():
-        raise RuntimeError("no GEMINI_API_KEY and no application-default credentials")
+    def boom(key=None):
+        raise RuntimeError("no GEMINI_API_KEY/vault keys and no application-default credentials")
 
     monkeypatch.setattr(gen, "_gemini_client", boom)
     data, meta = gen.gemini_image("anything")
@@ -319,31 +320,38 @@ def test_gemini_error_is_swallowed_into_meta(monkeypatch):
     assert "application-default" in meta["error"]
 
 
-def test_gemini_in_panel_image_chain(monkeypatch, tmp_path):
+def test_gemini_in_panel_image_chain(tmp_db, monkeypatch, tmp_path):
     """generate_image_for_panel must write the PNG and mark ready when
     gemini is the enabled provider that returns bytes."""
-    ep = db.create_episode(1, 9, "test_gem_chain", "GemChain", "", "")
-    db.replace_scenes(ep["id"], [{"slug": "INT. TEST - DAY",
-                                  "synopsis": "s", "location": "l",
-                                  "time_of_day": "DAY",
-                                  "characters": []}], {})
-    tree = db.episode_tree(ep["id"])
+    ep = tmp_db.create_episode(1, 9, "test_gem_chain", "GemChain", "", "")
+    ep = tmp_db.get_episode(ep["id"])  # idempotent re-runs against a dirty DB
+    tmp_db.replace_scenes(ep["id"], [{"slug": "INT. TEST - DAY",
+                                      "synopsis": "s", "location": "l",
+                                      "time_of_day": "DAY",
+                                      "characters": []}], {})
+    tree = tmp_db.episode_tree(ep["id"])
     panel = tree["scenes"][0]["panels"][0] if tree["scenes"][0]["panels"] else None
     if panel is None:
-        db.replace_panels(tree["scenes"][0]["id"],
-                          [{"shot_type": "CU", "camera_move": "static",
-                            "action": "hand", "vo_speaker": "",
-                            "vo_line": "", "on_screen_text": "",
-                            "duration_sec": 2.0, "visual_prompt": "vp"}], {})
-        tree = db.episode_tree(ep["id"])
+        tmp_db.replace_panels(tree["scenes"][0]["id"],
+                              [{"shot_type": "CU", "camera_move": "static",
+                                "action": "hand", "vo_speaker": "",
+                                "vo_line": "", "on_screen_text": "",
+                                "duration_sec": 2.0, "visual_prompt": "vp"}], {})
+        tree = tmp_db.episode_tree(ep["id"])
         panel = tree["scenes"][0]["panels"][0]
 
     monkeypatch.setattr(gen, "PROVIDER_CHAIN", [gen.gemini_image])
     monkeypatch.setenv("STORYBOARD_ALLOW_GEMINI", "1")
-    monkeypatch.setattr(gen, "_gemini_client", lambda: (_FakeClient(), "api_key"))
+    monkeypatch.setattr(gen, "_gemini_client", lambda key=None: (_FakeClient(), "api_key"))
     monkeypatch.setattr(gen, "IMAGES_DIR", tmp_path)
+    # hermetic: dummy vault key (never used — _gemini_client is patched) so
+    # the pool path runs and meta carries provider="gemini"
+    import keyring as kring
+    (tmp_path / "gemini+test.key").write_text("dummy-key-for-tests")
+    monkeypatch.setattr(gen, "gemini_pool",
+                        lambda: kring.KeyPool("gemini", (), vault_dir=tmp_path))
 
-    result = gen.generate_image_for_panel(panel, db.get_episode(ep["id"]))
+    result = gen.generate_image_for_panel(panel, tmp_db.get_episode(ep["id"]))
     assert result["status"] == "ready"
     out_file = (tmp_path / result["image_path"]).resolve()
     assert out_file.read_bytes() == b"\x89PNG-fake"
@@ -543,3 +551,76 @@ def test_boardroom_request_validation(api):
 
     with pytest.raises(ValidationError):
         api.BoardroomRequest(rounds=11)
+
+
+# ── keyring: Concierge-style vault + rotation ────────────────────────────
+
+def test_keyring_vault_files_and_rotation(tmp_path, monkeypatch):
+    import keyring as kring
+
+    (tmp_path / "openrouter+b.key").write_text("sk-vault-key-b\n")
+    (tmp_path / "openrouter+a.key").write_text("sk-vault-key-a")
+    (tmp_path / "gemini+work.key").write_text("gk-vault-1")
+    (tmp_path / "unrelated.key").write_text("nope")
+
+    for var in ("OPENROUTER_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(var, raising=False)
+
+    or_pool = kring.KeyPool("openrouter", ("OPENROUTER_API_KEY",),
+                            vault_dir=tmp_path)
+    assert or_pool.all_keys() == ["sk-vault-key-a", "sk-vault-key-b"]
+    assert or_pool.get_key() == "sk-vault-key-a"
+    assert or_pool.rotate() == "sk-vault-key-b"
+    assert or_pool.rotate() == "sk-vault-key-a"  # wraps round-robin
+
+    g_pool = kring.KeyPool("gemini", ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+                           vault_dir=tmp_path)
+    assert g_pool.all_keys() == ["gk-vault-1"]
+    st = g_pool.status()
+    assert st["pool_size"] == 1
+    assert st["active_fingerprint"] == "lt-1"  # last 4 chars of gk-vault-1
+    assert st["vault_keys"] == 1
+    # never leak raw keys through status
+    assert "gk-vault-1" not in str(st)
+
+
+def test_keyring_env_precedence_and_dedup(tmp_path, monkeypatch):
+    import keyring as kring
+    monkeypatch.setenv("NOVITA_API_KEY", "nv-primary")
+    (tmp_path / "novita+backup.key").write_text("nv-backup")
+    (tmp_path / "novita+dupe.key").write_text("nv-primary")
+    pool = kring.KeyPool("novita", ("NOVITA_API_KEY",), vault_dir=tmp_path)
+    assert pool.all_keys() == ["nv-primary", "nv-backup"]
+
+
+def test_gen_rotates_pool_on_429(monkeypatch, tmp_path):
+    """A rate-limited key must trigger rotation to the next vault key."""
+    import requests as req
+
+    calls = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        calls.append(headers["Authorization"])
+        r = type("R", (), {})()
+        if headers["Authorization"].endswith("key-one"):
+            def boom():
+                raise req.HTTPError("429 Too Many Requests")
+            r.raise_for_status = boom
+        else:
+            r.raise_for_status = lambda: None
+            r.json = lambda: {"data": [{"b64_json": base64.b64encode(b"img").decode()}]}
+        return r
+
+    monkeypatch.setattr(gen.requests, "post", fake_post)
+    monkeypatch.setattr(gen, "_or_pick_model", lambda: "fake/model")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-key-one")
+    (tmp_path / "openrouter+second.key").write_text("or-key-two")
+    pool = gen.kring.KeyPool("openrouter", ("OPENROUTER_API_KEY",),
+                             vault_dir=tmp_path)
+    monkeypatch.setattr(gen, "openrouter_pool", lambda: pool)
+
+    data, meta = gen.openrouter_image("prompt")
+    assert data == b"img"
+    assert meta["key"] == "...-two"          # rotated off the 429'd key
+    assert calls[0].endswith("or-key-one")  # first attempt used key one
+    assert calls[-1].endswith("or-key-two")  # second attempt used key two
