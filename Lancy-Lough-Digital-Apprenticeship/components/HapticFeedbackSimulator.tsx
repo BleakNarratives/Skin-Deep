@@ -8,11 +8,13 @@ type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
 // when parent component state updates on scroll.
 const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('none');
+  const [isPaused, setIsPaused] = useState(false);
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
   const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Fixed target
 
   // Simulate hand movement
   useEffect(() => {
+    if (isPaused) return;
     const interval = setInterval(() => {
       setHandPosition(prev => ({
         x: Math.min(100, Math.max(0, prev.x + (Math.random() - 0.5) * 10)),
@@ -20,11 +22,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       }));
     }, 200);
     return () => clearInterval(interval);
-  }, []);
+  }, [isPaused]);
 
   // Apply feedback logic
   useEffect(() => {
-    if (feedbackType === 'none') return;
+    if (feedbackType === 'none' || isPaused) return;
 
     const feedbackStrength = 0.05; // How much feedback affects movement
 
@@ -125,6 +127,18 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               Spring-Damping
             </button>
+            <button
+              type="button"
+              onClick={() => setIsPaused((prev) => !prev)}
+              aria-pressed={isPaused}
+              aria-label={isPaused ? 'Resume hand movement simulation' : 'Pause hand movement simulation'}
+              title={isPaused ? 'Resume movement simulation' : 'Pause movement simulation — unlike Mikey, you can pause to inspect!'}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                isPaused ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-md' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
@@ -137,8 +151,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
         </div>
         <div
-          role="region"
-          aria-label="Interactive Haptic Training Canvas"
+          role="img"
+          aria-label={`Simulated haptic training surface with target at ${targetPosition.x}%, ${targetPosition.y}% and hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%`}
           className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
         >
           <div
