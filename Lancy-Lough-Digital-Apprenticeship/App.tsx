@@ -429,7 +429,14 @@ const App: React.FC = () => {
                 This autonomous layer also functions as a "Virtual Guest Spot," allowing remote artist participation via video
                 while a robotic device tattoos the client, preserving personal connection across distances.
               </p>
-              <img src="https://picsum.photos/800/400?random=1" alt="Robotic Arm Tattooing" className="mt-8 rounded-lg shadow-lg" />
+              <img
+                src="https://picsum.photos/800/400?random=1"
+                alt="Robotic Arm Tattooing"
+                width={800}
+                height={400}
+                loading="lazy"
+                className="mt-8 rounded-lg shadow-lg"
+              />
               <p className="text-gray-500 text-sm mt-2 text-center">Simulated robotic tattooing with precision</p>
             </Card>
           </section>
@@ -454,7 +461,14 @@ const App: React.FC = () => {
                 The architecture itself favors non-repetitive, sculpture-like forms, reflecting a commitment to variety and character
                 essential to true art, avoiding the "literally repeating building designs" of standard automation.
               </p>
-              <img src="https://picsum.photos/800/400?random=2" alt="Ethical AI Concept" className="mt-8 rounded-lg shadow-lg" />
+              <img
+                src="https://picsum.photos/800/400?random=2"
+                alt="Ethical AI Concept"
+                width={800}
+                height={400}
+                loading="lazy"
+                className="mt-8 rounded-lg shadow-lg"
+              />
               <p className="text-gray-500 text-sm mt-2 text-center">Conceptual art representing ethical considerations in AI</p>
             </Card>
           </section>

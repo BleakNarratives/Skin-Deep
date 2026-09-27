@@ -169,10 +169,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
         >
           <div
             role="img"
-            aria-label="Target trajectory center anchor"
-            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
-            role="img"
             aria-label="Target trajectory position"
+            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
               left: `${targetPosition.x}%`,
               top: `${targetPosition.y}%`,
@@ -184,10 +182,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div
             role="img"
-            aria-label={`Simulated hand position pointer (${alignmentAccuracy}% aligned)`}
+            aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y (${alignmentAccuracy}% aligned)`}
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
-            role="img"
-            aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y`}
             style={{
               left: `${handPosition.x}%`,
               top: `${handPosition.y}%`,
