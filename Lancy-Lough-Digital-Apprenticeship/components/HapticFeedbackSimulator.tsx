@@ -25,11 +25,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  const handleResetPosition = () => {
+  const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
-    setActionNotice('Hand position reset to target center.');
-    setTimeout(() => setActionNotice(''), 3000);
-  };
+    setStatusMessage('Hand position reset to center. Re-centered with precision Mikey could only dream of!');
+    setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
 
   // Apply feedback logic
   useEffect(() => {
@@ -149,6 +149,15 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               }`}
             >
               {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
+            <button
+              type="button"
+              onClick={handleResetPosition}
+              aria-label="Reset hand position back to target center"
+              title="Reset hand position back to center — instant recovery, unlike Mikey's unrecoverable wobbles"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-gray-700 hover:bg-gray-600 text-teal-300 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            >
+              ↺ Reset Position
             </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
