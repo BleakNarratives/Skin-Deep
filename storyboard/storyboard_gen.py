@@ -28,6 +28,9 @@ if str(BOARDROOM_ROOT) not in sys.path:
 
 import requests  # noqa: E402  (router depends on it; kept adjacent)
 
+from keyring import KeyPool, openrouter_pool, novita_pool, gemini_pool
+import keyring as kring  # re-exported for /health introspection
+
 SB_DIR = Path(__file__).parent
 IMAGES_DIR = SB_DIR / "images"
 EXPORTS_DIR = SB_DIR / "exports"
@@ -215,9 +218,56 @@ def regenerate_panel(panel: dict, neighbors: list[dict], scene: dict,
 
 
 # ── stage 3: image providers ─────────────────────────────────────────────
+# All three providers pull keys from the Concierge-style keyring (see
+# keyring.py): env var first, then `<service>+<label>.key` files in
+# ~/.concierge/vault/, round-robin with rotation on 429/quota errors.
+
+_429_HINTS = ("429", "rate limit", "ratelimit", "quota", "too many requests",
+              "exhausted")
+
+
+def _is_rate_limit(err: Exception | str) -> bool:
+    s = str(err).lower()
+    return any(h in s for h in _429_HINTS)
+
+
+def _pool_attempt(pool: KeyPool, fn):
+    """Run fn(key) across the pool, rotating on rate-limit failures.
+    Returns (result_or_None, used_key_fingerprint, last_error)."""
+    last_err = None
+    used_fp = None
+    keys = pool.all_keys()
+    key = pool.get_key()
+    for _ in range(max(len(keys), 1)):
+        if not key:
+            break
+        fp = key[-4:]
+        try:
+            data, meta = fn(key)
+        except Exception as e:  # network blowups shouldn't burn the pool
+            return None, fp, str(e)[:300]
+        used_fp = fp
+        meta = meta or {}
+        meta.setdefault("key", f"...{fp}")
+        if data is None and _is_rate_limit(meta.get("error", "")):
+            pool.rotate()
+            last_err = meta.get("error")
+            key = pool.get_key()
+            continue
+        return (data, meta, None) if data else (None, fp, meta.get("error"))
+    if not keys:
+        # empty pool: one shot anyway so ADC-only auth paths still run
+        try:
+            data, meta = fn(None)
+        except Exception as e:
+            return None, None, str(e)[:300]
+        meta = meta or {}
+        return (data, meta, None) if data else (None, None, meta.get("error"))
+    return None, used_fp, last_err or "no keys in pool"
+
 
 def _openrouter_key() -> str:
-    return os.environ.get("OPENROUTER_API_KEY", "")
+    return openrouter_pool().get_key() or ""
 
 
 def _or_pick_model() -> str | None:
@@ -239,68 +289,148 @@ def _or_pick_model() -> str | None:
 
 
 def openrouter_image(prompt: str) -> tuple[bytes | None, dict]:
-    key = _openrouter_key()
-    if not key:
-        return None, {"provider": "openrouter", "error": "no OPENROUTER_API_KEY"}
+    pool = openrouter_pool()
+    if not pool.all_keys():
+        return None, {"provider": "openrouter",
+                      "error": "no OPENROUTER_API_KEY and no vault keys"}
     model = _or_pick_model()
     if not model:
         return None, {"provider": "openrouter", "error": "no image models discovered"}
-    try:
-        r = requests.post(
-            f"{OPENROUTER_URL}/images",
-            headers={"Authorization": f"Bearer {key}"},
-            json={"model": model, "prompt": prompt, "aspect_ratio": "16:9"},
-            timeout=180,
-        )
-        r.raise_for_status()
-        item = r.json().get("data", [{}])[0]
-        b64 = item.get("b64_json", "")
-        if not b64:
-            return None, {"provider": "openrouter", "error": "empty image payload"}
-        return base64.b64decode(b64), {
-            "provider": "openrouter", "model": model,
-            "media_type": item.get("media_type", "image/png"),
-            "cost_usd": r.json().get("usage", {}).get("cost"),
-        }
-    except Exception as e:
-        return None, {"provider": "openrouter", "model": model, "error": str(e)[:300]}
+
+    def attempt(key: str):
+        try:
+            r = requests.post(
+                f"{OPENROUTER_URL}/images",
+                headers={"Authorization": f"Bearer {key}"},
+                json={"model": model, "prompt": prompt, "aspect_ratio": "16:9"},
+                timeout=180,
+            )
+            r.raise_for_status()
+            item = r.json().get("data", [{}])[0]
+            b64 = item.get("b64_json", "")
+            if not b64:
+                return None, {"provider": "openrouter", "error": "empty image payload"}
+            return base64.b64decode(b64), {
+                "provider": "openrouter", "model": model,
+                "media_type": item.get("media_type", "image/png"),
+                "cost_usd": r.json().get("usage", {}).get("cost"),
+            }
+        except Exception as e:
+            # surface HTTP status text so _pool_attempt can spot 429s
+            return None, {"provider": "openrouter", "model": model,
+                          "error": str(e)[:300]}
+
+    data, meta, err = _pool_attempt(pool, attempt)
+    if data:
+        return data, meta
+    return None, {"provider": "openrouter", "model": model,
+                  "error": err or "pool exhausted"}
 
 
 def novita_image(prompt: str) -> tuple[bytes | None, dict]:
-    key = os.environ.get("NOVITA_API_KEY", "")
-    if not key:
-        return None, {"provider": "novita", "error": "no NOVITA_API_KEY"}
+    pool = novita_pool()
+    if not pool.all_keys():
+        return None, {"provider": "novita",
+                      "error": "no NOVITA_API_KEY and no vault keys"}
+
+    def attempt(key: str):
+        try:
+            r = requests.post(
+                NOVITA_URL,
+                headers={"Authorization": f"Bearer {key}"},
+                json={
+                    "model_name": "stable-diffusion-xl-v1-0",
+                    "prompt": f"{prompt}, {_STYLE_SUFFIX}",
+                    "negative_prompt": "text, watermark, low quality, blurry, deformed hands",
+                    "width": 1024, "height": 576, "samples": 1, "guidance_scale": 7.5,
+                },
+                timeout=180,
+            )
+            r.raise_for_status()
+            images = r.json().get("images") or []
+            if not images:
+                return None, {"provider": "novita", "error": "no images in response"}
+            url = images[0].get("image_url", "")
+            img = requests.get(url, timeout=60)
+            img.raise_for_status()
+            return img.content, {"provider": "novita", "model": "sdxl-v1"}
+        except Exception as e:
+            return None, {"provider": "novita", "error": str(e)[:300]}
+
+    data, meta, err = _pool_attempt(pool, attempt)
+    if data:
+        return data, meta
+    return None, {"provider": "novita", "error": err or "pool exhausted"}
+
+
+GEMINI_IMAGE_MODEL = os.environ.get("STORYBOARD_GEMINI_IMAGE_MODEL",
+                                    "gemini-2.5-flash-image")
+
+
+def _gemini_client(key: str | None = None):
+    """Client for image gen. Auth order: keyring pool (env GEMINI_API_KEY /
+    GOOGLE_API_KEY first, then gemini+*.key vault files), then ADC
+    (gcloud application-default credentials — what gemini-cli uses when you
+    run it signed in / with GOOGLE_GENAI_USE_VERTEXAI). Returns
+    (client, auth_mode) or raises RuntimeError with a clear message."""
+    from google import genai
+
+    key = key or gemini_pool().get_key()
+    if key:
+        return genai.Client(api_key=key), "api_key"
     try:
-        r = requests.post(
-            NOVITA_URL,
-            headers={"Authorization": f"Bearer {key}"},
-            json={
-                "model_name": "stable-diffusion-xl-v1-0",
-                "prompt": f"{prompt}, {_STYLE_SUFFIX}",
-                "negative_prompt": "text, watermark, low quality, blurry, deformed hands",
-                "width": 1024, "height": 576, "samples": 1, "guidance_scale": 7.5,
-            },
-            timeout=180,
-        )
-        r.raise_for_status()
-        images = r.json().get("images") or []
-        if not images:
-            return None, {"provider": "novita", "error": "no images in response"}
-        url = images[0].get("image_url", "")
-        img = requests.get(url, timeout=60)
-        img.raise_for_status()
-        return img.content, {"provider": "novita", "model": "sdxl-v1"}
-    except Exception as e:
-        return None, {"provider": "novita", "error": str(e)[:300]}
+        return genai.Client(vertexai=True), "vertex_adc"
+    except Exception as e:  # no ADC configured
+        raise RuntimeError(
+            "no GEMINI_API_KEY/vault keys and no application-default "
+            f"credentials (run `gcloud auth application-default login`): {e}") from e
 
 
 def gemini_image(prompt: str) -> tuple[bytes | None, dict]:
-    # Image gen left Gemini's free tier (Aug 2026). Kept as an explicit
-    # billing-required stub so the chain documents itself.
-    return None, {
-        "provider": "gemini",
-        "error": "requires paid tier (billing) — enable via STORYBOARD_ALLOW_GEMINI=1",
-    }
+    """Native Gemini image generation via google-genai. Wired up after the
+    CLI handoff (2026-09): API-key or Vertex ADC auth, Nano Banana
+    (gemini-2.5-flash-image). Still gated behind STORYBOARD_ALLOW_GEMINI=1
+    because image gen left the free tier — set the flag to spend pennies."""
+    if os.environ.get("STORYBOARD_ALLOW_GEMINI") != "1":
+        return None, {
+            "provider": "gemini",
+            "error": "billing required — enable via STORYBOARD_ALLOW_GEMINI=1",
+        }
+
+    def attempt(key: str):
+        try:
+            client, auth = _gemini_client(key)
+            resp = client.models.generate_content(
+                model=GEMINI_IMAGE_MODEL,
+                contents=prompt,
+                config={
+                    "response_modalities": ["IMAGE"],
+                    "image_config": {"aspect_ratio": "16:9"},
+                },
+            )
+            for part in (resp.candidates[0].content.parts if resp.candidates else []):
+                data = getattr(part, "inline_data", None)
+                if data and getattr(data, "data", None):
+                    return bytes(data.data), {
+                        "provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                        "auth": auth, "media_type": data.mime_type or "image/png",
+                    }
+            return None, {"provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                          "auth": auth, "error": "no inline image in response"}
+        except Exception as e:
+            return None, {"provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                          "error": str(e)[:300]}
+
+    pool = gemini_pool()
+    if pool.all_keys():
+        data, meta, err = _pool_attempt(pool, attempt)
+        if data:
+            return data, meta
+        return None, {"provider": "gemini", "model": GEMINI_IMAGE_MODEL,
+                      "error": err or "pool exhausted"}
+    # no keys at all — try ADC (may raise with a clear message inside attempt)
+    _, meta, err = _pool_attempt(pool, attempt)
+    return None, meta or {"provider": "gemini", "error": err or "no auth"}
 
 
 PROVIDER_CHAIN: list[Callable[[str], tuple[bytes | None, dict]]] = [

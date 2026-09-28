@@ -25,11 +25,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  const handleResetPosition = () => {
+  const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
-    setActionNotice('Hand position reset to target center.');
-    setTimeout(() => setActionNotice(''), 3000);
-  };
+    setStatusMessage('Hand position reset to target center.');
+    setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
 
   // Apply feedback logic
   useEffect(() => {
@@ -150,6 +150,15 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             >
               {isPaused ? '▶ Resume' : '⏸ Pause'}
             </button>
+            <button
+              type="button"
+              onClick={handleResetPosition}
+              aria-label="Reset hand position back to target center"
+              title="Reset hand position to center — cleaner reset than Mikey's messy retry"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            >
+              ↺ Reset Hand
+            </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
             Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
@@ -169,7 +178,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
         >
           <div
             role="img"
-            aria-label="Target trajectory center anchor"
+            aria-label="Target trajectory position"
             className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
             style={{
               left: `${targetPosition.x}%`,
@@ -182,7 +191,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div
             role="img"
-            aria-label={`Simulated hand position pointer (${alignmentAccuracy}% aligned, x: ${Math.round(handPosition.x)}%, y: ${Math.round(handPosition.y)}%)`}
+            aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y (${alignmentAccuracy}% aligned)`}
             className="absolute bg-blue-500 w-4 h-4 rounded-full"
             style={{
               left: `${handPosition.x}%`,

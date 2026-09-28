@@ -121,7 +121,9 @@ const FlashStencilGenerator: React.FC = React.memo(() => {
     };
   }, [arMode]);
 
-  const downloadSvg = () => {
+  // Performance optimization: Memoize downloadSvg callback to prevent re-allocating closure
+  // function instances on every overlayScale/overlayOpacity slider drag tick.
+  const downloadSvg = useCallback(() => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}">
 ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round" />`).join('\n')}` +
 '\n</svg>';
@@ -137,9 +139,10 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
     setTimeout(() => {
       setIsDownloaded(false);
     }, 2000);
-  };
+  }, [paths, style, seed]);
 
-  const copySvg = () => {
+  // Performance optimization: Memoize copySvg callback to maintain stable reference across UI re-renders.
+  const copySvg = useCallback(() => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}">
 ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill}" stroke-linecap="round" stroke-linejoin="round" />`).join('\n')}` +
 '\n</svg>';
@@ -150,7 +153,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
         setTimeout(() => setIsCopied(false), 2000);
       })
       .catch(() => setStatusMessage('Failed to copy SVG stencil.'));
-  };
+  }, [paths, style, seed]);
 
   return (
     <Card title="Flash & Stencil Generator" className="col-span-1 lg:col-span-2">
