@@ -246,11 +246,11 @@ def test_panels_require_scenes(api):
 
 
 def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):
@@ -585,3 +585,51 @@ def test_arena_request_validation_security():
 
     with pytest.raises(ValidationError):
         arena_api.BattleRequest(identity_shift="x" * 5001)
+
+
+def test_render_sheet_path_traversal_prevention():
+    import storyboard_api as api
+
+    tree = {
+        "title": "Test Episode",
+        "season": 1,
+        "number": 1,
+        "logline": "Test logline",
+        "scenes": [
+            {
+                "slug": "INT. TEST - DAY",
+                "synopsis": "Test synopsis",
+                "panels": [
+                    {
+                        "image_status": "ready",
+                        "image_path": "../../etc/passwd",
+                        "shot_type": "MS",
+                        "camera_move": "static",
+                        "duration_sec": 3.0,
+                        "action": "Action test",
+                        "vo_line": "",
+                        "vo_speaker": "",
+                        "on_screen_text": "",
+                    },
+                    {
+                        "image_status": "ready",
+                        "image_path": "ep1/valid_image.png",
+                        "shot_type": "CU",
+                        "camera_move": "static",
+                        "duration_sec": 2.0,
+                        "action": "Valid action",
+                        "vo_line": "",
+                        "vo_speaker": "",
+                        "on_screen_text": "",
+                    },
+                ],
+            }
+        ],
+    }
+
+    rendered = api._render_sheet(tree)
+    # The traversal path should NOT be rendered in an img tag
+    assert "../../etc/passwd" not in rendered
+    assert "no image — visual prompt on file" in rendered
+    # The valid relative image path should be rendered
+    assert "<img src='../ep1/valid_image.png' alt='panel'>" in rendered
