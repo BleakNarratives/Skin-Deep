@@ -196,7 +196,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setComplexity(newComp);
                 setStatusMessage(`Stencil complexity set to ${newComp}.`);
               }}
-              aria-label={`Stencil complexity level: ${complexity}`}
+              aria-label="Stencil complexity level"
               aria-valuemin={2}
               aria-valuemax={14}
               aria-valuenow={complexity}
@@ -272,7 +272,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={2.5}
                   step={0.05}
                   value={overlayScale}
-                  aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
+                  aria-label="Overlay scale"
                   aria-valuemin={0.3}
                   aria-valuemax={2.5}
                   aria-valuenow={overlayScale}
@@ -292,7 +292,7 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={1}
                   step={0.05}
                   value={overlayOpacity}
-                  aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
+                  aria-label="Overlay opacity"
                   aria-valuemin={0.1}
                   aria-valuemax={1}
                   aria-valuenow={overlayOpacity}
