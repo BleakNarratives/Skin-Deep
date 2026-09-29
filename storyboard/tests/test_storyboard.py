@@ -246,11 +246,53 @@ def test_panels_require_scenes(api):
 
 
 def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
+
+
+def test_panel_image_error_handling_sanitization(api, monkeypatch):
+    p = {"id": 1, "scene_id": 1, "ord": 1}
+    scene = {"id": 1, "episode_id": 1, "ord": 1}
+    ep = {"id": 1, "slug": "test_slug"}
+
+    monkeypatch.setattr(api.db, "get_panel", lambda pid: p if pid == 1 else None)
+    monkeypatch.setattr(api.db, "get_scene", lambda sid: scene if sid == 1 else None)
+    monkeypatch.setattr(api.db, "get_episode", lambda eid: ep if eid == 1 else None)
+
+    def fake_gen_value_error(p, ep):
+        raise ValueError("invalid episode slug for image generation: ../evil")
+
+    monkeypatch.setattr(api.gen, "generate_image_for_panel", fake_gen_value_error)
+    with pytest.raises(HTTPException) as ei_val:
+        api.panel_image(1)
+    assert ei_val.value.status_code == 400
+    assert ei_val.value.detail == "invalid parameters for image generation"
+
+    def fake_gen_os_error(p, ep):
+        raise OSError("[Errno 13] Permission denied: '/home/jules/secret/dir'")
+
+    monkeypatch.setattr(api.gen, "generate_image_for_panel", fake_gen_os_error)
+    with pytest.raises(HTTPException) as ei_os:
+        api.panel_image(1)
+    assert ei_os.value.status_code == 500
+    assert ei_os.value.detail == "failed to write panel image file"
+
+
+def test_regenerate_panel_missing_parent_episode_404(api, monkeypatch):
+    p = {"id": 1, "scene_id": 1, "ord": 1, "shot_type": "CU", "action": "test"}
+    scene = {"id": 1, "episode_id": 999, "ord": 1}
+
+    monkeypatch.setattr(api.db, "get_panel", lambda pid: p if pid == 1 else None)
+    monkeypatch.setattr(api.db, "get_scene", lambda sid: scene if sid == 1 else None)
+    monkeypatch.setattr(api.db, "get_episode", lambda eid: None)
+
+    with pytest.raises(HTTPException) as ei:
+        api.regenerate_panel(1)
+    assert ei.value.status_code == 404
+    assert ei.value.detail == "episode 999 not found"
 
 
 def test_boardroom_request_validation(api):

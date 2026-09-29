@@ -216,7 +216,7 @@ def regenerate_panel(panel_id: int) -> dict:
     scene_row = db.get_scene(p["scene_id"])
     if scene_row is None:
         raise HTTPException(404, "parent scene missing")
-    ep = db.get_episode(scene_row["episode_id"])
+    ep = _episode_or_404(scene_row["episode_id"])
     neighbors = [x for x in db.list_panels(p["scene_id"]) if x["id"] != panel_id]
     try:
         fresh, provider = gen.regenerate_panel(
@@ -252,7 +252,14 @@ def panel_image(panel_id: int) -> dict:
     ep = _episode_or_404(scene["episode_id"])
     p = dict(p)
     p["scene_ord"] = scene["ord"]
-    return gen.generate_image_for_panel(p, ep)
+    try:
+        return gen.generate_image_for_panel(p, ep)
+    except ValueError as e:
+        # Security: Catch path traversal or invalid slug errors and return generic 400.
+        raise HTTPException(400, "invalid parameters for image generation")
+    except OSError:
+        # Security: Catch filesystem errors to prevent leaking server paths or raw OS error details.
+        raise HTTPException(500, "failed to write panel image file")
 
 
 # ── exports ──────────────────────────────────────────────────────────────
