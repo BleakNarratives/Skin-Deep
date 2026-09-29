@@ -26,7 +26,17 @@ const ChatInterface: React.FC = React.memo(() => {
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleClearChat = useCallback(() => {
+    if (!showConfirmClear) {
+      setShowConfirmClear(true);
+    } else {
+      setMessages([]);
+      setShowConfirmClear(false);
+    }
+  }, [showConfirmClear]);
 
   const scrollToBottom = () => {
     if (!isMinimized) {
@@ -90,21 +100,43 @@ const ChatInterface: React.FC = React.memo(() => {
   return (
     <Card className="fixed bottom-4 right-4 w-80 h-96 flex flex-col bg-gray-900 shadow-2xl z-50 p-0 overflow-hidden border border-teal-500/30">
       <div className="bg-teal-700 text-white p-4 font-bold flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full" />
-          <span>DeepSeek AI Chat</span>
+        <div className="flex items-center space-x-2 min-w-0 mr-2">
+          <img src="https://picsum.photos/20/20" alt="AI Icon" className="rounded-full flex-shrink-0" />
+          <span className="whitespace-nowrap truncate">DeepSeek AI Chat</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsMinimized(true)}
-          aria-label="Minimize DeepSeek AI Chat panel"
-          aria-expanded={true}
-          className="text-teal-100 hover:text-white p-1 rounded hover:bg-teal-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+        <div className="flex items-center space-x-1 flex-shrink-0">
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearChat}
+              onBlur={() => setShowConfirmClear(false)}
+              aria-label={showConfirmClear ? "Confirm clear chat history" : "Clear chat history"}
+              title={showConfirmClear ? "Click again to confirm clearing messages" : "Clear chat history"}
+              className={`text-xs px-2 py-1 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 ${
+                showConfirmClear
+                  ? 'bg-rose-600 text-white font-semibold'
+                  : 'text-teal-100 hover:text-white hover:bg-teal-800'
+              }`}
+            >
+              {showConfirmClear ? 'Confirm?' : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              )}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsMinimized(true)}
+            aria-label="Minimize DeepSeek AI Chat panel"
+            aria-expanded={true}
+            className="text-teal-100 hover:text-white p-1 rounded hover:bg-teal-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div
