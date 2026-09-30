@@ -27,8 +27,33 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
   const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
-    setStatusMessage('Hand position reset to target center.');
+    setTargetPosition({ x: 50, y: 50 });
+    setStatusMessage('Hand and target position reset to center.');
     setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
+
+  const handleSurfaceClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
+    const y = Math.min(100, Math.max(0, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+    setTargetPosition({ x, y });
+    setStatusMessage(`Target repositioned to ${x}%, ${y}%.`);
+  }, []);
+
+  const handleSurfaceKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      setTargetPosition(prev => {
+        let { x, y } = prev;
+        const step = 5;
+        if (e.key === 'ArrowLeft') x = Math.max(0, x - step);
+        if (e.key === 'ArrowRight') x = Math.min(100, x + step);
+        if (e.key === 'ArrowUp') y = Math.max(0, y - step);
+        if (e.key === 'ArrowDown') y = Math.min(100, y + step);
+        setStatusMessage(`Target moved via arrow keys to ${x}%, ${y}%.`);
+        return { x, y };
+      });
+    }
   }, []);
 
   // Apply feedback logic
@@ -172,14 +197,18 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
         </div>
         <div
-          role="img"
-          aria-label={`Simulated haptic training surface with target at ${targetPosition.x}%, ${targetPosition.y}% and hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%`}
-          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
+          role="region"
+          tabIndex={0}
+          onClick={handleSurfaceClick}
+          onKeyDown={handleSurfaceKeyDown}
+          aria-label={`Interactive haptic simulation surface. Click or use arrow keys to relocate target position (currently at ${targetPosition.x}%, ${targetPosition.y}%). Hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}% (${alignmentAccuracy}% aligned).`}
+          title="Click or use arrow keys to relocate target trajectory — unlike Mikey, who hits targets purely by accident!"
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
         >
           <div
             role="img"
             aria-label="Target trajectory position"
-            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
+            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white pointer-events-none"
             style={{
               left: `${targetPosition.x}%`,
               top: `${targetPosition.y}%`,
@@ -192,7 +221,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           <div
             role="img"
             aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y (${alignmentAccuracy}% aligned)`}
-            className="absolute bg-blue-500 w-4 h-4 rounded-full"
+            className="absolute bg-blue-500 w-4 h-4 rounded-full pointer-events-none"
             style={{
               left: `${handPosition.x}%`,
               top: `${handPosition.y}%`,
@@ -201,7 +230,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               transition: 'all 0.1s linear',
             }}
           ></div>
-          <p className="absolute bottom-2 left-2 text-xs text-gray-400">Simulated Training Surface</p>
+          <p className="absolute bottom-2 left-2 text-xs text-gray-400 pointer-events-none">Simulated Training Surface (Click or use Arrow Keys to move target)</p>
         </div>
       </div>
     </Card>
