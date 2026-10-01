@@ -246,11 +246,11 @@ def test_panels_require_scenes(api):
 
 
 def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):
@@ -507,6 +507,23 @@ def test_health_offline(api):
     h = api.health()
     assert "image_chain" in h
     assert "text_providers" in h
+
+
+def test_keyring_path_sanitization(api):
+    import keyring as kring
+
+    raw_path = Path.home() / ".concierge" / "vault"
+    sanitized = kring._sanitize_path(raw_path)
+    assert str(Path.home()) not in sanitized
+    assert sanitized.startswith("~")
+
+    pool = kring.KeyPool("test_service", vault_dir=raw_path)
+    st = pool.status()
+    assert str(Path.home()) not in st["vault_dir"]
+    assert st["vault_dir"].startswith("~")
+
+    h = api.health()
+    assert str(Path.home()) not in h["keyring"]["vault_dir"]
 
 
 def test_generate_image_for_panel_path_traversal_prevention(api):
