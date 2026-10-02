@@ -245,12 +245,12 @@ def test_panels_require_scenes(api):
     assert ei.value.status_code == 400
 
 
-def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+def test_scene_create_request_validation(api):
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):
@@ -507,6 +507,11 @@ def test_health_offline(api):
     h = api.health()
     assert "image_chain" in h
     assert "text_providers" in h
+    assert "vault_configured" in h["keyring"]
+    assert "vault_dir" not in h["keyring"]
+    for pool in h["keyring"]["pools"]:
+        assert "vault_configured" in pool
+        assert "vault_dir" not in pool
 
 
 def test_generate_image_for_panel_path_traversal_prevention(api):

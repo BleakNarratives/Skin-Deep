@@ -109,12 +109,14 @@ class KeyPool:
             return keys[self._index]
 
     def status(self) -> dict:
+        # Security: Mask absolute filesystem path (vault_dir) to prevent leaking
+        # host directory layout and usernames in public health API endpoints.
         keys = self.all_keys()
         active = keys[self._index % len(keys)] if keys else None
         return {
             "service": self.service,
             "pool_size": len(keys),
-            "vault_dir": str(self.vault_dir),
+            "vault_configured": self.vault_dir.is_dir(),
             "vault_keys": len(self._vault_keys()),
             "active_fingerprint": (active[-4:] if active else None),
         }
