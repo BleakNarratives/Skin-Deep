@@ -432,9 +432,10 @@ def health() -> dict:
         "provider": "gemini", "enabled": gemini_enabled,
         "auth": gemini_auth, "model": gen.GEMINI_IMAGE_MODEL,
     })
-    # Concierge-style keyring status (pool sizes + active key fingerprints)
+    # Security: Mask absolute filesystem path (VAULT_DIR) to prevent information
+    # disclosure of backend directory structure in unauthenticated health checks.
     out["keyring"] = {
-        "vault_dir": str(gen.kring.VAULT_DIR),
+        "vault_configured": gen.kring.VAULT_DIR.is_dir(),
         "pools": [gen.openrouter_pool().status(),
                   gen.novita_pool().status(),
                   gen.gemini_pool().status()],
