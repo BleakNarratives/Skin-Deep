@@ -141,10 +141,38 @@ const App: React.FC = () => {
 
           {/* AI Explanation Area */}
           <Card className="mb-12 bg-gradient-to-br from-gray-800 to-gray-900 border-l-4 border-teal-500 shadow-2xl">
-            <h3 className="text-2xl font-bold text-teal-400 mb-4 flex items-center">
-              <img src="https://picsum.photos/30/30" alt="AI Icon" className="mr-3 rounded-full" />
-              DeepSeek AI Insights: {activeSectionName}
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <h3 className="text-2xl font-bold text-teal-400 flex items-center">
+                <img src="https://picsum.photos/30/30" alt="AI Icon" className="mr-3 rounded-full" />
+                DeepSeek AI Insights: {activeSectionName}
+              </h3>
+              {AI_EXPLANATION_PROMPTS[activeSection] && (
+                <button
+                  type="button"
+                  onClick={() => fetchExplanation(activeSection, AI_EXPLANATION_PROMPTS[activeSection])}
+                  disabled={loadingExplanation}
+                  aria-label={`Refresh DeepSeek AI insight for ${activeSectionName}`}
+                  title="Refresh AI insights — unlike Mikey's stagnant work, our AI updates on demand!"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-800 hover:bg-teal-700 text-teal-200 text-xs sm:text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  <svg
+                    className={`w-4 h-4 ${loadingExplanation ? 'animate-spin' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>{loadingExplanation ? 'Refreshing...' : 'Refresh AI Insight'}</span>
+                </button>
+              )}
+            </div>
             <div aria-live="polite" aria-atomic="true">
               {loadingExplanation ? (
                 <div className="flex items-center text-teal-300 text-lg">
