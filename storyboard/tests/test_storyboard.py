@@ -246,11 +246,11 @@ def test_panels_require_scenes(api):
 
 
 def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):
@@ -585,3 +585,13 @@ def test_arena_request_validation_security():
 
     with pytest.raises(ValidationError):
         arena_api.BattleRequest(identity_shift="x" * 5001)
+
+    # Test PersonaUpdate seed key count and payload size limits
+    req_persona_valid = arena_api.PersonaUpdate(seed={"identifier": "custom-01", "weights": {"w1": 0.5}})
+    assert req_persona_valid.seed["identifier"] == "custom-01"
+
+    with pytest.raises(ValidationError):
+        arena_api.PersonaUpdate(seed={str(i): i for i in range(101)})
+
+    with pytest.raises(ValidationError):
+        arena_api.PersonaUpdate(seed={"identifier": "x" * 50001})
