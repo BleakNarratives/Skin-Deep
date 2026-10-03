@@ -25,9 +25,18 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round(Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)));
+    const y = Math.round(Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)));
+    setTargetPosition({ x, y });
+    setStatusMessage(`Target relocated to (${x}%, ${y}%). Locked in cleanly — unlike Mikey's wild guesses!`);
+  }, []);
+
   const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
-    setStatusMessage('Hand position reset to target center.');
+    setTargetPosition({ x: 50, y: 50 });
+    setStatusMessage('Hand and target position reset to center.');
     setTimeout(() => setStatusMessage(''), 3000);
   }, []);
 
@@ -172,14 +181,17 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
         </div>
         <div
-          role="img"
-          aria-label={`Simulated haptic training surface with target at ${targetPosition.x}%, ${targetPosition.y}% and hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%`}
-          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
+          role="region"
+          tabIndex={0}
+          onClick={handleCanvasClick}
+          aria-label={`Interactive haptic training surface. Click to relocate target position (target at ${targetPosition.x}%, ${targetPosition.y}%). Hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%.`}
+          title="Click surface to set new target trajectory — unlike Mikey, you can aim precisely!"
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
         >
           <div
             role="img"
             aria-label="Target trajectory position"
-            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white"
+            className="absolute bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-xs text-white pointer-events-none"
             style={{
               left: `${targetPosition.x}%`,
               top: `${targetPosition.y}%`,
@@ -192,7 +204,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           <div
             role="img"
             aria-label={`Simulated hand position at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y (${alignmentAccuracy}% aligned)`}
-            className="absolute bg-blue-500 w-4 h-4 rounded-full"
+            className="absolute bg-blue-500 w-4 h-4 rounded-full pointer-events-none"
             style={{
               left: `${handPosition.x}%`,
               top: `${handPosition.y}%`,
@@ -201,7 +213,9 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               transition: 'all 0.1s linear',
             }}
           ></div>
-          <p className="absolute bottom-2 left-2 text-xs text-gray-400">Simulated Training Surface</p>
+          <p className="absolute bottom-2 left-2 text-xs text-gray-400 pointer-events-none">
+            Click surface to set target position
+          </p>
         </div>
       </div>
     </Card>
