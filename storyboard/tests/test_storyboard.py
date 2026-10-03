@@ -155,6 +155,22 @@ def test_episode_create_slug_path_traversal_prevention(api):
             )
 
 
+def test_delete_episode_sqlite_error_sanitizes_500(api, tmp_db, monkeypatch):
+    ep = tmp_db.create_episode(1, 105, "test_delete_db_err", "Delete DB Err", "log", "")
+
+    import sqlite3
+
+    def fake_delete(*args, **kwargs):
+        raise sqlite3.Error("sqlite error exposing /secret/path/storyboard.db")
+
+    monkeypatch.setattr(db, "delete_episode", fake_delete)
+
+    with pytest.raises(HTTPException) as ei:
+        api.delete_episode(ep["id"])
+    assert ei.value.status_code == 500
+    assert ei.value.detail == "failed to delete episode"
+
+
 def test_create_episode_oserror_sanitizes_500(api, monkeypatch):
     def fake_write_text(*args, **kwargs):
         raise OSError("[Errno 13] Permission denied: '/var/secret/path/episodes/test.md'")
@@ -245,12 +261,12 @@ def test_panels_require_scenes(api):
     assert ei.value.status_code == 400
 
 
-def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+def test_scene_create_request_validation(api):
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):
@@ -585,3 +601,21 @@ def test_arena_request_validation_security():
 
     with pytest.raises(ValidationError):
         arena_api.BattleRequest(identity_shift="x" * 5001)
+
+
+def test_panel_patch_validation(api):
+    patch_valid = api.PanelPatch(action="valid action", duration_sec=3.0, shot_type="CU")
+    assert patch_valid.action == "valid action"
+    assert patch_valid.duration_sec == 3.0
+
+    with pytest.raises(ValidationError):
+        api.PanelPatch(action="x" * 5001)
+
+    with pytest.raises(ValidationError):
+        api.PanelPatch(shot_type="x" * 33)
+
+    with pytest.raises(ValidationError):
+        api.PanelPatch(duration_sec=0.05)
+
+    with pytest.raises(ValidationError):
+        api.PanelPatch(duration_sec=61.0)

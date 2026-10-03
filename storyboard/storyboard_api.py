@@ -12,6 +12,7 @@ import csv
 import html
 import io
 import json
+import sqlite3
 import sys
 from pathlib import Path
 from typing import Any
@@ -149,7 +150,11 @@ def get_episode(episode_id: int) -> dict:
 @router.delete("/episodes/{episode_id}")
 def delete_episode(episode_id: int) -> dict:
     _episode_or_404(episode_id)
-    db.delete_episode(episode_id)
+    try:
+        db.delete_episode(episode_id)
+    except sqlite3.Error:
+        # Security: Catch database exceptions to prevent leaking server filesystem paths or raw DB errors.
+        raise HTTPException(500, "failed to delete episode")
     return {"deleted": episode_id}
 
 
