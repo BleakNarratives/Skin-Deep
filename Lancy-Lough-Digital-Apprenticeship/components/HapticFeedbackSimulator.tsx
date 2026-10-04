@@ -27,8 +27,26 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
   const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
-    setStatusMessage('Hand position reset to target center.');
+    setTargetPosition({ x: 50, y: 50 });
+    setStatusMessage('Hand and target positions reset to center.');
     setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 10 : 2;
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      setTargetPosition((prev) => {
+        let newX = prev.x;
+        let newY = prev.y;
+        if (e.key === 'ArrowUp') newY = Math.max(5, prev.y - step);
+        if (e.key === 'ArrowDown') newY = Math.min(95, prev.y + step);
+        if (e.key === 'ArrowLeft') newX = Math.max(5, prev.x - step);
+        if (e.key === 'ArrowRight') newX = Math.min(95, prev.x + step);
+        setStatusMessage(`Target repositioned to ${Math.round(newX)}%, ${Math.round(newY)}% via keyboard.`);
+        return { x: newX, y: newY };
+      });
+    }
   }, []);
 
   // Apply feedback logic
@@ -172,9 +190,12 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
         </div>
         <div
-          role="img"
-          aria-label={`Simulated haptic training surface with target at ${targetPosition.x}%, ${targetPosition.y}% and hand at ${Math.round(handPosition.x)}%, ${Math.round(handPosition.y)}%`}
-          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner"
+          role="region"
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          aria-label={`Interactive haptic training surface. Target at ${Math.round(targetPosition.x)}% x, ${Math.round(targetPosition.y)}% y. Hand at ${Math.round(handPosition.x)}% x, ${Math.round(handPosition.y)}% y. Use arrow keys to move target.`}
+          aria-describedby="haptic-surface-instructions"
+          className="flex-1 relative h-64 border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 cursor-pointer"
         >
           <div
             role="img"
@@ -201,7 +222,9 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
               transition: 'all 0.1s linear',
             }}
           ></div>
-          <p className="absolute bottom-2 left-2 text-xs text-gray-400">Simulated Training Surface</p>
+          <p id="haptic-surface-instructions" className="absolute bottom-2 left-2 text-xs text-gray-400">
+            Training Surface • Arrow Keys to move target (Unlike Mikey's wild guessing!)
+          </p>
         </div>
       </div>
     </Card>
