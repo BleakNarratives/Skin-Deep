@@ -245,12 +245,12 @@ def test_panels_require_scenes(api):
     assert ei.value.status_code == 400
 
 
-def test_scene_generate_request_validation(api):
-    req = api.SceneGenerateRequest(outline="short outline")
+def test_scene_create_request_validation(api):
+    req = api.SceneCreateRequest(outline="short outline")
     assert req.outline == "short outline"
 
     with pytest.raises(ValidationError):
-        api.SceneGenerateRequest(outline="x" * 50001)
+        api.SceneCreateRequest(outline="x" * 100001)
 
 
 def test_boardroom_request_validation(api):
@@ -572,6 +572,16 @@ def test_arena_request_validation_security():
 
     with pytest.raises(ValidationError):
         arena_api.AgentRunRequest(task_id="valid_task", group="group;SELECT *")
+
+    # Test ArenaRunRequest item validation
+    req_arena = arena_api.ArenaRunRequest(groups=["A", "B"], task_ids=["task_001_legal_analysis"])
+    assert req_arena.groups == ["A", "B"]
+
+    with pytest.raises(ValidationError):
+        arena_api.ArenaRunRequest(groups=["invalid/group!"])
+
+    with pytest.raises(ValidationError):
+        arena_api.ArenaRunRequest(task_ids=["invalid;task;id"])
 
     # Test BattleRequest duress_level and string input limits
     req_battle = arena_api.BattleRequest(duress_level="pressure", contradiction_seed="seed", turns=3)
