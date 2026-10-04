@@ -13,7 +13,7 @@ import random
 import sqlite3
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
@@ -96,9 +96,13 @@ class ScoreRequest(BaseModel):
 
 
 class ArenaRunRequest(BaseModel):
-    # Security: Limit maximum list elements to prevent resource exhaustion / DoS attacks.
-    groups: list[str] = Field(default_factory=lambda: ["A", "B", "C"], max_length=10)
-    task_ids: list[str] = Field(default_factory=list, max_length=50)  # empty = all tasks
+    # Security: Limit maximum list elements and validate list items to prevent injection & DoS.
+    groups: list[Annotated[str, Field(min_length=1, max_length=10, pattern=r"^[a-zA-Z0-9_-]+$")]] = Field(
+        default_factory=lambda: ["A", "B", "C"], max_length=10
+    )
+    task_ids: list[Annotated[str, Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")]] = Field(
+        default_factory=list, max_length=50
+    )  # empty = all tasks
 
 
 class BattleRequest(BaseModel):
