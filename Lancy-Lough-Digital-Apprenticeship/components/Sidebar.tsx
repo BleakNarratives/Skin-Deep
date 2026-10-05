@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { NavItem } from '../types';
 
 interface SidebarProps {
@@ -40,12 +40,14 @@ SidebarNavItem.displayName = 'SidebarNavItem';
 
 // Performance optimization: Memoize Sidebar container to skip redundant re-renders.
 const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, onSelectSection, isMobileMenuOpen = false, onCloseMobileMenu }) => {
-  const handleItemSelect = (id: string) => {
+  // Performance optimization: Wrap handleItemSelect in useCallback so its reference remains stable
+  // across activeSection state changes, preserving React.memo on SidebarNavItem and preventing N item re-renders.
+  const handleItemSelect = useCallback((id: string) => {
     onSelectSection(id);
     if (onCloseMobileMenu) {
       onCloseMobileMenu();
     }
-  };
+  }, [onSelectSection, onCloseMobileMenu]);
 
   return (
     <nav
