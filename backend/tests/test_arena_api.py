@@ -349,6 +349,32 @@ def test_agents_run_unknown_task():
     assert r.status_code == 404
 
 
+def test_path_parameter_validation_security():
+    # Invalid agent_id containing special characters / path traversal symbols
+    r = client.get("/api/v1/agents/invalid!agent@id")
+    assert r.status_code == 422  # Unprocessable Entity (Validation Error)
+
+    r = client.post(
+        "/api/v1/agents/invalid!agent@id/run",
+        json={"task_id": "task_001_legal_analysis", "group": "A"},
+    )
+    assert r.status_code == 422
+
+    # agent_id exceeding max_length of 64
+    too_long_id = "a" * 65
+    r = client.get(f"/api/v1/agents/{too_long_id}")
+    assert r.status_code == 422
+
+    # Invalid round_id containing special characters
+    r = client.get("/api/v1/arena/round/round;DROP TABLE")
+    assert r.status_code == 422
+
+    # round_id exceeding max_length of 64
+    too_long_round = "r" * 65
+    r = client.get(f"/api/v1/arena/round/{too_long_round}")
+    assert r.status_code == 422
+
+
 def test_corpus_untouched():
     """The arena must never write to persona_runs.db — verify byte-identical."""
     from pathlib import Path

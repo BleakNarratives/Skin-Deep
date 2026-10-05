@@ -15,7 +15,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Path as FastAPIPath, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 import arena_db
@@ -289,7 +289,9 @@ async def agents_register(req: AgentRegisterRequest) -> dict:
 
 
 @router.get("/agents/{agent_id}")
-async def agents_status(agent_id: str) -> dict:
+async def agents_status(
+    agent_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+) -> dict:
     _orch_state_loaded()
     if agent_id not in orch.AGENT_STATE:
         raise HTTPException(status_code=404, detail=f"unknown agent: {agent_id}")
@@ -305,7 +307,10 @@ async def agents_status(agent_id: str) -> dict:
 
 
 @router.post("/agents/{agent_id}/run")
-async def agents_run(agent_id: str, req: AgentRunRequest) -> dict:
+async def agents_run(
+    agent_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
+    req: AgentRunRequest = ...,
+) -> dict:
     _orch_state_loaded()
     if agent_id not in orch.AGENT_STATE:
         raise HTTPException(status_code=404, detail=f"unknown agent: {agent_id}")
@@ -355,7 +360,9 @@ async def arena_run(req: ArenaRunRequest) -> dict:
 
 
 @router.get("/arena/round/{round_id}")
-async def arena_round(round_id: str) -> dict:
+async def arena_round(
+    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+) -> dict:
     r = arena_db.get_round(round_id)
     if r is None:
         raise HTTPException(status_code=404, detail=f"unknown round: {round_id}")
@@ -385,7 +392,10 @@ async def ws_telemetry(ws: WebSocket) -> None:
 
 
 @router.websocket("/ws/run/{round_id}")
-async def ws_run(ws: WebSocket, round_id: str) -> None:
+async def ws_run(
+    ws: WebSocket,
+    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
+) -> None:
     """Live round feed with catch-up replay.
 
     Late joiners get every event persisted so far (replayed from arena.db),
