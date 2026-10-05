@@ -40,6 +40,15 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     setTimeout(() => setStatusMessage(''), 3000);
   }, []);
 
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
+    const y = Math.min(100, Math.max(0, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+    setTargetPosition({ x, y });
+    setStatusMessage(`Target relocated to (${x}%, ${y}%). Unlike Mikey's wild guesses, precision targeting is active!`);
+    setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
+
   const handleSurfaceClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.min(100, Math.max(0, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
