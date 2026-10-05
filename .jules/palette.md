@@ -21,3 +21,7 @@
 ## 2026-09-22 - Interactive Simulation Canvas & Relative Target Positioning
 **Learning:** 2D simulation canvas surfaces require `role="region"`, `tabIndex={0}`, and clear `aria-label` descriptors explaining interaction semantics. Overlay text must use `pointer-events-none` so mouse clicks are registered on the surface container, and explicit reset controls with `focus-visible:ring-2` styling ensure full keyboard accessibility and easy state reset.
 **Action:** When making canvas/simulation areas interactive, apply `role="region"`, `aria-label`, `pointer-events-none` on overlay elements, and pair with an accessible Reset button.
+
+## 2026-09-24 - Keyboard Focusability for Recharts SVG Containers
+**Learning:** Recharts SVG components wrapped in `role="img"` containers with `aria-label` are omitted from the default browser keyboard focus order during Tab navigation unless `tabIndex={0}` is explicitly assigned. Adding `tabIndex={0}` and `focus-visible:ring-2` focus indicators allows keyboard and screen reader users to focus directly on data charts and hear their `aria-label` summary.
+**Action:** Always wrap Recharts SVG chart components in containers with `role="img"`, `tabIndex={0}`, `aria-label`, and `focus-visible:ring-2` styling for complete keyboard accessibility.

@@ -43,6 +43,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ navItems, activeSection, o
   // Performance optimization: Wrap handleItemSelect in useCallback so its reference remains stable
   // when activeSection changes. This prevents invalidating React.memo on child SidebarNavItem instances,
   // reducing navigation button re-renders from N (11) down to 2 per section scroll event.
+  // across activeSection state changes, preserving React.memo on SidebarNavItem and preventing N item re-renders.
   const handleItemSelect = useCallback((id: string) => {
     onSelectSection(id);
     if (onCloseMobileMenu) {
