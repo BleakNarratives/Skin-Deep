@@ -26,6 +26,23 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  const handleSelectFeedback = useCallback((type: FeedbackType) => {
+    setFeedbackType(type);
+    const modeNames: Record<FeedbackType, string> = {
+      none: 'No Feedback (unguided mode)',
+      spring: 'Spring Feedback (trajectory pull)',
+      damping: 'Damping Feedback (tremor reduction)',
+      'spring-damping': 'Spring-Damping Feedback (combined stabilization)',
+    };
+    setStatusMessage(`Mode switched to ${modeNames[type]}.`);
+  }, []);
+
+  const handleTogglePause = useCallback(() => {
+    setIsPaused(prev => {
+      const nextState = !prev;
+      setStatusMessage(nextState ? 'Simulation paused.' : 'Simulation resumed.');
+      return nextState;
+    });
   const handleSurfaceClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!surfaceRef.current) return;
     const rect = surfaceRef.current.getBoundingClientRect();
@@ -60,6 +77,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
   const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
+    setStatusMessage('Hand position reset to target center.');
     setTargetPosition({ x: 50, y: 50 });
     setStatusMessage('Hand & target reset to center — cleaner setup than Mikey\'s shaky try.');
     setStatusMessage('Hand and target position reset to center.');
@@ -161,7 +179,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Haptic Feedback Mode">
             <button
               type="button"
-              onClick={() => setFeedbackType('none')}
+              onClick={() => handleSelectFeedback('none')}
               aria-pressed={feedbackType === 'none'}
               aria-label="Disable haptic feedback (raw unguided movement like Mikey's shaky hands)"
               title="Disable haptic guidance"
@@ -173,7 +191,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             </button>
             <button
               type="button"
-              onClick={() => setFeedbackType('spring')}
+              onClick={() => handleSelectFeedback('spring')}
               aria-pressed={feedbackType === 'spring'}
               aria-label="Enable spring haptic feedback to pull hand toward target trajectory"
               title="Enable spring feedback trajectory pull"
@@ -185,7 +203,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             </button>
             <button
               type="button"
-              onClick={() => setFeedbackType('damping')}
+              onClick={() => handleSelectFeedback('damping')}
               aria-pressed={feedbackType === 'damping'}
               aria-label="Enable damping haptic feedback to smooth out hand tremors"
               title="Enable damping tremor reduction"
@@ -197,7 +215,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             </button>
             <button
               type="button"
-              onClick={() => setFeedbackType('spring-damping')}
+              onClick={() => handleSelectFeedback('spring-damping')}
               aria-pressed={feedbackType === 'spring-damping'}
               aria-label="Enable spring-damping haptic feedback for combined trajectory stabilization"
               title="Enable combined spring and damping feedback"
@@ -209,7 +227,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             </button>
             <button
               type="button"
-              onClick={() => setIsPaused((prev) => !prev)}
+              onClick={handleTogglePause}
               aria-pressed={isPaused}
               aria-label={isPaused ? 'Resume hand movement simulation' : 'Pause hand movement simulation'}
               title={isPaused ? 'Resume movement simulation' : 'Pause movement simulation — unlike Mikey, you can pause to inspect!'}
