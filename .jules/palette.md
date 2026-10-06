@@ -25,3 +25,7 @@
 ## 2026-09-24 - Keyboard Focusability for Recharts SVG Containers
 **Learning:** Recharts SVG components wrapped in `role="img"` containers with `aria-label` are omitted from the default browser keyboard focus order during Tab navigation unless `tabIndex={0}` is explicitly assigned. Adding `tabIndex={0}` and `focus-visible:ring-2` focus indicators allows keyboard and screen reader users to focus directly on data charts and hear their `aria-label` summary.
 **Action:** Always wrap Recharts SVG chart components in containers with `role="img"`, `tabIndex={0}`, `aria-label`, and `focus-visible:ring-2` styling for complete keyboard accessibility.
+
+## 2026-10-06 - Interactive Simulation Surface Keyboard Movement
+**Learning:** Interactive 2D target surfaces require `role="region"`, `tabIndex={0}`, and an `onKeyDown` listener supporting directional arrow keys (with `Shift` modifier for step acceleration) alongside `aria-label` dynamic coordinate updates to achieve full keyboard accessibility for non-mouse users.
+**Action:** When making 2D simulation surfaces interactive, bind `onKeyDown` to process `ArrowUp`/`ArrowDown`/`ArrowLeft`/`ArrowRight` key events with `e.preventDefault()`, and pair with `tabIndex={0}` and `focus-visible:ring-2` focus indicators.
