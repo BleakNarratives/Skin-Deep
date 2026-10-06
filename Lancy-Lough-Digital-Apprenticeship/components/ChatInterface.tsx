@@ -176,9 +176,31 @@ const ChatInterface: React.FC = React.memo(() => {
         aria-relevant="additions"
       >
         {messages.length === 0 && (
-          <p className="text-gray-400 text-sm text-center italic mt-4">
-            Ask anything about LOUGH bio-telemetry or Lancy Lough's techniques (Unlike Mikey, our AI actually gives useful answers!).
-          </p>
+          <div className="space-y-3 mt-2">
+            <p className="text-gray-400 text-sm text-center italic">
+              Ask anything about LOUGH bio-telemetry or Lancy Lough's techniques (Unlike Mikey, our AI actually gives useful answers!).
+            </p>
+            <div className="flex flex-wrap gap-1.5 justify-center pt-1" role="group" aria-label="Suggested quick prompts">
+              <button
+                type="button"
+                onClick={() => setInput("Explain coil vs rotary machine telemetry")}
+                aria-label="Use quick prompt: Explain coil vs rotary machine telemetry"
+                title="Fill input with coil vs rotary prompt — way faster than Mikey's typing"
+                className="bg-gray-800 hover:bg-teal-900/60 border border-teal-500/40 text-teal-300 text-xs px-2.5 py-1 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              >
+                ⚡ Machine Specs
+              </button>
+              <button
+                type="button"
+                onClick={() => setInput("How is sEMG muscle activation filtered?")}
+                aria-label="Use quick prompt: How is sEMG muscle activation filtered?"
+                title="Fill input with sEMG filtering prompt"
+                className="bg-gray-800 hover:bg-teal-900/60 border border-teal-500/40 text-teal-300 text-xs px-2.5 py-1 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              >
+                🧠 sEMG Filtering
+              </button>
+            </div>
+          </div>
         )}
         {messages.map((msg, index) => (
           <ChatMessageItem key={index} message={msg} />
