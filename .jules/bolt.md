@@ -17,3 +17,7 @@
 ## 2026-09-26 - Rollup Manual Chunks & Image Lazy Loading
 **Learning:** Monolithic Vite production bundles containing heavy UI chart libraries (Recharts) degrade initial script parse times and trigger build warnings (>500kB). Configuring Rollup `manualChunks` in `vite.config.ts` using module path checks (`id.includes('node_modules/recharts')`) splits dependencies into separate cacheable chunks, reducing the main application JS bundle size by >90% (615kB down to 58kB).
 **Action:** Use functional `manualChunks` inspection in `vite.config.ts` for large third-party libraries (`recharts`, `react-dom`), and add `loading="lazy"` with explicit `width`/`height` dimensions to offscreen images.
+
+## 2026-09-27 - Consolidated Simulation Timers in Interactive Canvas Components
+**Learning:** Running multiple un-synchronized `setInterval` timers within interactive UI simulation components (e.g. 200ms jitter timer and 100ms vector calculation timer) causes competing React state updates and 50% extra timer wakeups per second.
+**Action:** Unify simulation physics and jitter updates into a single 100ms interval timer with atomic state update callbacks, and wrap distance metrics in `useMemo`.
