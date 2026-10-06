@@ -509,6 +509,23 @@ def test_health_offline(api):
     assert "text_providers" in h
 
 
+def test_health_gemini_exception_sanitized(api, monkeypatch):
+    monkeypatch.setenv("STORYBOARD_ALLOW_GEMINI", "1")
+
+    def broken_gemini_client(key=None):
+        raise RuntimeError("Errno 2 No such file or directory: '/home/jules/secret/credentials.json'")
+
+    monkeypatch.setattr(gen, "_gemini_client", broken_gemini_client)
+
+    h = api.health()
+    gemini_entry = next((item for item in h["image_chain"] if item["provider"] == "gemini"), None)
+    assert gemini_entry is not None
+    assert gemini_entry["auth"] == "auth_failed"
+    # Ensure raw filesystem paths or exception strings are not leaked
+    assert "secret" not in json.dumps(h)
+    assert "credentials.json" not in json.dumps(h)
+
+
 def test_generate_image_for_panel_path_traversal_prevention(api):
     panel = {"id": 1, "action": "test action", "visual_prompt": "test prompt"}
     malicious_ep = {"slug": "../evil_dir"}
