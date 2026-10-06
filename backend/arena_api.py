@@ -360,7 +360,9 @@ async def arena_run(req: ArenaRunRequest) -> dict:
 
 
 @router.get("/arena/round/{round_id}")
-async def arena_round(round_id: str) -> dict:
+async def arena_round(
+    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+) -> dict:
     r = arena_db.get_round(round_id)
     if r is None:
         raise HTTPException(status_code=404, detail=f"unknown round: {round_id}")
@@ -390,7 +392,10 @@ async def ws_telemetry(ws: WebSocket) -> None:
 
 
 @router.websocket("/ws/run/{round_id}")
-async def ws_run(ws: WebSocket, round_id: str) -> None:
+async def ws_run(
+    ws: WebSocket,
+    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
+) -> None:
     """Live round feed with catch-up replay.
 
     Late joiners get every event persisted so far (replayed from arena.db),
