@@ -19,7 +19,12 @@ interface DataChartProps {
 const DataChart: React.FC<DataChartProps> = React.memo(({ data, title, dataKey, unit, color }) => {
   return (
     <Card title={title}>
-      <div role="img" aria-label={`Line chart displaying ${title} measured in ${unit}`}>
+      <div
+        role="img"
+        tabIndex={0}
+        aria-label={`Line chart displaying ${title} measured in ${unit} (precision metrics far beyond Mikey's guesstimates)`}
+        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded transition-all duration-150 p-1"
+      >
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#4a4a4a" />
