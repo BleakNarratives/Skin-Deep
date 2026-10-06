@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Card from './Card';
 import DataChart from './DataChart';
 import { MOCK_EMG_DATA } from '../constants';
@@ -7,26 +7,64 @@ import { MOCK_EMG_DATA } from '../constants';
 // Performance optimization: Memoize VideoDataOverlay component to skip redundant re-renders
 // when parent component updates state (e.g., active scroll section or AI explanations).
 const VideoDataOverlay: React.FC = React.memo(() => {
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+
   // Memoize needle pressure data transformation to avoid array mapping allocation on render
   const needlePressureData = useMemo(() => {
     return MOCK_EMG_DATA.map(d => ({ ...d, value: d.value / 5 }));
   }, []);
 
+  const togglePlayback = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
+
   return (
     <Card title="Video-Data Overlay: Live Session View" className="col-span-1 lg:col-span-2">
-      <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-6 shadow-md">
+      <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-6 shadow-md group">
         <img
           src="https://picsum.photos/1280/720?grayscale&blur=2"
           alt="Tattoo Session Placeholder"
           width={1280}
           height={720}
           loading="lazy"
-          className="w-full h-full object-cover opacity-60"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${isPlaying ? 'opacity-60' : 'opacity-40'}`}
         />
-        <div className="absolute inset-0 flex flex-col justify-between p-4 bg-gradient-to-t from-black/50 to-transparent">
+        <div className="absolute inset-0 flex flex-col justify-between p-4 bg-gradient-to-t from-black/60 via-transparent to-black/40">
           <div className="flex justify-between items-start">
-            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full animate-pulse">LIVE</span>
-            <span className="text-white text-sm">Recording: Lancy Lough - Line Work Session #007</span>
+            <div className="flex items-center space-x-2">
+              <span
+                className={`text-white text-xs font-semibold px-2.5 py-1 rounded-full transition-colors duration-200 ${
+                  isPlaying ? 'bg-red-600 animate-pulse' : 'bg-gray-600'
+                }`}
+              >
+                {isPlaying ? '● LIVE' : '⏸ PAUSED'}
+              </span>
+              <button
+                type="button"
+                onClick={togglePlayback}
+                aria-label={isPlaying ? 'Pause live stream session' : 'Play live stream session'}
+                aria-pressed={isPlaying}
+                title={
+                  isPlaying
+                    ? "Pause session stream — unlike Mikey, you can pause to analyze frame dynamics"
+                    : "Resume live stream — instant resume without Mikey's buffering glitches"
+                }
+                className="bg-gray-800/80 hover:bg-teal-600 text-white p-1.5 rounded-full border border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-colors"
+              >
+                {isPlaying ? (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <span className="text-white text-sm bg-black/40 px-2 py-1 rounded backdrop-blur-xs">
+              Recording: Lancy Lough - Line Work Session #007
+            </span>
           </div>
           <div className="flex justify-end items-end gap-4">
             <div className="bg-blue-800 bg-opacity-70 backdrop-blur-sm p-3 rounded-lg text-white text-sm">
