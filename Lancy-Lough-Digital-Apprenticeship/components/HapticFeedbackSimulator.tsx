@@ -13,13 +13,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [statusMessage, setStatusMessage] = useState<string>('');
   const surfaceRef = useRef<HTMLDivElement>(null);
 
-  // Performance optimization: Consolidated single simulation loop.
-  // Unifies random hand tremor jitter and haptic feedback vector calculations into a single
-  // 100ms interval timer (instead of dual un-synchronized timers running at 200ms and 100ms),
-  // reducing state update thrashing and re-renders by 50%.
-  useEffect(() => {
-    if (isPaused) return;
-
   const handleSelectFeedback = useCallback((type: FeedbackType) => {
     setFeedbackType(type);
     const modeNames: Record<FeedbackType, string> = {
@@ -37,6 +30,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       setStatusMessage(nextState ? 'Simulation paused.' : 'Simulation resumed.');
       return nextState;
     });
+  }, []);
+
   const handleSurfaceClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!surfaceRef.current) return;
     const rect = surfaceRef.current.getBoundingClientRect();
@@ -46,9 +41,44 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     setStatusMessage(`Target relocated to (${x}%, ${y}%). Locked in cleanly — unlike Mikey's wild guesses!`);
   }, []);
 
+  const handleSurfaceKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 10 : 2;
+    let dx = 0;
+    let dy = 0;
+    if (e.key === 'ArrowLeft') dx = -step;
+    else if (e.key === 'ArrowRight') dx = step;
+    else if (e.key === 'ArrowUp') dy = -step;
+    else if (e.key === 'ArrowDown') dy = step;
+    else return;
+
+    e.preventDefault();
+    setTargetPosition(prev => {
+      const newX = Math.min(100, Math.max(0, prev.x + dx));
+      const newY = Math.min(100, Math.max(0, prev.y + dy));
+      setStatusMessage(`Target shifted via keyboard to (${newX}%, ${newY}%).`);
+      return { x: newX, y: newY };
+    });
+  }, []);
+
+  const handleResetPosition = useCallback(() => {
+    setHandPosition({ x: 50, y: 50 });
+    setTargetPosition({ x: 50, y: 50 });
+    setStatusMessage('Hand and target position reset to center — cleaner setup than Mikey\'s shaky try.');
+    setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
+
+  // Performance optimization: Consolidated single simulation loop.
+  // Unifies random hand tremor jitter and haptic feedback vector calculations into a single
+  // 100ms interval timer (instead of dual un-synchronized timers), reducing state update thrashing
+  // and timer wakeups by 50%.
+  useEffect(() => {
+    if (isPaused) return;
+
+    const feedbackStrength = 0.05;
+
     const simulationInterval = setInterval(() => {
       setHandPosition(prev => {
-        // Random hand tremor jitter
+        // Hand tremor jitter
         let jitterX = (Math.random() - 0.5) * 4;
         let jitterY = (Math.random() - 0.5) * 4;
 
@@ -77,52 +107,10 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           y: Math.min(100, Math.max(0, newY)),
         };
       });
-    }
-  }, []);
-
-  const handleResetPosition = useCallback(() => {
-    setHandPosition({ x: 50, y: 50 });
-    setStatusMessage('Hand position reset to target center.');
-    setTargetPosition({ x: 50, y: 50 });
-    setStatusMessage('Hand and target position reset to center — cleaner setup than Mikey\'s shaky try.');
-    setTimeout(() => setStatusMessage(''), 3000);
-  }, []);
-
-  // Apply feedback logic
-  useEffect(() => {
-    if (feedbackType === 'none' || isPaused) return;
-
-    const feedbackStrength = 0.05; // How much feedback affects movement
-
-    const applyFeedback = setInterval(() => {
-      setHandPosition(prev => {
-        let newX = prev.x;
-        let newY = prev.y;
-
-        const dx = targetPosition.x - prev.x;
-        const dy = targetPosition.y - prev.y;
-
-        if (feedbackType.includes('spring')) {
-          newX += dx * feedbackStrength;
-          newY += dy * feedbackStrength;
-        }
-
-        if (feedbackType.includes('damping')) {
-          // Simulate reducing erratic movement by nudging towards target
-          newX += Math.sign(dx) * Math.min(Math.abs(dx), feedbackStrength * 2);
-          newY += Math.sign(dy) * Math.min(Math.abs(dy), feedbackStrength * 2);
-        }
-
-        // Keep within bounds
-        newX = Math.min(100, Math.max(0, newX));
-        newY = Math.min(100, Math.max(0, newY));
-
-        return { x: newX, y: newY };
-      });
     }, 100);
 
-    return () => clearInterval(applyFeedback);
-  }, [feedbackType, targetPosition, isPaused]);
+    return () => clearInterval(simulationInterval);
+  }, [isPaused, feedbackType, targetPosition]);
 
   const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
