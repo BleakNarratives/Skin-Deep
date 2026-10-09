@@ -25,3 +25,7 @@
 ## 2026-09-24 - Keyboard Focusability for Recharts SVG Containers
 **Learning:** Recharts SVG components wrapped in `role="img"` containers with `aria-label` are omitted from the default browser keyboard focus order during Tab navigation unless `tabIndex={0}` is explicitly assigned. Adding `tabIndex={0}` and `focus-visible:ring-2` focus indicators allows keyboard and screen reader users to focus directly on data charts and hear their `aria-label` summary.
 **Action:** Always wrap Recharts SVG chart components in containers with `role="img"`, `tabIndex={0}`, `aria-label`, and `focus-visible:ring-2` styling for complete keyboard accessibility.
+
+## 2026-09-28 - Canvas Arrow Key Target Precision & Modifier Scaling
+**Learning:** Interactive 2D target surfaces wrapped in `role="region"` become fully accessible to keyboard users when Arrow keys adjust target coordinates with `e.preventDefault()`. Supporting Shift modifier keys for accelerated step movements (e.g. 10% vs 2%) provides both coarse and fine precision control.
+**Action:** Bind `onKeyDown` on interactive canvas regions to handle ArrowUp/Down/Left/Right with optional `e.shiftKey` multiplier and live ARIA announcements.
