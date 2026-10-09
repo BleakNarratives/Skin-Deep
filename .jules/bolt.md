@@ -18,6 +18,6 @@
 **Learning:** Monolithic Vite production bundles containing heavy UI chart libraries (Recharts) degrade initial script parse times and trigger build warnings (>500kB). Configuring Rollup `manualChunks` in `vite.config.ts` using module path checks (`id.includes('node_modules/recharts')`) splits dependencies into separate cacheable chunks, reducing the main application JS bundle size by >90% (615kB down to 58kB).
 **Action:** Use functional `manualChunks` inspection in `vite.config.ts` for large third-party libraries (`recharts`, `react-dom`), and add `loading="lazy"` with explicit `width`/`height` dimensions to offscreen images.
 
-## 2026-09-27 - Consolidated Simulation Timers in Interactive Canvas Components
-**Learning:** Running multiple un-synchronized `setInterval` timers within interactive UI simulation components (e.g. 200ms jitter timer and 100ms vector calculation timer) causes competing React state updates and 50% extra timer wakeups per second.
-**Action:** Unify simulation physics and jitter updates into a single 100ms interval timer with atomic state update callbacks, and wrap distance metrics in `useMemo`.
+## 2026-09-27 - Consolidated Simulation Timers & Ref Target Tracking in Interactive Canvas Components
+**Learning:** Running multiple un-synchronized `setInterval` timers within interactive UI simulation components causes competing React state updates and 50% extra timer wakeups per second. Additionally, using object state as an interval dependency forces teardown/re-creation of the timer on every position move. Note that wrapping primitive scalar math (`Math.hypot`) in `useMemo` is a React anti-pattern that adds overhead compared to direct calculation.
+**Action:** Unify simulation physics and jitter updates into a single 100ms interval timer with atomic state update callbacks, use `useRef` to track target position updates without restarting intervals, and calculate scalar distance metrics directly.
