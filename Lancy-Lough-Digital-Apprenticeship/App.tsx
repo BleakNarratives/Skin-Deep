@@ -113,9 +113,18 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, []);
 
+  // Performance optimization: Throttle window scroll event processing using requestAnimationFrame
+  // to avoid redundant state checks on every pixel tick during continuous scrolling.
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowScrollTop(window.scrollY > 300);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
