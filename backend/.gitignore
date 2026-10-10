@@ -10,3 +10,4 @@ __pycache__/
 # The sacred ~/MikeySwarm/persona_runs.db corpus is never here.
 arena.db
 arena.db-*
+persona_runs_stub.db
