@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path as APIPath
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field
 
@@ -139,7 +139,7 @@ def create_episode(body: EpisodeCreate) -> dict:
 
 
 @router.get("/episodes/{episode_id}")
-def get_episode(episode_id: int) -> dict:
+def get_episode(episode_id: int = APIPath(..., ge=1, le=2147483647)) -> dict:
     tree = db.episode_tree(episode_id)
     if tree is None:
         raise HTTPException(404, f"episode {episode_id} not found")
@@ -147,7 +147,7 @@ def get_episode(episode_id: int) -> dict:
 
 
 @router.delete("/episodes/{episode_id}")
-def delete_episode(episode_id: int) -> dict:
+def delete_episode(episode_id: int = APIPath(..., ge=1, le=2147483647)) -> dict:
     _episode_or_404(episode_id)
     db.delete_episode(episode_id)
     return {"deleted": episode_id}
@@ -156,7 +156,10 @@ def delete_episode(episode_id: int) -> dict:
 # ── AI generation stages ─────────────────────────────────────────────────
 
 @router.post("/episodes/{episode_id}/scenes")
-def generate_scenes(episode_id: int, body: SceneCreateRequest | None = None) -> dict:
+def generate_scenes(
+    episode_id: int = APIPath(..., ge=1, le=2147483647),
+    body: SceneCreateRequest | None = None,
+) -> dict:
     ep = _episode_or_404(episode_id)
     req = body or SceneCreateRequest()
     outline = _outline_text(ep, req.outline)
@@ -169,7 +172,7 @@ def generate_scenes(episode_id: int, body: SceneCreateRequest | None = None) -> 
 
 
 @router.post("/episodes/{episode_id}/panels")
-def generate_panels(episode_id: int) -> dict:
+def generate_panels(episode_id: int = APIPath(..., ge=1, le=2147483647)) -> dict:
     ep = _episode_or_404(episode_id)
     scenes = db.list_scenes(episode_id)
     if not scenes:
@@ -186,7 +189,10 @@ def generate_panels(episode_id: int) -> dict:
 
 
 @router.post("/episodes/{episode_id}/boardroom")
-def boardroom_mode(episode_id: int, body: BoardroomRequest | None = None) -> dict:
+def boardroom_mode(
+    episode_id: int = APIPath(..., ge=1, le=2147483647),
+    body: BoardroomRequest | None = None,
+) -> dict:
     ep = _episode_or_404(episode_id)
     req = body or BoardroomRequest()
     outline = _outline_text(ep, req.outline)
@@ -203,7 +209,10 @@ def boardroom_mode(episode_id: int, body: BoardroomRequest | None = None) -> dic
 # ── panel edits / regeneration / images ──────────────────────────────────
 
 @router.patch("/panels/{panel_id}")
-def patch_panel(panel_id: int, body: PanelPatch) -> dict:
+def patch_panel(
+    panel_id: int = APIPath(..., ge=1, le=2147483647),
+    body: PanelPatch = ...,
+) -> dict:
     _panel_or_404(panel_id)
     fields = {k: v for k, v in body.model_dump().items() if v is not None}
     row = db.update_panel(panel_id, **fields)
@@ -211,7 +220,7 @@ def patch_panel(panel_id: int, body: PanelPatch) -> dict:
 
 
 @router.post("/panels/{panel_id}/regenerate")
-def regenerate_panel(panel_id: int) -> dict:
+def regenerate_panel(panel_id: int = APIPath(..., ge=1, le=2147483647)) -> dict:
     p = _panel_or_404(panel_id)
     scene_row = db.get_scene(p["scene_id"])
     if scene_row is None:
@@ -244,7 +253,7 @@ def regenerate_panel(panel_id: int) -> dict:
 
 
 @router.post("/panels/{panel_id}/image")
-def panel_image(panel_id: int) -> dict:
+def panel_image(panel_id: int = APIPath(..., ge=1, le=2147483647)) -> dict:
     p = _panel_or_404(panel_id)
     scene = db.get_scene(p["scene_id"])
     if scene is None:
@@ -276,7 +285,7 @@ def _flatten(tree: dict) -> list[dict]:
 
 
 @router.get("/episodes/{episode_id}/export/json")
-def export_json(episode_id: int) -> Response:
+def export_json(episode_id: int = APIPath(..., ge=1, le=2147483647)) -> Response:
     tree = db.episode_tree(episode_id)
     if tree is None:
         raise HTTPException(404, "episode not found")
@@ -306,7 +315,7 @@ def _sanitize_csv_cell(val: Any) -> Any:
 
 
 @router.get("/episodes/{episode_id}/export/csv")
-def export_csv(episode_id: int) -> Response:
+def export_csv(episode_id: int = APIPath(..., ge=1, le=2147483647)) -> Response:
     tree = db.episode_tree(episode_id)
     if tree is None:
         raise HTTPException(404, "episode not found")
@@ -329,7 +338,7 @@ def export_csv(episode_id: int) -> Response:
 
 
 @router.get("/episodes/{episode_id}/export/sheet")
-def export_sheet(episode_id: int) -> HTMLResponse:
+def export_sheet(episode_id: int = APIPath(..., ge=1, le=2147483647)) -> HTMLResponse:
     tree = db.episode_tree(episode_id)
     if tree is None:
         raise HTTPException(404, "episode not found")
