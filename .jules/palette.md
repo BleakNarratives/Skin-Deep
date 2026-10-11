@@ -25,3 +25,7 @@
 ## 2026-09-24 - Keyboard Focusability for Recharts SVG Containers
 **Learning:** Recharts SVG components wrapped in `role="img"` containers with `aria-label` are omitted from the default browser keyboard focus order during Tab navigation unless `tabIndex={0}` is explicitly assigned. Adding `tabIndex={0}` and `focus-visible:ring-2` focus indicators allows keyboard and screen reader users to focus directly on data charts and hear their `aria-label` summary.
 **Action:** Always wrap Recharts SVG chart components in containers with `role="img"`, `tabIndex={0}`, `aria-label`, and `focus-visible:ring-2` styling for complete keyboard accessibility.
+
+## 2026-10-11 - Keyboard Nudge Navigation & Live Status Feedback for Simulation Surfaces
+**Learning:** Interactive simulation canvases (`role="region"`) benefit from arrow key handling with Shift modifier step scaling (e.g., 5% vs 1% adjustments) and key resets ('R'), paired with live status region updates (`aria-live="polite"`), providing full screen reader and keyboard accessibility without requiring mouse interactions.
+**Action:** When implementing interactive canvas surfaces, bind `onKeyDown` handlers for arrow keys and reset shortcuts, update state with boundary clamping, and output descriptive announcements to `aria-live="polite"` containers.
