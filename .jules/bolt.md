@@ -21,3 +21,7 @@
 ## 2026-09-27 - Consolidated Simulation Timers in Interactive Canvas Components
 **Learning:** Running multiple un-synchronized `setInterval` timers within interactive UI simulation components (e.g. 200ms jitter timer and 100ms vector calculation timer) causes competing React state updates and 50% extra timer wakeups per second.
 **Action:** Unify simulation physics and jitter updates into a single 100ms interval timer with atomic state update callbacks, and wrap distance metrics in `useMemo`.
+
+## 2026-10-11 - State-Diffed Scroll Listener Throttling via requestAnimationFrame
+**Learning:** Invoking React state setters directly in high-frequency scroll event handlers fires state setters on every pixel scroll tick, enqueueing unneeded React re-evaluation cycles even when the target threshold state boolean remains unchanged.
+**Action:** Wrap scroll event callbacks in `requestAnimationFrame` with a ticking flag and perform state value diffing (`prev !== isPastThreshold`) inside the updater function to ensure state setters only execute when crossing the threshold boundary.
