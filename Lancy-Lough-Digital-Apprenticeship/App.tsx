@@ -113,9 +113,20 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, []);
 
+  // Performance optimization: Throttle window scroll event listener with requestAnimationFrame
+  // and state diffing so React state updates only fire when crossing the 300px scroll threshold,
+  // reducing main thread CPU usage and unneeded state re-evaluations during smooth scrolling.
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const isPastThreshold = window.scrollY > 300;
+          setShowScrollTop((prev) => (prev !== isPastThreshold ? isPastThreshold : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
