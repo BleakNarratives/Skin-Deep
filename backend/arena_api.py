@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Path as APIPath, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 import arena_db
 import telemetry
@@ -111,6 +111,15 @@ class BattleRequest(BaseModel):
 
 class PersonaUpdate(BaseModel):
     seed: dict[str, Any]
+
+    # Security: Validate seed payload size when serialized to JSON (max 50,000 chars)
+    # to prevent resource exhaustion (DoS) and database bloat when storing custom seeds.
+    @field_validator("seed")
+    @classmethod
+    def check_seed_size(cls, v: dict[str, Any]) -> dict[str, Any]:
+        if len(json.dumps(v, default=str)) > 50000:
+            raise ValueError("custom seed payload exceeds maximum allowed size (50,000 bytes)")
+        return v
 
 
 class AgentRegisterRequest(BaseModel):
@@ -361,7 +370,7 @@ async def arena_run(req: ArenaRunRequest) -> dict:
 
 @router.get("/arena/round/{round_id}")
 async def arena_round(
-    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+    round_id: str = APIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
 ) -> dict:
     r = arena_db.get_round(round_id)
     if r is None:
@@ -394,7 +403,7 @@ async def ws_telemetry(ws: WebSocket) -> None:
 @router.websocket("/ws/run/{round_id}")
 async def ws_run(
     ws: WebSocket,
-    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
+    round_id: str = APIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
 ) -> None:
     """Live round feed with catch-up replay.
 
