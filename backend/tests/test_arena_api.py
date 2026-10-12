@@ -198,6 +198,16 @@ def test_persona_put():
     assert r.json()["status"] == "stored"
 
 
+def test_persona_put_oversized_seed():
+    # Verify that custom seed payloads exceeding 50,000 bytes are rejected with 422
+    oversized_seed = {"identifier": "huge-seed", "data": "x" * 50001}
+    r = client.put(
+        "/api/v1/persona",
+        json={"seed": oversized_seed},
+    )
+    assert r.status_code == 422
+
+
 def test_arena_run_and_poll(server_url):
     with httpx.Client(base_url=server_url, timeout=10) as c:
         r = c.post("/api/v1/arena/run", json={"groups": ["A"], "task_ids": ["task_001_legal_analysis"]})
