@@ -114,8 +114,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
 
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
-
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
     [handPosition.x, handPosition.y, targetPosition.x, targetPosition.y]
@@ -207,8 +205,17 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             {statusMessage && <span className="block text-teal-300 text-sm mt-1">🎯 {statusMessage}</span>}
           </div>
           <div className="mt-3 flex items-center space-x-2">
-            <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
-            <span className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}>
+            <span id="haptic-accuracy-label" className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
+            <span
+              role="meter"
+              aria-labelledby="haptic-accuracy-label"
+              aria-valuenow={alignmentAccuracy}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuetext={`${alignmentAccuracy}% trajectory accuracy`}
+              title={`${alignmentAccuracy}% trajectory accuracy — far more accurate than Mikey's shaky freehand`}
+              className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}
+            >
               {alignmentAccuracy}%
             </span>
           </div>

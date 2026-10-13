@@ -29,3 +29,7 @@
 ## 2026-10-06 - Interactive 2D Simulation Surface Keyboard Controls
 **Learning:** Interactive target coordinates on 2D simulation surfaces (`role="region"`, `tabIndex={0}`) require `onKeyDown` listeners handling Arrow Keys (and Shift+Arrow for 10x step modifiers) with `e.preventDefault()`. Coupling keypress handlers with `aria-live="polite"` status announcements ensures screen reader and keyboard-only users can navigate coordinates with real-time feedback.
 **Action:** On interactive 2D simulation regions, attach `onKeyDown` Arrow key handlers with `e.preventDefault()` and update an `aria-live="polite"` container with explicit coordinate readouts.
+
+## 2026-10-13 - ARIA Meter Attributes for Accuracy & Score Indicators
+**Learning:** Displaying numeric performance metrics (like percentage accuracy badges or scores) without semantic ARIA roles causes screen readers to treat them as plain static text. Assigning `role="meter"`, `aria-labelledby`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and descriptive `aria-valuetext` attributes transforms accuracy indicators into accessible range meters for assistive tech users.
+**Action:** When rendering dynamic numeric percentages or scores, wrap the badge with `role="meter"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and `aria-valuetext` alongside an informative tooltip.
