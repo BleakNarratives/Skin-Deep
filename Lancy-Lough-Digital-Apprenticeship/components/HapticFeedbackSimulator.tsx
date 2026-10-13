@@ -54,14 +54,14 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
       setTargetPosition(prev => {
-        const step = 5;
+        const step = e.shiftKey ? 10 : 2;
         let newX = prev.x;
         let newY = prev.y;
         if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
         if (e.key === 'ArrowDown') newY = Math.min(100, prev.y + step);
         if (e.key === 'ArrowLeft') newX = Math.max(0, prev.x - step);
         if (e.key === 'ArrowRight') newX = Math.min(100, prev.x + step);
-        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%).`);
+        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%)${e.shiftKey ? ' [fast step]' : ' [fine step]'}.`);
         return { x: newX, y: newY };
       });
     }
@@ -113,8 +113,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
-
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
