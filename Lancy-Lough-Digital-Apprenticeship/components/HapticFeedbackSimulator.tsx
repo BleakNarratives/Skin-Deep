@@ -1,7 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Card from './Card';
 
 type FeedbackType = 'none' | 'spring' | 'damping' | 'spring-damping';
+
+const FEEDBACK_DESCRIPTIONS: Record<FeedbackType, string> = {
+  none: 'No active feedback (resembling Mikey’s unguided freehand).',
+  spring: 'Pulls hand toward ideal trajectory.',
+  damping: 'Smooths out tremors and erratic movements.',
+  'spring-damping': 'Combines both methods for master-level path straightness.',
+};
 
 // Performance optimization: Memoize HapticFeedbackSimulator component to skip redundant re-renders
 // when parent component state updates on scroll.
@@ -11,7 +18,9 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const [handPosition, setHandPosition] = useState({ x: 50, y: 50 }); // Percentage
   const [targetPosition, setTargetPosition] = useState({ x: 50, y: 50 }); // Target position
   const [statusMessage, setStatusMessage] = useState<string>('');
+
   const surfaceRef = useRef<HTMLDivElement>(null);
+  const targetPositionRef = useRef(targetPosition);
 
   const handleSelectFeedback = useCallback((type: FeedbackType) => {
     setFeedbackType(type);
@@ -81,8 +90,9 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
         let newY = prev.y + jitterY;
 
         if (feedbackType !== 'none') {
-          const dx = targetPosition.x - prev.x;
-          const dy = targetPosition.y - prev.y;
+          const currentTarget = targetPositionRef.current;
+          const dx = currentTarget.x - prev.x;
+          const dy = currentTarget.y - prev.y;
 
           if (feedbackType.includes('spring')) {
             newX += dx * feedbackStrength;
@@ -107,14 +117,10 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
   const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
-  const getFeedbackDescription = (type: FeedbackType) => {
-    switch (type) {
-      case 'spring': return 'Pulls hand toward ideal trajectory.';
-      case 'damping': return 'Smooths out tremors and erratic movements.';
-      case 'spring-damping': return 'Combines both methods for master-level path straightness.';
-      default: return 'No active feedback (resembling Mikey’s unguided freehand).';
-    }
-  };
+  const alignmentAccuracy = useMemo(
+    () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
+    [handPosition.x, handPosition.y, targetPosition.x, targetPosition.y]
+  );
 
   return (
     <Card title="Haptic Guidance Simulation" className="col-span-1 lg:col-span-2">
@@ -198,7 +204,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             </button>
           </div>
           <div aria-live="polite" className="text-gray-400 text-md italic mt-2">
-            Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {getFeedbackDescription(feedbackType)}
+            Current Feedback: <span className="text-white font-semibold">{feedbackType.replace('-', ' ')}</span> - {FEEDBACK_DESCRIPTIONS[feedbackType]}
             {statusMessage && <span className="block text-teal-300 text-sm mt-1">🎯 {statusMessage}</span>}
           </div>
           <div className="mt-3 flex items-center space-x-2">
