@@ -6,14 +6,36 @@ import { getChatResponse } from '../services/geminiService';
 // Performance optimization: Memoize ChatMessageItem component to avoid re-rendering existing
 // chat bubble DOM elements on every keystroke in the input text field.
 const ChatMessageItem = React.memo(({ message }: { message: ChatMessage }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(message.text)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {});
+  }, [message.text]);
+
   return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} group relative`}>
       <div
-        className={`max-w-[75%] px-4 py-2 rounded-lg ${
+        className={`max-w-[80%] px-4 py-2 rounded-lg relative ${
           message.role === 'user' ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-100'
         }`}
       >
         {message.text}
+        {message.role === 'model' && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            aria-label={copied ? "Copied AI message to clipboard" : "Copy AI message text"}
+            title={copied ? "Copied!" : "Copy response text"}
+            className="ml-2 inline-flex items-center text-xs text-gray-400 hover:text-teal-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-teal-400 rounded px-1 transition-colors"
+          >
+            {copied ? '✓ Copied' : '📋 Copy'}
+          </button>
+        )}
       </div>
     </div>
   );
