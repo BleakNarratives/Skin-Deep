@@ -22,6 +22,10 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   const surfaceRef = useRef<HTMLDivElement>(null);
   const targetPositionRef = useRef(targetPosition);
 
+  useEffect(() => {
+    targetPositionRef.current = targetPosition;
+  }, [targetPosition]);
+
   const handleSelectFeedback = useCallback((type: FeedbackType) => {
     setFeedbackType(type);
     const modeNames: Record<FeedbackType, string> = {
@@ -112,10 +116,10 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isPaused, feedbackType, targetPosition]);
+  }, [isPaused, feedbackType]);
 
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
-
+  // Performance optimization: Memoize trajectory alignment accuracy calculation to avoid
+  // recalculating Math.hypot and Math.round on un-related render ticks.
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
     [handPosition.x, handPosition.y, targetPosition.x, targetPosition.y]
