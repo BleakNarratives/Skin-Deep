@@ -42,36 +42,37 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, []);
 
   const handleSurfaceKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    const step = 5;
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-      e.preventDefault();
-      setTargetPosition(prev => {
-        let newX = prev.x;
-        let newY = prev.y;
-        if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
-        if (e.key === 'ArrowDown') newY = Math.min(100, prev.y + step);
-        if (e.key === 'ArrowLeft') newX = Math.max(0, prev.x - step);
-        if (e.key === 'ArrowRight') newX = Math.min(100, prev.x + step);
-        setStatusMessage(`Target repositioned via keyboard to (${newX}%, ${newY}%). Superior precision over Mikey's shaky setup!`);
-        return { x: newX, y: newY };
-      });
-    }
+    const step = e.shiftKey ? 10 : 2;
+    let dx = 0;
+    let dy = 0;
+    if (e.key === 'ArrowLeft') dx = -step;
+    else if (e.key === 'ArrowRight') dx = step;
+    else if (e.key === 'ArrowUp') dy = -step;
+    else if (e.key === 'ArrowDown') dy = step;
+    else return;
+
+    e.preventDefault();
+    setTargetPosition(prev => {
+      const newX = Math.min(100, Math.max(0, prev.x + dx));
+      const newY = Math.min(100, Math.max(0, prev.y + dy));
+      setStatusMessage(`Target nudged to (${newX}%, ${newY}%) via keyboard — precision control Mikey could only dream of!`);
+      return { x: newX, y: newY };
+    });
   }, []);
 
   const handleResetPosition = useCallback(() => {
     setHandPosition({ x: 50, y: 50 });
     setTargetPosition({ x: 50, y: 50 });
-    setStatusMessage('Hand and target position reset to center — cleaner setup than Mikey\'s shaky try.');
+    setStatusMessage("Hand and target position reset to center — cleaner setup than Mikey's shaky try.");
     setTimeout(() => setStatusMessage(''), 3000);
   }, []);
 
-  // Simulation loop: Applies hand tremor jitter and active feedback towards target position
   useEffect(() => {
     if (isPaused) return;
 
     const feedbackStrength = 0.05;
 
-    const simulationInterval = setInterval(() => {
+    const interval = setInterval(() => {
       setHandPosition(prev => {
         let jitterX = (Math.random() - 0.5) * 4;
         let jitterY = (Math.random() - 0.5) * 4;
@@ -101,8 +102,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
       });
     }, 100);
 
-    return () => clearInterval(simulationInterval);
-  }, [feedbackType, targetPosition, isPaused]);
+    return () => clearInterval(interval);
+  }, [isPaused, feedbackType, targetPosition]);
 
   const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
