@@ -51,22 +51,20 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, []);
 
   const handleSurfaceKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    const step = e.shiftKey ? 10 : 2;
-    let dx = 0;
-    let dy = 0;
-    if (e.key === 'ArrowLeft') dx = -step;
-    else if (e.key === 'ArrowRight') dx = step;
-    else if (e.key === 'ArrowUp') dy = -step;
-    else if (e.key === 'ArrowDown') dy = step;
-    else return;
-
-    e.preventDefault();
-    setTargetPosition(prev => {
-      const newX = Math.min(100, Math.max(0, prev.x + dx));
-      const newY = Math.min(100, Math.max(0, prev.y + dy));
-      setStatusMessage(`Target nudged to (${newX}%, ${newY}%) via keyboard — precision control Mikey could only dream of!`);
-      return { x: newX, y: newY };
-    });
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      setTargetPosition(prev => {
+        const step = 5;
+        let newX = prev.x;
+        let newY = prev.y;
+        if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
+        if (e.key === 'ArrowDown') newY = Math.min(100, prev.y + step);
+        if (e.key === 'ArrowLeft') newX = Math.max(0, prev.x - step);
+        if (e.key === 'ArrowRight') newX = Math.min(100, prev.x + step);
+        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%).`);
+        return { x: newX, y: newY };
+      });
+    }
   }, []);
 
   const handleResetPosition = useCallback(() => {
@@ -105,6 +103,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           }
         }
 
+        // Keep within 0-100% bounds
         return {
           x: Math.min(100, Math.max(0, newX)),
           y: Math.min(100, Math.max(0, newY)),
