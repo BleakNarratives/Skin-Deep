@@ -97,7 +97,11 @@ def _outline_text(ep: dict, override: str = "") -> str:
     if not path.is_relative_to(SB_DIR.resolve()):
         raise HTTPException(400, "invalid outline path")
     if path.exists():
-        return path.read_text(errors="replace")
+        try:
+            return path.read_text(errors="replace")
+        except OSError:
+            # Security: Catch filesystem errors to prevent leaking server path/permission details to callers.
+            raise HTTPException(500, "failed to read outline file")
     raise HTTPException(400, f"episode '{ep['slug']}' has no outline file")
 
 
@@ -195,6 +199,7 @@ def boardroom_mode(episode_id: int, body: BoardroomRequest | None = None) -> dic
     except gen.GenerationError as e:
         raise _gen_fail(e)
     except Exception:  # conductor runtime failure — fail loud
+        # Security: Prevent raw exception string leakage (prevents exposing internal server paths or stack traces).
         raise HTTPException(502, "boardroom conductor failed")
     db.update_episode(episode_id, director_notes=json.dumps(notes, ensure_ascii=False))
     return notes
