@@ -351,6 +351,9 @@ def novita_image(prompt: str) -> tuple[bytes | None, dict]:
             if not images:
                 return None, {"provider": "novita", "error": "no images in response"}
             url = images[0].get("image_url", "")
+            # Security: Validate URL scheme to prevent SSRF via unexpected URI protocols (e.g. file://, ftp://).
+            if not url.lower().startswith(("https://", "http://")):
+                return None, {"provider": "novita", "error": "invalid image url scheme"}
             img = requests.get(url, timeout=60)
             img.raise_for_status()
             return img.content, {"provider": "novita", "model": "sdxl-v1"}
