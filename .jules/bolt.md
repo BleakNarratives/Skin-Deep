@@ -21,3 +21,7 @@
 ## 2026-09-27 - Consolidated Simulation Timers in Interactive Canvas Components
 **Learning:** Running multiple un-synchronized `setInterval` timers within interactive UI simulation components (e.g. 200ms jitter timer and 100ms vector calculation timer) causes competing React state updates and 50% extra timer wakeups per second.
 **Action:** Unify simulation physics and jitter updates into a single 100ms interval timer with atomic state update callbacks, and wrap distance metrics in `useMemo`.
+
+## 2026-09-28 - Avoid wrapping primitive nanosecond math calculations in useMemo
+**Learning:** Wrapping sub-nanosecond primitive calculations (such as `Math.hypot`, `Math.max`, or simple arithmetic) in React's `useMemo` hook introduces unnecessary memory allocations (dependency array creation) and hook equality checking overhead that is slower and more memory-intensive than calculating inline on render.
+**Action:** Compute primitive math directly on render, and reserve `useMemo` strictly for expensive data transformations, complex object/array operations, or preserving referential integrity for memoized child props.
