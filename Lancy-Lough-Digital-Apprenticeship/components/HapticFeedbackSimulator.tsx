@@ -54,14 +54,14 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
       setTargetPosition(prev => {
-        const step = 5;
+        const step = e.shiftKey ? 1 : 5;
         let newX = prev.x;
         let newY = prev.y;
         if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
         if (e.key === 'ArrowDown') newY = Math.min(100, prev.y + step);
         if (e.key === 'ArrowLeft') newX = Math.max(0, prev.x - step);
         if (e.key === 'ArrowRight') newX = Math.min(100, prev.x + step);
-        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%).`);
+        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%)${e.shiftKey ? ' [1% fine precision step]' : ''}.`);
         return { x: newX, y: newY };
       });
     }
@@ -113,8 +113,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
-
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
@@ -219,8 +217,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           tabIndex={0}
           onClick={handleSurfaceClick}
           onKeyDown={handleSurfaceKeyDown}
-          aria-label={`Interactive haptic surface. Target at (${targetPosition.x}%, ${targetPosition.y}%). Click surface or use arrow keys to reposition target.`}
-          title="Click surface or use Arrow Keys to move target — unlike Mikey, you have pixel-perfect control!"
+          aria-label={`Interactive haptic surface. Target at (${targetPosition.x}%, ${targetPosition.y}%). Click surface or use arrow keys (Shift+Arrow for 1% fine precision) to reposition target.`}
+          title="Click surface or use Arrow Keys (Shift+Arrow for 1% fine precision) to move target — unlike Mikey, you have pixel-perfect control!"
           className="flex-1 relative min-h-[256px] border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
         >
           <div
@@ -249,7 +247,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             }}
           ></div>
           <p className="absolute bottom-2 left-2 text-xs text-gray-400 pointer-events-none select-none z-10">
-            🎯 Click surface or use Arrow keys to move target — unlike Mikey's rigid setups
+            🎯 Click surface or use Arrow keys (Shift+Arrow for 1% fine precision) to move target — unlike Mikey's rigid setups
           </p>
         </div>
       </div>
