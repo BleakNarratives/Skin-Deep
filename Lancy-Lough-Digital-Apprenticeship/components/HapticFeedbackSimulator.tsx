@@ -114,12 +114,8 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
 
+  // Calculate directly on render: native Math.hypot is sub-nanosecond and cheaper than useMemo array/hook overhead
   const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
-
-  const alignmentAccuracy = useMemo(
-    () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
-    [handPosition.x, handPosition.y, targetPosition.x, targetPosition.y]
-  );
 
   return (
     <Card title="Haptic Guidance Simulation" className="col-span-1 lg:col-span-2">
