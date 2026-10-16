@@ -29,3 +29,7 @@
 ## 2026-10-06 - Interactive 2D Simulation Surface Keyboard Controls
 **Learning:** Interactive target coordinates on 2D simulation surfaces (`role="region"`, `tabIndex={0}`) require `onKeyDown` listeners handling Arrow Keys (and Shift+Arrow for 10x step modifiers) with `e.preventDefault()`. Coupling keypress handlers with `aria-live="polite"` status announcements ensures screen reader and keyboard-only users can navigate coordinates with real-time feedback.
 **Action:** On interactive 2D simulation regions, attach `onKeyDown` Arrow key handlers with `e.preventDefault()` and update an `aria-live="polite"` container with explicit coordinate readouts.
+
+## 2026-10-20 - Global Keyboard Shortcuts for Floating Action Controls
+**Learning:** Floating navigation controls (such as Scroll-to-Top buttons) are inaccessible to power users navigating long documents without global hotkey listeners. Binding a global modifier shortcut (`Alt+T`) on `window` with `e.preventDefault()` and updating the button's `aria-label` and `title` to explicitly mention the shortcut empowers keyboard navigation while keeping screen readers informed.
+**Action:** When adding or updating floating action controls, pair `window` keyboard listeners with explicit hotkey mentions in `aria-label` and `title` attributes.

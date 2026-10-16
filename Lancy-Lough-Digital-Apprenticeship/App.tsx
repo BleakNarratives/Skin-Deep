@@ -125,6 +125,17 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        scrollToTop();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [scrollToTop]);
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
       <Header isMobileMenuOpen={isMobileMenuOpen} onToggleMobileMenu={handleToggleMobileMenu} />
@@ -530,8 +541,8 @@ const App: React.FC = () => {
         <button
           type="button"
           onClick={scrollToTop}
-          aria-label="Scroll to top of page"
-          title="Scroll to top"
+          aria-label="Scroll to top of page (Alt+T shortcut)"
+          title="Scroll back to top (Alt+T) — faster than Mikey searching for missing ink caps!"
           className="fixed bottom-6 left-6 lg:left-72 z-40 bg-teal-700 hover:bg-teal-600 text-white p-3 rounded-full shadow-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 transition-all duration-200 flex items-center justify-center"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
