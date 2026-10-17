@@ -29,3 +29,7 @@
 ## 2026-10-06 - Interactive 2D Simulation Surface Keyboard Controls
 **Learning:** Interactive target coordinates on 2D simulation surfaces (`role="region"`, `tabIndex={0}`) require `onKeyDown` listeners handling Arrow Keys (and Shift+Arrow for 10x step modifiers) with `e.preventDefault()`. Coupling keypress handlers with `aria-live="polite"` status announcements ensures screen reader and keyboard-only users can navigate coordinates with real-time feedback.
 **Action:** On interactive 2D simulation regions, attach `onKeyDown` Arrow key handlers with `e.preventDefault()` and update an `aria-live="polite"` container with explicit coordinate readouts.
+
+## 2026-10-17 - Live Metric Progress Gauges Accessibility
+**Learning:** Real-time percentage accuracy gauges and telemetry indicators require `role="progressbar"`, `aria-labelledby`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and `aria-valuetext` along with `role="status"` on the parent wrapper to dynamically announce metric changes to screen readers as user interaction occurs.
+**Action:** When displaying real-time accuracy or performance metrics, wrap the gauge in `role="status"` and assign `role="progressbar"` with explicit `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, and `aria-valuetext` string attributes.
