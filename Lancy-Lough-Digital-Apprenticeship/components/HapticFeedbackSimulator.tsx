@@ -114,8 +114,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
 
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
-
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
     [handPosition.x, handPosition.y, targetPosition.x, targetPosition.y]
