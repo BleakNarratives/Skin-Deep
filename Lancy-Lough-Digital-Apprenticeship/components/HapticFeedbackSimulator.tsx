@@ -114,8 +114,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
 
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
-
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
     [handPosition.x, handPosition.y, targetPosition.x, targetPosition.y]
@@ -220,6 +218,10 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           onClick={handleSurfaceClick}
           onKeyDown={handleSurfaceKeyDown}
           aria-label={`Interactive haptic surface. Target at (${targetPosition.x}%, ${targetPosition.y}%). Click surface or use arrow keys to reposition target.`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={alignmentAccuracy}
+          aria-valuetext={`Target at ${targetPosition.x}% horizontal, ${targetPosition.y}% vertical. Alignment accuracy ${alignmentAccuracy}%`}
           title="Click surface or use Arrow Keys to move target — unlike Mikey, you have pixel-perfect control!"
           className="flex-1 relative min-h-[256px] border border-gray-600 rounded-lg overflow-hidden bg-gray-900 shadow-inner cursor-crosshair focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
         >
