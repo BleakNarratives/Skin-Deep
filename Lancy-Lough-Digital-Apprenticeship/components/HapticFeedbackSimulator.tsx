@@ -75,6 +75,13 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
   }, []);
 
   useEffect(() => {
+    targetPositionRef.current = targetPosition;
+  }, [targetPosition]);
+
+  // Performance optimization: Access targetPosition via targetPositionRef in the timer callback
+  // and omit targetPosition from dependency array. This prevents tear-down/re-creation of the 100ms
+  // simulation timer on every target movement tick (e.g., arrow key navigation or drag clicks).
+  useEffect(() => {
     if (isPaused) return;
 
     const feedbackStrength = 0.05;
@@ -112,9 +119,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isPaused, feedbackType, targetPosition]);
-
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
+  }, [isPaused, feedbackType]);
 
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
