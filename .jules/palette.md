@@ -29,3 +29,7 @@
 ## 2026-10-06 - Interactive 2D Simulation Surface Keyboard Controls
 **Learning:** Interactive target coordinates on 2D simulation surfaces (`role="region"`, `tabIndex={0}`) require `onKeyDown` listeners handling Arrow Keys (and Shift+Arrow for 10x step modifiers) with `e.preventDefault()`. Coupling keypress handlers with `aria-live="polite"` status announcements ensures screen reader and keyboard-only users can navigate coordinates with real-time feedback.
 **Action:** On interactive 2D simulation regions, attach `onKeyDown` Arrow key handlers with `e.preventDefault()` and update an `aria-live="polite"` container with explicit coordinate readouts.
+
+## 2026-10-14 - Mobile Navigation Drawer Backdrop & Escape Key Dismissal
+**Learning:** Mobile slide-out navigation drawers require a dimmed click-outside backdrop (`aria-hidden="true"`) paired with a global `Escape` key event listener when active. This provides both touch and keyboard users with intuitive, standard ways to dismiss the drawer overlay without needing to locate the top toggle button.
+**Action:** When implementing or updating mobile overlay navigation drawers, render a dimmed click-to-dismiss backdrop element and attach an `Escape` keypress listener that updates open state.
