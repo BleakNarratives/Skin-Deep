@@ -21,3 +21,7 @@
 ## 2026-09-27 - Consolidated Simulation Timers in Interactive Canvas Components
 **Learning:** Running multiple un-synchronized `setInterval` timers within interactive UI simulation components (e.g. 200ms jitter timer and 100ms vector calculation timer) causes competing React state updates and 50% extra timer wakeups per second.
 **Action:** Unify simulation physics and jitter updates into a single 100ms interval timer with atomic state update callbacks, and wrap distance metrics in `useMemo`.
+
+## 2026-09-28 - Interval Timer Dependency Churn vs Mutable Refs in Interactive Loops
+**Learning:** Including interactive state variables (such as target coordinates or user inputs) in a `setInterval` `useEffect` dependency array tears down and reinstantiates the timer interval on every single state change (click or keypress), resetting timing cycles and causing execution churn.
+**Action:** Synchronize mutable state variables to `useRef` containers via dedicated side-effects and exclude them from the timer `useEffect` dependency array so simulation intervals run continuously without teardown churn.
