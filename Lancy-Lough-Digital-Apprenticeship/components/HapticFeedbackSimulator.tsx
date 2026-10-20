@@ -50,18 +50,27 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     setStatusMessage(`Target relocated to (${x}%, ${y}%). Locked in cleanly — unlike Mikey's wild guesses!`);
   }, []);
 
+  useEffect(() => {
+    targetPositionRef.current = targetPosition;
+  }, [targetPosition]);
+
   const handleSurfaceKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
       e.preventDefault();
       setTargetPosition(prev => {
-        const step = 5;
+        const step = e.shiftKey ? 10 : 2;
         let newX = prev.x;
         let newY = prev.y;
-        if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
-        if (e.key === 'ArrowDown') newY = Math.min(100, prev.y + step);
-        if (e.key === 'ArrowLeft') newX = Math.max(0, prev.x - step);
-        if (e.key === 'ArrowRight') newX = Math.min(100, prev.x + step);
-        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%).`);
+        if (e.key === 'Home' || e.key === 'End') {
+          newX = 50;
+          newY = 50;
+        } else {
+          if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
+          if (e.key === 'ArrowDown') newY = Math.min(100, prev.y + step);
+          if (e.key === 'ArrowLeft') newX = Math.max(0, prev.x - step);
+          if (e.key === 'ArrowRight') newX = Math.min(100, prev.x + step);
+        }
+        setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%)${e.shiftKey ? ' [10% coarse step]' : ''}.`);
         return { x: newX, y: newY };
       });
     }
@@ -113,8 +122,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
-
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
