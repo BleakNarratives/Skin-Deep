@@ -29,3 +29,7 @@
 ## 2026-10-06 - Interactive 2D Simulation Surface Keyboard Controls
 **Learning:** Interactive target coordinates on 2D simulation surfaces (`role="region"`, `tabIndex={0}`) require `onKeyDown` listeners handling Arrow Keys (and Shift+Arrow for 10x step modifiers) with `e.preventDefault()`. Coupling keypress handlers with `aria-live="polite"` status announcements ensures screen reader and keyboard-only users can navigate coordinates with real-time feedback.
 **Action:** On interactive 2D simulation regions, attach `onKeyDown` Arrow key handlers with `e.preventDefault()` and update an `aria-live="polite"` container with explicit coordinate readouts.
+
+## 2026-10-22 - Interactive Simulation Canvas Shortcuts & ARIA Status Badge
+**Learning:** For interactive simulation surfaces with dynamic trajectory scores or percentage indicators, adding `role="status"` and a clear `aria-label` to the badge ensures assistive technologies announce real-time score quality changes. Additionally, providing explicit keyboard shortcuts (`Shift+Arrow` for 10x step, `Space` for pause/resume, and `R` for reset) alongside visible legend hints significantly improves keyboard efficiency.
+**Action:** Always assign `role="status"` and contextual `aria-label` attributes to dynamic feedback badges, and include visible shortcut hints for interactive regions.

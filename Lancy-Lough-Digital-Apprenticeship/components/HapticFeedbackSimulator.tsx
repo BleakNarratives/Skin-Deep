@@ -50,11 +50,18 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     setStatusMessage(`Target relocated to (${x}%, ${y}%). Locked in cleanly — unlike Mikey's wild guesses!`);
   }, []);
 
+  const handleResetPosition = useCallback(() => {
+    setHandPosition({ x: 50, y: 50 });
+    setTargetPosition({ x: 50, y: 50 });
+    setStatusMessage("Hand and target position reset to center — cleaner setup than Mikey's shaky try.");
+    setTimeout(() => setStatusMessage(''), 3000);
+  }, []);
+
   const handleSurfaceKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
       setTargetPosition(prev => {
-        const step = 5;
+        const step = e.shiftKey ? 10 : 5;
         let newX = prev.x;
         let newY = prev.y;
         if (e.key === 'ArrowUp') newY = Math.max(0, prev.y - step);
@@ -64,15 +71,14 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
         setStatusMessage(`Target relocated via keyboard to (${newX}%, ${newY}%).`);
         return { x: newX, y: newY };
       });
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      handleTogglePause();
+    } else if (e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      handleResetPosition();
     }
-  }, []);
-
-  const handleResetPosition = useCallback(() => {
-    setHandPosition({ x: 50, y: 50 });
-    setTargetPosition({ x: 50, y: 50 });
-    setStatusMessage("Hand and target position reset to center — cleaner setup than Mikey's shaky try.");
-    setTimeout(() => setStatusMessage(''), 3000);
-  }, []);
+  }, [handleTogglePause, handleResetPosition]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -113,8 +119,6 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
 
     return () => clearInterval(interval);
   }, [isPaused, feedbackType, targetPosition]);
-
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
 
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
@@ -208,7 +212,11 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
           </div>
           <div className="mt-3 flex items-center space-x-2">
             <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">Trajectory Accuracy:</span>
-            <span className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}>
+            <span
+              role="status"
+              aria-label={`Trajectory accuracy: ${alignmentAccuracy} percent. ${alignmentAccuracy > 80 ? 'Optimal alignment' : alignmentAccuracy > 50 ? 'Moderate alignment' : 'Needs adjustment'}`}
+              className={`px-2 py-0.5 rounded text-xs font-bold transition-colors duration-300 ${alignmentAccuracy > 80 ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-500/50' : alignmentAccuracy > 50 ? 'bg-amber-900/80 text-amber-300 border border-amber-500/50' : 'bg-rose-900/80 text-rose-300 border border-rose-500/50'}`}
+            >
               {alignmentAccuracy}%
             </span>
           </div>
@@ -249,7 +257,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
             }}
           ></div>
           <p className="absolute bottom-2 left-2 text-xs text-gray-400 pointer-events-none select-none z-10">
-            🎯 Click surface or use Arrow keys to move target — unlike Mikey's rigid setups
+            🎯 Shortcuts: [Arrows] Move target (Shift=10x) • [Space] Pause • [R] Reset — unlike Mikey's rigid setup
           </p>
         </div>
       </div>
