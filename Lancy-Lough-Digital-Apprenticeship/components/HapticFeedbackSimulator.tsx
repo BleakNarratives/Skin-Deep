@@ -74,6 +74,12 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     setTimeout(() => setStatusMessage(''), 3000);
   }, []);
 
+  // Keep targetPositionRef synced with state so interval closure always sees current target position
+  // without needing to teardown and restart the timer on target movements.
+  useEffect(() => {
+    targetPositionRef.current = targetPosition;
+  }, [targetPosition]);
+
   useEffect(() => {
     if (isPaused) return;
 
@@ -112,9 +118,7 @@ const HapticFeedbackSimulator: React.FC = React.memo(() => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isPaused, feedbackType, targetPosition]);
-
-  const alignmentAccuracy = Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y)));
+  }, [isPaused, feedbackType]);
 
   const alignmentAccuracy = useMemo(
     () => Math.max(0, Math.round(100 - Math.hypot(handPosition.x - targetPosition.x, handPosition.y - targetPosition.y))),
