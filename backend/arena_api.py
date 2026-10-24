@@ -110,7 +110,8 @@ class BattleRequest(BaseModel):
 
 
 class PersonaUpdate(BaseModel):
-    seed: dict[str, Any]
+    # Security: Limit maximum dictionary keys to prevent resource exhaustion / DoS attacks via oversized payload allocation.
+    seed: dict[str, Any] = Field(..., max_length=100)
 
 
 class AgentRegisterRequest(BaseModel):
@@ -361,7 +362,7 @@ async def arena_run(req: ArenaRunRequest) -> dict:
 
 @router.get("/arena/round/{round_id}")
 async def arena_round(
-    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+    round_id: str = APIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
 ) -> dict:
     r = arena_db.get_round(round_id)
     if r is None:
@@ -394,7 +395,7 @@ async def ws_telemetry(ws: WebSocket) -> None:
 @router.websocket("/ws/run/{round_id}")
 async def ws_run(
     ws: WebSocket,
-    round_id: str = FastAPIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
+    round_id: str = APIPath(..., min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$"),
 ) -> None:
     """Live round feed with catch-up replay.
 
