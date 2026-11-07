@@ -114,6 +114,16 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
@@ -128,6 +138,13 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 antialiased">
       <Header isMobileMenuOpen={isMobileMenuOpen} onToggleMobileMenu={handleToggleMobileMenu} />
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 lg:hidden transition-opacity"
+          onClick={handleCloseMobileMenu}
+          aria-hidden="true"
+        />
+      )}
       <Sidebar
         navItems={NAV_ITEMS}
         activeSection={activeSection}
