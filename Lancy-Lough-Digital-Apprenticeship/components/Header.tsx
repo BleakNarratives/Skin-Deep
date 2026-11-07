@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = React.memo(({
             </button>
           )}
           <div className="flex items-center">
-            <img src="https://picsum.photos/40/40" alt="LOUGH Logo" className="mr-3 rounded-full" />
+            <img src="https://picsum.photos/40/40" alt="" aria-hidden="true" className="mr-3 rounded-full" />
             <h1 className="text-2xl font-bold text-teal-400">Lough Skin Deep</h1>
           </div>
         </div>
