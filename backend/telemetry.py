@@ -26,14 +26,22 @@ STATE_FILE: Path = MIKEY_ROOT / "logs" / "memguard" / "memguard_state.json"
 
 
 def _read_meminfo() -> dict:
+    # Performance optimization: Target only required memory keys and exit early
+    # as soon as all 3 required metrics are parsed. Reduces /proc/meminfo line
+    # scan iterations by ~90% (reads first 3 lines instead of ~50+ lines).
+    keys_needed = {"MemTotal", "MemFree", "MemAvailable"}
     d: dict[str, int] = {}
     try:
         with open("/proc/meminfo") as f:
             for line in f:
                 key, _, rest = line.partition(":")
-                parts = rest.split()
-                if parts:
-                    d[f"{key.strip()}_mb"] = int(parts[0]) // 1024
+                key = key.strip()
+                if key in keys_needed:
+                    parts = rest.split()
+                    if parts:
+                        d[f"{key}_mb"] = int(parts[0]) // 1024
+                    if len(d) == len(keys_needed):
+                        break
     except (OSError, ValueError):
         pass
     return d
