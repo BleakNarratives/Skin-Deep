@@ -205,6 +205,22 @@ def test_outline_text_path_traversal_prevention(api, tmp_db):
     assert ei.value.detail == "invalid outline path"
 
 
+def test_outline_text_oserror_sanitizes_500(api, tmp_db, monkeypatch):
+    ep = tmp_db.create_episode(1, 104, "test_outline_oserror", "Outline OSError Ep", "log", outline_path="episodes/test_outline_oserror.md")
+
+    monkeypatch.setattr(Path, "exists", lambda self: True)
+
+    def fake_read_text(*args, **kwargs):
+        raise OSError("[Errno 13] Permission denied: '/home/jules/secret/episodes/test_outline_oserror.md'")
+
+    monkeypatch.setattr(Path, "read_text", fake_read_text)
+
+    with pytest.raises(HTTPException) as ei:
+        api._outline_text(ep)
+    assert ei.value.status_code == 500
+    assert ei.value.detail == "failed to read outline file"
+
+
 def test_export_path_traversal_prevention(api, tmp_db):
     ep = tmp_db.create_episode(1, 102, "../evil_export_slug", "Evil Slug Ep", "log", "")
     with pytest.raises(HTTPException) as ei_json:
@@ -251,6 +267,23 @@ def test_scene_generate_request_validation(api):
 
     with pytest.raises(ValidationError):
         api.SceneCreateRequest(outline="x" * 100001)
+
+
+def test_boardroom_mode_exception_sanitization(api, monkeypatch):
+    ep = api.create_episode(api.EpisodeCreate(
+        season=1, number=88, slug="test_boardroom_err", title="Boardroom Error Ep", outline="outline content"
+    ))
+
+    def fake_boardroom_notes_error(outline, rounds=2):
+        raise RuntimeError("Internal conductor failure at /var/secrets/keys/conductor.pem line 42")
+
+    monkeypatch.setattr(gen, "boardroom_notes", fake_boardroom_notes_error)
+
+    with pytest.raises(HTTPException) as ei:
+        api.boardroom_mode(ep["id"])
+
+    assert ei.value.status_code == 502
+    assert ei.value.detail == "boardroom conductor failed"
 
 
 def test_boardroom_request_validation(api):
