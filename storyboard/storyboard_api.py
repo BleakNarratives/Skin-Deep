@@ -354,6 +354,15 @@ def _esc(s: Any) -> str:
     return html.escape(str(s), quote=True)
 
 
+def _is_safe_image_path(img_path: str) -> bool:
+    # Security: Ensure image path remains inside IMAGES_DIR to prevent directory traversal
+    try:
+        resolved = (gen.IMAGES_DIR / img_path).resolve()
+        return resolved.is_relative_to(gen.IMAGES_DIR.resolve())
+    except (ValueError, OSError):
+        return False
+
+
 def _render_sheet(tree: dict) -> str:
     parts = [
         "<!doctype html><html><head><meta charset='utf-8'>",
@@ -385,7 +394,7 @@ def _render_sheet(tree: dict) -> str:
         )
         for p in scene["panels"]:
             img = ""
-            if p["image_status"] == "ready" and p["image_path"]:
+            if p["image_status"] == "ready" and p["image_path"] and _is_safe_image_path(p["image_path"]):
                 img = f"<img src='../{_esc(p['image_path'])}' alt='panel'>"
             else:
                 img = "<div class='ph'>no image — visual prompt on file</div>"
