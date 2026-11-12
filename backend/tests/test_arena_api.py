@@ -148,6 +148,23 @@ def test_runs_corpus():
     assert all(row["group_type"] == "A" for row in rows)
 
 
+def test_runs_query_parameter_validation_security():
+    # Invalid group query parameter containing special characters / SQL injection attempt
+    r = client.get("/api/v1/runs?group=A;DROP%20TABLE")
+    assert r.status_code == 422  # Validation Error
+
+    # Group exceeding max_length of 10
+    r = client.get("/api/v1/runs?group=" + "A" * 11)
+    assert r.status_code == 422
+
+    # Limit out of bounds (< 1 or > 500)
+    r = client.get("/api/v1/runs?limit=0")
+    assert r.status_code == 422
+
+    r = client.get("/api/v1/runs?limit=501")
+    assert r.status_code == 422
+
+
 def test_runs_corpus_db_error_handling(monkeypatch):
     """Verify database exceptions return generic 500 detail without leaking filesystem paths or DB errors."""
     import sqlite3
