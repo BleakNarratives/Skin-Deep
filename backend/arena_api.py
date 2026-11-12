@@ -15,8 +15,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Path as APIPath, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Path as APIPath, Query, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field, field_validator
 
 import arena_db
 import telemetry
@@ -110,7 +110,15 @@ class BattleRequest(BaseModel):
 
 
 class PersonaUpdate(BaseModel):
+    # Security: Restrict size of seed payload to prevent memory/CPU DoS attacks on DB insertion.
     seed: dict[str, Any]
+
+    @field_validator("seed")
+    @classmethod
+    def validate_seed_size(cls, v: dict[str, Any]) -> dict[str, Any]:
+        if len(json.dumps(v, default=str)) > 500000:
+            raise ValueError("persona seed payload too large (max 500KB)")
+        return v
 
 
 class AgentRegisterRequest(BaseModel):
@@ -187,7 +195,10 @@ async def score(req: ScoreRequest) -> dict:
 
 
 @router.get("/runs")
-async def runs(group: str | None = None, limit: int = 50) -> list[dict]:
+async def runs(
+    group: str | None = Query(default=None, max_length=32, pattern=r"^[a-zA-Z0-9_-]+$"),
+    limit: int = 50,
+) -> list[dict]:
     """Read-only analytics over the persona_runs.db corpus."""
     q = "SELECT * FROM persona_runs"
     args: list[Any] = []
