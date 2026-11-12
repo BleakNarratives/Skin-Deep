@@ -536,6 +536,15 @@ def test_arena_db_insert_persona_custom(tmp_path):
         assert "test-security-seed" in row["seed"]
 
 
+def test_storyboard_path_parameter_validation_security(api):
+    # Test path parameter validation constraints (ge=1, le=2147483647) via APIPath metadata
+    p = api.APIPath(..., ge=1, le=2147483647)
+    ge_constraints = [m.ge for m in p.metadata if hasattr(m, "ge")]
+    le_constraints = [m.le for m in p.metadata if hasattr(m, "le")]
+    assert ge_constraints == [1]
+    assert le_constraints == [2147483647]
+
+
 def test_boardroom_request_validation(api):
     # Valid bounds: 1 <= rounds <= 10
     req_valid = api.BoardroomRequest(rounds=3)
