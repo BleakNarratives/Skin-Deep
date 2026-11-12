@@ -110,7 +110,8 @@ class BattleRequest(BaseModel):
 
 
 class PersonaUpdate(BaseModel):
-    seed: dict[str, Any]
+    # Security: Limit maximum dictionary keys to prevent resource exhaustion / DoS attacks via oversized payload allocation.
+    seed: dict[str, Any] = Field(..., max_length=100)
 
 
 class AgentRegisterRequest(BaseModel):

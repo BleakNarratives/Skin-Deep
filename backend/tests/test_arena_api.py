@@ -198,6 +198,13 @@ def test_persona_put():
     assert r.json()["status"] == "stored"
 
 
+def test_persona_put_oversized_payload_rejected():
+    # Verify that PersonaUpdate seed dict containing > 100 entries is rejected with 422
+    oversized_seed = {f"key_{i}": f"val_{i}" for i in range(101)}
+    r = client.put("/api/v1/persona", json={"seed": oversized_seed})
+    assert r.status_code == 422
+
+
 def test_arena_run_and_poll(server_url):
     with httpx.Client(base_url=server_url, timeout=10) as c:
         r = c.post("/api/v1/arena/run", json={"groups": ["A"], "task_ids": ["task_001_legal_analysis"]})
