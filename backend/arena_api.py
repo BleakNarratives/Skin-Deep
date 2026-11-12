@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Path as APIPath, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 import arena_db
 import telemetry
@@ -111,6 +111,15 @@ class BattleRequest(BaseModel):
 
 class PersonaUpdate(BaseModel):
     seed: dict[str, Any]
+
+    # Security: Validate seed payload size when serialized to JSON (max 50,000 chars)
+    # to prevent resource exhaustion (DoS) and database bloat when storing custom seeds.
+    @field_validator("seed")
+    @classmethod
+    def check_seed_size(cls, v: dict[str, Any]) -> dict[str, Any]:
+        if len(json.dumps(v, default=str)) > 50000:
+            raise ValueError("custom seed payload exceeds maximum allowed size (50,000 bytes)")
+        return v
 
 
 class AgentRegisterRequest(BaseModel):
