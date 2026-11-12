@@ -426,8 +426,9 @@ def health() -> dict:
     if gemini_enabled:
         try:
             _, gemini_auth = gen._gemini_client()
-        except Exception as e:
-            gemini_auth = f"error: {str(e)[:120]}"
+        except Exception:
+            # Security: Do not expose raw exception strings to callers (prevents leakage of server filesystem paths/credentials details).
+            gemini_auth = "auth_failed"
     out["image_chain"].append({
         "provider": "gemini", "enabled": gemini_enabled,
         "auth": gemini_auth, "model": gen.GEMINI_IMAGE_MODEL,
