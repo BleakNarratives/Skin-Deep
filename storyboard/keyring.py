@@ -30,6 +30,18 @@ VAULT_DIR = Path(os.environ.get("SKINDEEP_KEYRING_DIR",
                                 Path.home() / ".concierge" / "vault"))
 
 
+def _sanitize_path(p: Path | str) -> str:
+    # Security: Mask absolute home directory path to prevent information disclosure.
+    s = str(p)
+    try:
+        home = str(Path.home())
+        if home and s.startswith(home):
+            return "~" + s[len(home):]
+    except Exception:
+        pass
+    return s
+
+
 class KeyPool:
     """Round-robin pool of API keys for one service, backed by
     `<service>+<label>.key` files in the vault dir plus an optional
@@ -114,7 +126,7 @@ class KeyPool:
         return {
             "service": self.service,
             "pool_size": len(keys),
-            "vault_dir": str(self.vault_dir),
+            "vault_dir": _sanitize_path(self.vault_dir),
             "vault_keys": len(self._vault_keys()),
             "active_fingerprint": (active[-4:] if active else None),
         }

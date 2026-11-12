@@ -426,15 +426,16 @@ def health() -> dict:
     if gemini_enabled:
         try:
             _, gemini_auth = gen._gemini_client()
-        except Exception as e:
-            gemini_auth = f"error: {str(e)[:120]}"
+        except Exception:
+            # Security: Sanitize error detail to prevent leaking internal system paths or stack trace info.
+            gemini_auth = "auth failed"
     out["image_chain"].append({
         "provider": "gemini", "enabled": gemini_enabled,
         "auth": gemini_auth, "model": gen.GEMINI_IMAGE_MODEL,
     })
     # Concierge-style keyring status (pool sizes + active key fingerprints)
     out["keyring"] = {
-        "vault_dir": str(gen.kring.VAULT_DIR),
+        "vault_dir": gen.kring._sanitize_path(gen.kring.VAULT_DIR),
         "pools": [gen.openrouter_pool().status(),
                   gen.novita_pool().status(),
                   gen.gemini_pool().status()],
