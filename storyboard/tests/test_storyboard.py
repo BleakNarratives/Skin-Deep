@@ -585,3 +585,19 @@ def test_arena_request_validation_security():
 
     with pytest.raises(ValidationError):
         arena_api.BattleRequest(identity_shift="x" * 5001)
+
+
+def test_novita_image_ssrf_scheme_validation(monkeypatch):
+    """Verify that non-http/https URLs returned by image providers are rejected to prevent SSRF."""
+    monkeypatch.setenv("NOVITA_API_KEY", "test-key-1234")
+
+    class MockResponse:
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return {"images": [{"image_url": "file:///etc/passwd"}]}
+
+    monkeypatch.setattr("requests.post", lambda *args, **kwargs: MockResponse())
+    img_bytes, meta = gen.novita_image("test prompt")
+    assert img_bytes is None
+    assert meta.get("error") == "invalid image url scheme"
