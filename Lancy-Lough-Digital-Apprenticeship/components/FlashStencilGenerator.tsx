@@ -196,11 +196,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                 setComplexity(newComp);
                 setStatusMessage(`Stencil complexity set to ${newComp}.`);
               }}
-              aria-label={`Stencil complexity level: ${complexity}`}
+              aria-label="Stencil complexity level"
               aria-valuemin={2}
               aria-valuemax={14}
               aria-valuenow={complexity}
               aria-valuetext={`Complexity level ${complexity}`}
+              title="Adjust stencil complexity — far finer detail than Mikey's crude sketches"
               className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg cursor-pointer"
             />
           </div>
@@ -272,11 +273,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={2.5}
                   step={0.05}
                   value={overlayScale}
-                  aria-label={`Overlay scale: ${overlayScale.toFixed(2)}x`}
+                  aria-label="Overlay scale"
                   aria-valuemin={0.3}
                   aria-valuemax={2.5}
                   aria-valuenow={overlayScale}
                   aria-valuetext={`Overlay scale ${overlayScale.toFixed(2)} times`}
+                  title="Adjust AR overlay scale"
                   onChange={(e) => setOverlayScale(Number(e.target.value))}
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
@@ -292,11 +294,12 @@ ${paths.map(p => `<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.stroke
                   max={1}
                   step={0.05}
                   value={overlayOpacity}
-                  aria-label={`Overlay opacity: ${Math.round(overlayOpacity * 100)}%`}
+                  aria-label="Overlay opacity"
                   aria-valuemin={0.1}
                   aria-valuemax={1}
                   aria-valuenow={overlayOpacity}
                   aria-valuetext={`Overlay opacity ${Math.round(overlayOpacity * 100)} percent`}
+                  title="Adjust AR overlay opacity"
                   onChange={(e) => setOverlayOpacity(Number(e.target.value))}
                   className="w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
                 />
