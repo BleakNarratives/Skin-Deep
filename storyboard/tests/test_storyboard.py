@@ -585,3 +585,29 @@ def test_arena_request_validation_security():
 
     with pytest.raises(ValidationError):
         arena_api.BattleRequest(identity_shift="x" * 5001)
+
+
+def test_runs_query_param_validation():
+    backend_dir = SB_DIR.parent / "backend"
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    import arena_api
+    from fastapi.exceptions import RequestValidationError
+
+    # Verify runs signature and Query annotations
+    import inspect
+    sig = inspect.signature(arena_api.runs)
+    group_param = sig.parameters["group"]
+    limit_param = sig.parameters["limit"]
+
+    # FastApi/Pydantic v2 stores Query validation constraints in metadata/metadata_lookup or attributes
+    q_group = group_param.default
+    q_limit = limit_param.default
+
+    meta_str = str(q_group.metadata)
+    assert "max_length=32" in meta_str or "32" in meta_str
+    assert r"^[a-zA-Z0-9_-]+$" in meta_str
+
+    limit_meta_str = str(q_limit.metadata)
+    assert "1" in limit_meta_str
+    assert "500" in limit_meta_str

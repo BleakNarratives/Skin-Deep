@@ -15,7 +15,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Path as APIPath, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Path as APIPath, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 import arena_db
@@ -187,7 +187,10 @@ async def score(req: ScoreRequest) -> dict:
 
 
 @router.get("/runs")
-async def runs(group: str | None = None, limit: int = 50) -> list[dict]:
+async def runs(
+    group: str | None = Query(default=None, max_length=32, pattern=r"^[a-zA-Z0-9_-]+$"),
+    limit: int = Query(default=50, ge=1, le=500),
+) -> list[dict]:
     """Read-only analytics over the persona_runs.db corpus."""
     q = "SELECT * FROM persona_runs"
     args: list[Any] = []
